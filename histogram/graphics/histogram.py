@@ -84,7 +84,7 @@ def plothist_fill_between(ax, *hists, **kwargs):
     return pts
 
 def plothist_1d(ax, hist, **kwargs):
-    baseline = kwargs.get('baseline','bottom')
+    baseline = kwargs.get('baseline',rc.plot.baseline)
 
     overlay = kwargs.pop('overlay',False)
     yscale = kwargs.pop('yscale',None)

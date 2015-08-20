@@ -63,19 +63,19 @@ class Histogram(object):
         while i < len(axes):
             if isinstance(axes[i], int):
                 if len(axes) > (i+2) and isinstance(axes[i+2],str):
-                    self.axes = [HistogramAxis(*axes[i:i+3])]
+                    self.axes.append(HistogramAxis(*axes[i:i+3]))
                     i = i + 3
                 else:
-                    self.axes = [HistogramAxis(*axes[i:i+2])]
+                    self.axes.append(HistogramAxis(*axes[i:i+2]))
                     i = i + 2
             elif isinstance(axes[i], str):
-                labels += [axes[i]]
+                labels.append(axes[i])
                 i = i + 1
             elif isinstance(axes[i], HistogramAxis):
-                self.axes += [axes[i]]
+                self.axes.append(axes[i])
                 i = i + 1
             else:
-                self.axes += [HistogramAxis(*axes[i])]
+                self.axes.append(HistogramAxis(*axes[i]))
                 i = i + 1
 
         self.label = kwargs.pop('label',None)
