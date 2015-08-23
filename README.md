@@ -1,9 +1,9 @@
 histogram
 =========
 
-A histogram object for scientific data-reduction and statistical analysis
+A histogram object written in Python for scientific data-reduction and statistical analysis
 
-The primary object of this module is a continuous-domain [Histogram](https://en.wikipedia.org/wiki/Histogram). Any number of dimensions is supported though only the lower dimensions can be visualized. For more information, please the **[wiki pages](https://github.com/theodoregoetz/histogram/wiki)**.
+The primary object of this module is a continuous-domain [histogram](https://en.wikipedia.org/wiki/Histogram). Any number of dimensions is supported though only the lower dimensions can be visualized. For more information, please the **[wiki pages](https://github.com/theodoregoetz/histogram/wiki)**. This package is dependent on [NumPy and SciPy](http://www.scipy.org), provides methods for producing and showing graphics through [Matplotlib](http://matplotlib.org) and can be serialized via python's pickling, NumPy's binary format or [HDF5](https://www.hdfgroup.org).
 
 Quick Start
 -----------
@@ -32,7 +32,7 @@ pyplot.show()
 Similar Packages and Software
 -----------------------------
 
-While there is no lack of other histogramming libraries out there, most have a narrow focus or seem to be quickly put together or are part of a much larger analysis package. This is last one is not technically addressed since this package is dependent on [NumPy and SciPy](http://www.scipy.org) which are rather large projects in their own right.
+While there is no lack of other histogramming libraries out there, most have a narrow focus or seem to be quickly put together, lacking documentation, or are part of a much larger analysis framework. This goal of this project is to be a solution for all python developers who want more functionality than that provided by NumPy's `histogramdd()` method.
 
 This project took many cues from the following python packages, trying to merge the features of each one into a single object:
 
