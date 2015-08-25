@@ -103,7 +103,10 @@ class Histogram(object):
         else:
             data = np.asarray(data)
             assert data.shape == shape, 'Data shape must match axes.'
-            self._data = np.asarray(data,dtype=dtype)
+            if dtype is None:
+                self._data = data
+            else:
+                self._data = data.astype(dtype)
 
         self.uncert = kwargs.pop('uncert',None)
 
@@ -449,8 +452,8 @@ class Histogram(object):
         '''
         extent of axes (up to maxdim) returned as
         a single tuple. By default, this includes
-        the uncertainty (if the last dimension is
-        the histogram's data and not an axis):
+        the uncertainty if the last dimension is
+        the histogram's data and not an axis:
 
             [xmin, xmax, ymin, ymax, ..., zmin-dz, zmax+dz]
 

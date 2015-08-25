@@ -1,12 +1,8 @@
-from __future__ import division
-
 import unittest
-
-import numpy as np
 
 from histogram.detail import RunControl
 
-class TestHistogram(unittest.TestCase):
+class TestRunControl(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -33,5 +29,5 @@ class TestHistogram(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    test = TestHistogram()
+    test = TestRunControl()
     test.test()

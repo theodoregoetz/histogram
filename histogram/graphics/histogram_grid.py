@@ -10,8 +10,7 @@ from mpl_toolkits.axes_grid1.inset_locator import \
 
 from .cmap import flame
 
-from ..histogram_axis import HistogramAxis
-from ..histogram import Histogram
+from .. import Histogram, HistogramAxis
 
 def plothist_grid(hist, xaxis=0, yaxis=1, **kwargs):
     debug = kwargs.pop('debug',False)
