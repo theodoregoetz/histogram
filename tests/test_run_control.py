@@ -20,6 +20,8 @@ class TestHistogram(unittest.TestCase):
 
         rc.lock()
 
+        rc.plot.patch.alpha = 0.8
+
         #rc.c = 3
         #rc.c.d = 3
 

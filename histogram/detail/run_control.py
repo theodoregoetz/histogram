@@ -41,9 +41,12 @@ class RunControl(RunControlBunch):
         return self.flat_str()
 
     def lock(self):
-        def raise_key_error():
-            raise KeyError('Run control parameters have been locked.')
-        RunControlBunch.__setattr__ = lambda *a,**kw: raise_key_error()
+        def locked_setattr(self,k,v):
+            if k not in self.__dict__:
+                raise KeyError('Run control parameters have been locked.')
+            else:
+                self.__dict__[k] = v
+        RunControlBunch.__setattr__ = lambda self,k,v: locked_setattr(self,k,v)
 
     def unlock(self):
         RunControlBunch.__setattr__ = dict.__setattr__
