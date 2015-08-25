@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 import numpy as np
 
 class HistogramAxis(object):
@@ -30,7 +30,12 @@ class HistogramAxis(object):
     '''
 
     def __init__(self, bins, limits=None, label=None):
-        self.label = label
+        if hasattr(bins,'__iter__') and (label is None):
+            self.label = limits
+            limits = None
+        else:
+            self.label = label
+
         if limits is not None:
             if not isinstance(bins, int):
                 raise TypeError('bins must be an integer if range limits are specified (input bins: {})'.format(bins))
@@ -42,9 +47,10 @@ class HistogramAxis(object):
                 self.edges = np.linspace(limits[0], limits[1], bins+1)
         else:
             if isinstance(bins, HistogramAxis):
-                self = bins.clone()
+                self.edges = bins.edges.copy()
+                self.label = copy(bins.label) if (label is None) else label
             else:
-                self.edges = bins
+                self.edges = deepcopy(bins)
 
     def __str__(self):
         '''String representation the edges array.
@@ -121,7 +127,7 @@ class HistogramAxis(object):
 
     def clone(self):
         '''Deep copy of this instance.'''
-        return HistogramAxis(self.edges[:], label=copy(self.label))
+        return HistogramAxis(self.edges.copy(),label=copy(self.label))
 
     def inaxis(self, x):
         '''Check if `x` is within this axis.
@@ -144,8 +150,11 @@ class HistogramAxis(object):
 
         Returns:
             int: Bin corresponding to the value `x`.
+
+        Notes:
+            This follows the convention: low <= x < high.
         '''
-        return np.searchsorted(self.edges, x) - 1
+        return np.searchsorted(self.edges, x, side='right') - 1
 
     def edge_index(self, x, snap='nearest'):
         '''Index of the edge based on the given snap.
@@ -218,7 +227,7 @@ class HistogramAxis(object):
         median = np.median(widths)
         return np.allclose(widths,median,rtol=rtol,atol=atol)
 
-    def cut(self, low, high=None, snap='expand'):
+    def cut(self, low, high=None, snap='nearest'):
         '''Return a truncated :py:class:`HistogramAxis`
 
         Arguments:

@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 
-from copy import copy
+from copy import copy, deepcopy
 import numpy as np
 import itertools as it
 from scipy import optimize as opt

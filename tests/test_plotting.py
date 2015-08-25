@@ -37,4 +37,4 @@ ax[0].plothist(h2)
 ax[1].plothist(h2)
 ax[1].plothist(h2.smooth(1), style='contour', overlay=True)
 
-pyplot.show()
+#pyplot.show()
