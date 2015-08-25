@@ -131,11 +131,15 @@ class Histogram(object):
             if u is None:
                 del self._uncert
             else:
-                self._uncert[...] = np.asarray(u, dtype=np.float64)
+                self._uncert[...] = u
         elif u is not None:
-            u = np.asarray(u, dtype=np.float64)
-            assert u.shape == self.shape, 'Uncertainty must have the same shape as the data.'
-            self._uncert = u
+            if hasattr(u,'__iter__'):
+                u = np.asarray(u, dtype=np.float64)
+                assert u.shape == self.shape, 'Uncertainty must have the same shape as the data.'
+                self._uncert = u
+            else:
+                self._uncert = np.full(self.shape, u, dtype=np.float64)
+
 
     @property
     def title(self):
@@ -636,7 +640,7 @@ class Histogram(object):
         filling many entries.
         '''
         try:
-            if pt < self.axes[0].min() or self.axes[0].max() < pt:
+            if pt < self.axes[0].min or self.axes[0].max < pt:
                 return
             self.data[self.axes[0].bin(pt)] += wt
         except ValueError:

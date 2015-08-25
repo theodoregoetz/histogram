@@ -41,3 +41,7 @@ syntax: regexp
 ^\.project$
 ^\.pydevproject
 ^\.ropeproject
+
+# Doc build
+^doc/build$
+/old/

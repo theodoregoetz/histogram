@@ -16,7 +16,7 @@ mplrc('axes',
 mplrc('axes.formatter', limits=(-3,4))
 mplrc('image',cmap='cubehelix_r')
 
-#histrc.plot.baseline = 'left'
+histrc.plot.baseline = 'left'
 
 npoints = 100000
 h1 = Histogram(100,(0,10),'x','y','title')
@@ -27,10 +27,10 @@ h2.fill(rand.normal(5,2,npoints),
         rand.uniform(0,10,npoints))
 
 fig,ax = pyplot.subplots(2,2)
-ax[0,0].plothist(h1, style='polygon' )
-ax[0,1].plothist(h1, style='errorbar')
-ax[1,0].plothist(h1, style='polygon' , baseline='left')
-ax[1,1].plothist(h1, style='errorbar', baseline='left')
+ax[0,0].plothist(h1, style='polygon' , baseline='bottom')
+ax[0,1].plothist(h1, style='errorbar', baseline='bottom')
+ax[1,0].plothist(h1, style='polygon' )#, baseline='left')
+ax[1,1].plothist(h1, style='errorbar')#, baseline='left')
 
 fig,ax = pyplot.subplots(1,2)
 ax[0].plothist(h2)
