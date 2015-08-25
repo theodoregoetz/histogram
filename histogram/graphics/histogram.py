@@ -7,7 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.ticker import MaxNLocator, LogLocator
 from matplotlib.colors import LogNorm
 
-from histogram import rc
+from .. import rc
 
 def plothist_errorbar(ax, hist, **kwargs):
     baseline = kwargs.pop('baseline',rc.plot.baseline)

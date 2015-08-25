@@ -1,11 +1,12 @@
-import sys, os
+import sys
+import os
 from distutils.util import strtobool
 
 import datetime
 import numpy as np
 import h5py
 
-from histogram import Histogram, HistogramAxis, rc
+from .. import Histogram, HistogramAxis, rc
 
 def ask_overwrite(filepath):
     global rc

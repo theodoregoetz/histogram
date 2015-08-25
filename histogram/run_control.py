@@ -1,4 +1,4 @@
-from histogram.detail.run_control import RunControl
+from .detail import RunControl
 
 ### Run Control Parameters (singleton object)
 rc = RunControl()

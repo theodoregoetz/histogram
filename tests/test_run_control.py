@@ -4,10 +4,13 @@ import unittest
 
 import numpy as np
 
-from histogram.detail.run_control import RunControl
+from histogram.detail import RunControl
 
 class TestHistogram(unittest.TestCase):
     def setUp(self):
+        pass
+
+    def runTest(self):
         pass
 
     def test(self):
@@ -27,6 +30,7 @@ class TestHistogram(unittest.TestCase):
 
         print('\n')
         print(rc)
+
 
 if __name__ == '__main__':
     test = TestHistogram()
