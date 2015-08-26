@@ -2,13 +2,19 @@ from copy import copy, deepcopy
 import numpy as np
 
 class HistogramAxis(object):
-    r'''A single axis used internally by :class:`Histogram` to store the bin edges in an open-grid format.
+    r'''A single axis used internally by :class:`Histogram` to store
+    the bin edges in an open-grid format.
 
-    An axis consists of a continuous range on the real-line, divided into bins such that there are no breaks. The bins do not have to be uniform, but they do have to cover the entire range.
+    An axis consists of a continuous range on the real-line, divided
+    into bins such that there are no breaks. The bins do not have to be
+    uniform, but they do have to cover the entire range.
 
     Args:
-        bins (int, float array): Number of bins in combination with `limits`, or 1D array of edges including the upper limit of the last bin.
-        limits (float 2-tuple): `(min,max)` representing the limits of this axis used in combination with integer `bins`.
+        bins (int, float array): Number of bins in combination with
+        `limits`, or 1D array of edges including the upper limit of the
+        last bin.
+        limits (float 2-tuple): `(min,max)` representing the limits of
+        this axis used in combination with integer `bins`.
         label (str): The axis label including units if applicable.
 
     Raises:
@@ -17,13 +23,15 @@ class HistogramAxis(object):
                     along the real line.
 
     Examples:
-        The following examples both create an axis of 100 uniform bins from 0 to 10. In this case, there are 101 edges to this axis::
+        The following examples both create an axis of 100 uniform bins
+        from 0 to 10. In this case, there are 101 edges to this axis::
 
             a1 = HistogramAxis(100,[0,10])
             a2 = HistogramAxis(np.linspace(0,10,101))
             assert a1 == a2
 
-        A non-uniform binning example: 10 bins on a log-scale from 1 to 10000::
+        A non-uniform binning example: 10 bins on a log-scale from 1 to
+        10000::
 
             a3 = HistogramAxis(np.logspace(0,4,11))
 
@@ -55,13 +63,18 @@ class HistogramAxis(object):
     def __str__(self):
         '''String representation the edges array.
 
-        The attribute :py:attr:`HistogramAxis.label` is not included in the output.
+        The attribute :py:attr:`HistogramAxis.label` is not included in
+        the output.
         '''
         return str(self.edges)
 
     def __eq__(self, that):
-        r'''Compare edges to within numpy's default tolerance. Labels are ignored.'''
-        return np.allclose(self.edges,that.edges)
+        r'''Compare edges to within numpy's default tolerance.
+        Labels are ignored.'''
+        try:
+            return np.allclose(self.edges,that.edges)
+        except ValueError:
+            return False
 
     @property
     def edges(self):
@@ -79,7 +92,8 @@ class HistogramAxis(object):
 
     @property
     def label(self):
-        '''The label of this axis including units if applicable. Example: "distance (meters)".'''
+        '''The label of this axis including units if applicable.
+        Example: "distance (meters)".'''
         return getattr(self,'_label',None)
 
     @label.setter
@@ -138,7 +152,8 @@ class HistogramAxis(object):
         Returns:
             bool: Result of ``min <= x < max``.
 
-        This follows the edge rules of :py:func:`numpy.digitize`:  ``min <= x < max``.
+        This follows the edge rules of :py:func:`numpy.digitize`:
+        ``min <= x < max``.
         '''
         return self.edges[0] <= x < self.edges[-1]
 
@@ -163,10 +178,12 @@ class HistogramAxis(object):
 
         Arguments:
             x (float): Position along this axis.
-            snap (str): Method for determining which edge is returned. Possible values are: {'nearest','low','high','both'}.
+            snap (str): Method for determining which edge is returned.
+            Possible values are: {'nearest','low','high','both'}.
 
         Note:
-            Output is a single number except for when ``snap='both'`` where the output will be a tuple: `(low,high)`.
+            Output is a single number except for when ``snap='both'``
+            where the output will be a tuple: `(low,high)`.
         '''
 
         snap_options = ['nearest','low','high','both']
@@ -203,7 +220,8 @@ class HistogramAxis(object):
         Returns:
             float: Width of the (b+1)-th bin.
 
-        Bin indexing starts with zero and by default, the width of the second bin (index: 1) is returned.
+        Bin indexing starts with zero and by default, the width of the
+        second bin (index: 1) is returned.
         '''
         return (self.edges[b+1] - self.edges[b])
 
@@ -233,15 +251,22 @@ class HistogramAxis(object):
         Arguments:
             low (float): Lowest bin will include this point
                     (`None` is equivalent to the lowest edge).
-            high (float): Highest bin will include this point (`None` is equivalent to the highest edge).
-            snap (str, str 2-tuple): Clip edges when creating new axis. Possible values are: {'nearest','expand','low','high','clip'}.
+            high (float): Highest bin will include this point (`None`
+            is equivalent to the highest edge).
+            snap (str, str 2-tuple): Clip edges when creating new axis.
+            Possible values are:
+            {'nearest','expand','low','high','clip'}.
 
         Returns:
             :py:class:`HistogramAxis`: A new instance.
-            mask (boolean array): mask array to be used on data to make this cut
+            mask (boolean array): mask array to be used on data to make
+            this cut
 
         Note:
-            Full bins of this axis will be used unless ``snap == 'clip'`` in which case the low or high bins will be clipped. Clipping will likely make a uniform axis no longer uniform.
+            Full bins of this axis will be used unless
+            ``snap == 'clip'`` in which case the low or high bins will
+            be clipped. Clipping will likely make a uniform axis no
+            longer uniform.
         '''
         if isinstance(snap,str):
             snap = (snap,snap)

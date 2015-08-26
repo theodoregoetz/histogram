@@ -50,7 +50,7 @@ class TestHistogramAxis(unittest.TestCase):
         a2 = HistogramAxis(np.linspace(0,10,100))
         a3 = HistogramAxis(np.logspace(1,4,100))
         assert a1 == a2
-        assert a1 != a2
+        assert a1 != a3
 
     def test_edges(self):
         a1 = HistogramAxis(100,[0,10],'x')
