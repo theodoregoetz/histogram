@@ -36,7 +36,7 @@ extensions = [
     #'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    #'sphinx.ext.linkcode',
+    'sphinx.ext.linkcode',
     'sphinx.ext.autosummary',
     #'numpydoc',
     'sphinxcontrib.issuetracker',
@@ -55,6 +55,25 @@ issuetracker_plaintext_issues = False
 
 # linkcode
 def linkcode_resolve(domain, info):
+
+    if not hasattr(linkcode_resolve,'githash'):
+        import sys
+        from subprocess import Popen, PIPE
+        proc = Popen("hg parent --template '{node}'",stdout=PIPE,shell=True)
+        hghash = proc.communicate()[0].decode(sys.stdout.encoding)
+        for line in open('../.hg/git-mapfile','r').readlines():
+            g,h = line.split()
+            if h == hghash:
+                linkcode_resolve.githash = g
+                break
+
+
+    def get_dict_attr(obj,attr):
+        for obj in [obj]+list(obj.__class__.__mro__):
+            if attr in obj.__dict__:
+                return obj.__dict__[attr]
+        raise AttributeError
+
     def retrieve_object(mod,name):
         if '.' not in name:
             mod = __import__(mod, fromlist=[name])
@@ -62,9 +81,15 @@ def linkcode_resolve(domain, info):
         else:
             first,last = name.split('.',maxsplit=1)
             mod = __import__(mod, fromlist=[first])
+            print('getattr',mod,first)
             obj = getattr(mod,first)
             for i in last.split('.'):
-                obj = getattr(obj,i)
+                print('getattr',obj,i)
+                obji = getattr(obj,i)
+                if isinstance(obji,property):
+                    obj = getattr(get_dict_attr(obj,i),'fget')
+                else:
+                    obj = obji
             return obj
 
     if domain != 'py':
@@ -78,11 +103,27 @@ def linkcode_resolve(domain, info):
     try:
         thismodule = import_module(info['module'])
         thisobject = retrieve_object(info['module'],info['fullname'])
-        fname,line = getsourcefile(thisobject), getsourcelines(thisobject)[-1]
+
+        fname = getsourcefile(thisobject)
         modfile = getsourcefile(thismodule)
-        fname = os.path.relpath(fname,os.path.dirname(modfile))
-        return "https://bitbucket.org/theodoregoetz/histogram/src/tip/histogram/{}#cl-{}".format(fname,line)
+        sourcelines = getsourcelines(thisobject)
+        opts = dict(
+            githash = linkcode_resolve.githash,
+            filepath = os.path.relpath(fname,os.path.dirname(modfile)),
+            firstline = sourcelines[-1],
+            lastline = sourcelines[-1] + len(sourcelines[0]) - 1,
+        )
+
+        lnk = 'http://github.com/theodoregoetz/histogram/blob' \
+            + '/{githash}/histogram/{filepath}' \
+            + '#L{firstline}-L{lastline}'
+
+        return lnk.format(**opts)
     except TypeError as e:
+        print(e)
+        return None
+    except AttributeError as e:
+        print(e)
         return None
 
 

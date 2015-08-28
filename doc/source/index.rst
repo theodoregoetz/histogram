@@ -1,7 +1,4 @@
-.. histogram documentation master file, created by
-   sphinx-quickstart on Thu Nov 20 08:15:21 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. histogram documentation master file
 
 ``histogram`` documentation
 ===========================
