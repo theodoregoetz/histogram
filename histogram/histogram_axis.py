@@ -311,10 +311,13 @@ class HistogramAxis(object):
 
         Arguments:
             nbins (int): Number of bins to merge.
-            snap (str): Snap the window to the "high" or "low" edge.
+            snap (str): If `nbins` does not evenly divide the number
+                    of bins in this axis, this will "snap" the window
+                    to the "high" or "low" edge.
             clip (bool): Ignore opposite limit from `snap` if `nbins`
                     does not evenly divide the number of bins in this
-                    axis.
+                    axis. Setting this to True (default) will result
+                    in an axis that maintains uniform bin widths.
 
         Returns:
             :py:class:`HistogramAxis`: A new instance.

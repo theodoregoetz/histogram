@@ -18,20 +18,17 @@ class Histogram(object):
     a continuous (non-discrete) range with a set
     number of bins.
 
-    Arguments:
-        axes (list): List of :py:class:`HistogramAxis` or constructor parameters thereof. These are the axis definitions.
+    Args:
+        axes (list): List of :py:class:`HistogramAxis` or constructor
+            parameters thereof. These are the axis definitions.
 
-    Keyword Arguments:
-        label (str):
-            Label for the filled data.
-        title (str):
-            Title of this histogram.
-        data (scalar array):
-            N-dimensional array for the filled data.
-        uncert (scalar array):
-            N-dimensional array for the uncertainty.
-        dtype (scalar type):
-            Type of the data array (superseded by dtype of data).
+    Keyword Args:
+        label (str): Label for the filled data.
+        title (str): Title of this histogram.
+        data (scalar array): N-dimensional array for the filled data.
+        uncert (scalar array): N-dimensional array for the uncertainty.
+        dtype (scalar type): Type of the data array (data will be
+        converted).
 
     Example:
 
@@ -45,11 +42,14 @@ class Histogram(object):
             from matplotlib import pyplot
             from histogram import Histogram
 
-            h = Histogram(100, [0,10])
-            h.fill(np.random.uniform(5,1,10000))
-            fig,ax = pyplot.subplots()
-            pt = ax.plothist(h)
+            h = Histogram(100, [0,10],'x (cm)','counts','Random Distribution')
+            h.fill(np.random.normal(5,1,10000))
+            fig,ax = pyplot.subplots(figsize=(4,2.5))
+            fig.subplots_adjust(left=.18,bottom=.2,right=.95,top=.88)
+            pt = ax.plothist(h,color='steelblue')
             pyplot.show()
+
+        .. image:: images/histogram_1dnorm.png
     '''
 
     def __init__(self, *axes, **kwargs):
@@ -113,6 +113,30 @@ class Histogram(object):
 ### properties
     @property
     def data(self):
+        ''':py:class:`numpy.ndarray` of the filled data for this :py:class:`Histogram`.
+
+        The indexes are in the same order as the :py:class:`HistogramAxis` objects in the list stored in :py:attr:`Histogram.axes`. One can set this directly - shape is checked and data is written "in-place" when possible.
+
+        Example:
+
+            Here, we create a histogram and set the data directly::
+
+                from scipy import stats
+                from matplotlib import pyplot
+                from histogram import Histogram
+
+                h = Histogram(50, [0,10])
+
+                xx = h.grid
+                h.data = 1000 * stats.norm(5,2).pdf(xx)
+
+                fig,ax = pyplot.subplots(figsize=(4,2.5))
+                fig.subplots_adjust(left=.15,bottom=.2,right=.9,top=.85)
+                pt = ax.plothist(h,color='steelblue')
+                pyplot.show()
+
+        .. image:: images/histogram_data_1dnorm.png
+        '''
         return self._data
 
     @data.setter
@@ -146,7 +170,7 @@ class Histogram(object):
 
     @property
     def title(self):
-        '''Title of this histogram'''
+        '''Title (string) of this histogram'''
         return getattr(self,'_title',None)
 
     @title.setter
@@ -159,7 +183,7 @@ class Histogram(object):
 
     @property
     def label(self):
-        '''The label of the filled data in this histogram. Usually something like "counts".'''
+        '''The (string) label of the filled data in this histogram. Usually something like "counts".'''
         return getattr(self,'_label',None)
 
     @label.setter
@@ -206,8 +230,8 @@ class Histogram(object):
         if self.title is not None:
             ret['title'] = self.title
         for i,a in enumerate(self.axes):
-            e = 'edge{}'.format(i)
-            el = e+'_label'
+            e = 'edges{}'.format(i)
+            el = 'label{}'.format(i)
             ret[e] = a.edges
             if a.label is not None:
                 ret[el] = a.label
@@ -221,11 +245,11 @@ class Histogram(object):
         required keywords:
 
             * data
-            * edge0, edge1 ... edgeN
-            * edge0_label, edge1_label ... edgeN_label
+            * edges0, edges1 ... edgesN
 
         optional keywords:
 
+            * label0, label1 ... labelN
             * uncert
             * label
             * title
@@ -239,20 +263,17 @@ class Histogram(object):
         or None), and `title` is the overall title of the histogram
         object (string or None).
         '''
-        data = kwargs['data']
+        data = kwargs.pop('data')
 
         axes = []
         for i in range(len(data.shape)):
-            e = 'edge{}'.format(i)
-            el = e+'_label'
-            axes.append(HistogramAxis(kwargs[e],label=kwargs.get(el,None)))
+            e = 'edges{}'.format(i)
+            el = 'label{}'.format(i)
+            axes.append(HistogramAxis(
+                kwargs.pop(e),
+                label=kwargs.pop(el,None) ))
 
-        return Histogram(
-            *axes,
-            data = data,
-            uncert = kwargs.get('uncert',None),
-            label = kwargs.get('label',None),
-            title = kwargs.get('title',None))
+        return Histogram(*axes, data = data, **kwargs)
 
 ###    dimension and shape
     @property

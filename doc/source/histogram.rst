@@ -5,6 +5,15 @@ Histogram
 
 .. autoclass:: Histogram
 
+    **Internal Data Attributes**
+
+    .. autosummary::
+        axes
+        data
+        label
+        title
+        uncert
+
     **Attributes**
 
     .. autosummary::
@@ -69,15 +78,44 @@ Histogram
         sum
         sum_over_axes
 
-Axes and Shape
---------------
+Axes, Shape and Labels
+----------------------
 
-Methods specific to the axis or axes of this histogram including size and shape of the data.
+Methods specific to the axes of this histogram including size, shape and labels.
+
+.. attribute:: Histogram.axes
+
+    This is a list of the :py:class:`HistogramAxis` objects in the same order as the dimensions of the :py:attr:`Histogram.data` attribute. This should not typically be changed after constructing the :py:class:`Histogram` in the first place.
+
+    Example:
+
+        One can access the underlying axes by the index. Here we create a 2D histogram, fill it and change the axes labels afterwards before plotting::
+
+            import numpy as np
+            from matplotlib import pyplot
+            from histogram import Histogram
+
+            datax = np.random.normal(5,1,10000)
+            datay = np.random.normal(0,2,10000)
+
+            h = Histogram((100,[0,10]), (40, [-5,5]))
+            h.fill(datax,datay)
+
+            h.axes[0].label = 'x'
+            h.axes[1].label = 'y'
+
+            fig,ax = pyplot.subplots(figsize=(4,2.5))
+            fig.subplots_adjust(left=.15,bottom=.2,right=.9)
+            pt,cb = ax.plothist(h)
+            pyplot.show()
+
+        .. image:: images/histogram_2dnorm.png
 
 .. autoattribute:: Histogram.binvolumes
 .. automethod:: Histogram.binwidth
 .. autoattribute:: Histogram.binwidths
 .. autoattribute:: Histogram.dim
+.. autoattribute:: Histogram.extent
 .. autoattribute:: Histogram.edge_grid
 .. autoattribute:: Histogram.edges
 .. autoattribute:: Histogram.grid
@@ -86,26 +124,15 @@ Methods specific to the axis or axes of this histogram including size and shape 
 .. autoattribute:: Histogram.shape
 .. autoattribute:: Histogram.size
 
-Modifying Methods
------------------
+Data, Uncertainty and Statistics
+--------------------------------
 
-Methods which directly modify the data within this histogram.
+Access to the filled data, associated uncertainty and various properties of the histogram.
 
-.. automethod:: Histogram.clear_nans
-.. automethod:: Histogram.fill
-.. automethod:: Histogram.fill_from_sample
-.. automethod:: Histogram.fill_one
-.. automethod:: Histogram.set
-.. automethod:: Histogram.reset
-
-Data and Statistics
--------------------
-
-Non-modifying methods which give some information about the data or uncertainty contained in this histogram instance.
-
+.. autoattribute:: Histogram.data
+.. autoattribute:: Histogram.uncert
 .. automethod:: Histogram.dtype
 .. automethod:: Histogram.errorbars
-.. automethod:: Histogram.extent
 .. automethod:: Histogram.integral
 .. automethod:: Histogram.max
 .. automethod:: Histogram.mean
@@ -113,10 +140,20 @@ Non-modifying methods which give some information about the data or uncertainty 
 .. automethod:: Histogram.std
 .. automethod:: Histogram.sum
 
+Filling Histogram with Data
+---------------------------
+
+.. automethod:: Histogram.fill
+.. automethod:: Histogram.fill_from_sample
+.. automethod:: Histogram.fill_one
+.. automethod:: Histogram.set
+.. automethod:: Histogram.reset
+.. automethod:: Histogram.clear_nans
+
 Transformations
 ---------------
 
-Methods which generally return a new histogram representing the same data in some transformed view.
+Methods which generally return a new histogram representing the same data in some transformed view, sometimes with a loss of information (eg. merged bins).
 
 .. automethod:: Histogram.cut
 .. automethod:: Histogram.cut_data
