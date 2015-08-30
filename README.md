@@ -4,8 +4,10 @@ histogram
 A histogram object written in Python for scientific data-reduction and statistical analysis
 
 The primary object of this module is a continuous-domain [histogram](https://en.wikipedia.org/wiki/Histogram). Any number of dimensions is supported though only the lower dimensions can be visualized. For more information, see the following documentation:
+
 * **[wiki pages](https://github.com/theodoregoetz/histogram/wiki)**
 * **[API Reference](http://theodoregoetz.github.io/histogram)**
+
 This package is dependent on [NumPy and SciPy](http://www.scipy.org), provides methods for producing and showing graphics through [Matplotlib](http://matplotlib.org) and can be serialized via python's pickling, NumPy's binary format or [HDF5](https://www.hdfgroup.org).
 
 Quick Start
