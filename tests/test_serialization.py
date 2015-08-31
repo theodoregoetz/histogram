@@ -38,9 +38,6 @@ hh = Histogram.load(pyvers+'/serialization_h')
 
 compare(h,hh)
 
-try:
-    othervers = '2' if pyvers == '3' else '3'
-    hhh = Histogram.load(othervers+'/serialization_h')
-    compare(h,hhh)
-except:
-    print('could not load histogram')
+othervers = '2' if pyvers == '3' else '3'
+hhh = Histogram.load(othervers+'/serialization_h')
+compare(h,hhh)
