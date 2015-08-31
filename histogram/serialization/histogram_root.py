@@ -37,7 +37,7 @@ def asroot(hist, name):
         if hist.dim < 3:
             axlabel_dispatch[hist.dim](hist.label)
         else:
-            warn('CERN/ROOT 3D Histograms do not store a content label. Information (hist.label) has been lost.')
+            warn('CERN/ROOT 3D Histograms do not store a content label. Information (hist.label = \''+hist.label+'\') has been lost.')
 
     return hnew
 
