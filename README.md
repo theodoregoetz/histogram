@@ -55,6 +55,7 @@ This project took many cues from the following python packages, trying to merge 
 * [vaex](https://pypi.python.org/pypi/vaex)
 * [datagram](https://pypi.python.org/pypi/datagram)
 * [hdrhistogram](https://pypi.python.org/pypi/hdrhistogram)
+* [dashi](http://www.ifh.de/~middell/dashi/index.html)
 
 Furthermore, the author was greatly influenced by the histogram classes
 found in [CERN's ROOT data analysis framework](https://root.cern.ch).
