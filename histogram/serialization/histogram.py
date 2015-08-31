@@ -1,5 +1,6 @@
 import sys
 import os
+from warnings import warn
 
 import numpy as np
 
@@ -11,10 +12,14 @@ try:
     have_h5py = True
 except ImportError:
     have_h5py = False
-    sys.stderr.write('''\
-    Warning: Could not import h5py.
-    You will not be able to load/save histograms stored in hdf5 format.
-    ''')
+    warn('Could not import h5py. You will not be able to load/save histograms stored in hdf5 format.', ImportWarning)
+
+try:
+    from .histogram_root import *
+    have_pyroot = True
+except ImportError:
+    have_pyroot = False
+    warn('Could not import ROOT (python bindings to CERN\'s ROOT). You will not be able to convert to/from PyROOT format.', ImportWarning)
 
 
 def save_histogram_to_npz(filepath, hist, **kwargs):
