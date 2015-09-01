@@ -179,8 +179,10 @@ class Histogram(object):
         if (t is None) or (t == ''):
             if hasattr(self,'_title'):
                 del self._title
-        else:
+        elif not isstr(t):
             self._title = str(t)
+        else:
+            self._title = t
 
     @property
     def label(self):
@@ -192,8 +194,10 @@ class Histogram(object):
         if (l is None) or (l == ''):
             if hasattr(self,'_label'):
                 del self._label
-        else:
+        elif not isstr(l):
             self._label = str(l)
+        else:
+            self._label = l
 
     def __eq__(self,hist):
         try:

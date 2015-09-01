@@ -103,8 +103,10 @@ class HistogramAxis(object):
         if (l is None) or (l == ''):
             if hasattr(self,'_label'):
                 del self._label
-        else:
+        elif not isstr(l):
             self._label = str(l)
+        else:
+            self._label = l
 
     @property
     def nbins(self):
