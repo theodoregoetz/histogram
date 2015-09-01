@@ -1,4 +1,5 @@
-from __future__ import print_function
+# -*- coding: utf-8 -*-
+from __future__ import print_function, unicode_literals
 
 import platform
 import os
@@ -22,13 +23,13 @@ def compare(h,hh):
         assert h.uncert == hh.uncert
     else:
         assert np.allclose(h.uncert,hh.uncert)
-    assert h.title == hh.title
+    assert h.title == hh.title, '{} {}, {} {}'.format(type(h.title),h.title,type(hh.title),hh.title)
     assert h.label == hh.label
     for a,aa in zip(h.axes,hh.axes):
         assert np.allclose(a.edges, aa.edges)
         assert a.label == aa.label
 
-h = Histogram(100,(0,10),'x','y','title')
+h = Histogram(100,(0,10),'Δx','y','title')
 h.fill(rand.normal(5,2,10000))
 h.uncert = np.sqrt(h.data)
 

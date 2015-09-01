@@ -66,7 +66,7 @@ class HistogramAxis(object):
         The attribute :py:attr:`HistogramAxis.label` is not included in
         the output.
         '''
-        return str(self.edges)
+        return unicode(self.edges)
 
     def __eq__(self, that):
         r'''Compare edges to within numpy's default tolerance.
@@ -102,7 +102,7 @@ class HistogramAxis(object):
             if hasattr(self,'_label'):
                 del self._label
         else:
-            self._label = str(l)
+            self._label = unicode(l)
 
     @property
     def nbins(self):
