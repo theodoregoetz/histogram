@@ -19,9 +19,9 @@ def compare(h,hh):
         assert a == aa
         assert a.label == aa.label
 
+infiles = ['h2','h3','h2.hdf5','h3.hdf5']
 
-h2 = Histogram.load('h2')
-compare(h,h2)
-
-h3 = Histogram.load('h3')
-compare(h,h3)
+for infile in infiles:
+    print(infile)
+    hh = Histogram.load(infile)
+    compare(h,hh)

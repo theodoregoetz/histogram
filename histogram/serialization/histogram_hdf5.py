@@ -18,21 +18,24 @@ def save_histogram_to_hdf5_group(grp, hist, **kwargs):
         edge = grp.create_dataset('edges'+str(i),
             (len(ax.edges),), 'f', data=ax.edges)
         if ax.label is not None:
-            edge.attrs['label'] = ax.label
+            edge.attrs['label'] = ax.label.decode('utf-8')
     if hist.label is not None:
-        grp.attrs['label'] = hist.label
+        grp.attrs['label'] = hist.label.decode('utf-8')
     if hist.title is not None:
-        grp.attrs['title'] = hist.title
+        grp.attrs['title'] = hist.title.decode('utf-8')
 
 def load_histogram_from_hdf5_group(grp):
     data = grp['data']
     axes = []
     for i in range(len(data.shape)):
         edges = grp['edges{}'.format(i)]
-        axes += [HistogramAxis(edges,label=edges.attrs.get('label', None))]
+        axes.append(
+            HistogramAxis(
+                np.asarray(edges),
+                label = edges.attrs.get('label', None) ) )
     return Histogram(
         *axes,
-        data=data,
+        data = data,
         uncert = grp.get('uncert',None),
         title = grp.attrs.get('title', None),
         label = grp.attrs.get('label', None))
