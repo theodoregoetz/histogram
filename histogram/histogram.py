@@ -7,6 +7,7 @@ from scipy import optimize as opt
 from scipy import stats, ndimage, interpolate
 
 from .histogram_axis import HistogramAxis
+from .detail import isstr
 
 # ignore divide by zero (silently create nan's)
 np.seterr(divide='ignore', invalid='ignore')
@@ -62,13 +63,13 @@ class Histogram(object):
         i = 0
         while i < len(axes):
             if isinstance(axes[i], int):
-                if len(axes) > (i+2) and isinstance(axes[i+2],basestring):
+                if len(axes) > (i+2) and isstr(axes[i+2]):
                     self.axes.append(HistogramAxis(*axes[i:i+3]))
                     i = i + 3
                 else:
                     self.axes.append(HistogramAxis(*axes[i:i+2]))
                     i = i + 2
-            elif isinstance(axes[i], basestring):
+            elif isstr(axes[i]):
                 labels.append(axes[i])
                 i = i + 1
             elif isinstance(axes[i], HistogramAxis):
@@ -193,6 +194,18 @@ class Histogram(object):
                 del self._label
         else:
             self._label = str(l)
+
+    def __eq__(self,hist):
+        try:
+            if not np.allclose(self.data,hist.data):
+                return False
+            for a,aa in zip(self.axes,hist.axes):
+                if a != aa:
+                    return False
+        except ValueError:
+            return False
+
+        return True
 
 ### non-modifying information getters
     def __str__(self):

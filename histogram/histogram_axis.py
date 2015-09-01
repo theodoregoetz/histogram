@@ -1,6 +1,8 @@
 from copy import copy, deepcopy
 import numpy as np
 
+from .detail import isstr
+
 class HistogramAxis(object):
     r'''A single axis used internally by :class:`Histogram` to store
     the bin edges in an open-grid format.
@@ -66,7 +68,7 @@ class HistogramAxis(object):
         The attribute :py:attr:`HistogramAxis.label` is not included in
         the output.
         '''
-        return unicode(self.edges)
+        return str(self.edges)
 
     def __eq__(self, that):
         r'''Compare edges to within numpy's default tolerance.
@@ -102,7 +104,7 @@ class HistogramAxis(object):
             if hasattr(self,'_label'):
                 del self._label
         else:
-            self._label = unicode(l)
+            self._label = str(l)
 
     @property
     def nbins(self):
@@ -268,7 +270,7 @@ class HistogramAxis(object):
             be clipped. Clipping will likely make a uniform axis no
             longer uniform.
         '''
-        if isinstance(snap,str):
+        if isstr(snap):
             snap = (snap,snap)
 
         snap_options = ['nearest','expand','low','high','clip']
