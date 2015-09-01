@@ -204,7 +204,7 @@ class Histogram(object):
             if not np.allclose(self.data,hist.data):
                 return False
             for a,aa in zip(self.axes,hist.axes):
-                if a != aa:
+                if not (a == aa):
                     return False
         except ValueError:
             return False
