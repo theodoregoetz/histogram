@@ -61,7 +61,6 @@ class Histogram(object):
         labels = []
         i = 0
         while i < len(axes):
-            print(axes[i], type(axes[i]), isinstance(axes[i],basestring))
             if isinstance(axes[i], int):
                 if len(axes) > (i+2) and isinstance(axes[i+2],basestring):
                     self.axes.append(HistogramAxis(*axes[i:i+3]))
@@ -180,7 +179,7 @@ class Histogram(object):
             if hasattr(self,'_title'):
                 del self._title
         else:
-            self._title = unicode(t)
+            self._title = str(t)
 
     @property
     def label(self):
@@ -193,15 +192,15 @@ class Histogram(object):
             if hasattr(self,'_label'):
                 del self._label
         else:
-            self._label = unicode(l)
+            self._label = str(l)
 
 ### non-modifying information getters
     def __str__(self):
         '''
-        the unicode() representation of the numpy array containing
+        the str() representation of the numpy array containing
         the data only (axes, uncertainty and labels are ignored).
         '''
-        return unicode(self.data)
+        return str(self.data)
 
     def __call__(self,*xx,**kwargs):
         '''
@@ -265,23 +264,16 @@ class Histogram(object):
         object (string or None).
         '''
         data = kwargs.pop('data')
-        uncert = kwargs.pop('uncert')
 
         axes = []
         for i in range(len(data.shape)):
             e = 'edges{}'.format(i)
             el = 'label{}'.format(i)
-            label = kwargs.pop(el,None)
-            if label is not None:
-                label = label.tostring().decode()
             axes.append(HistogramAxis(
                 kwargs.pop(e),
-                label=label))
+                label=kwargs.pop(el,None) ))
 
-        kwargs['title'] = kwargs['title'].tostring().decode()
-        kwargs['label'] = kwargs['label'].tostring().decode()
-
-        return Histogram(*axes, data = data, uncert=uncert, **kwargs)
+        return Histogram(*axes, data = data, **kwargs)
 
 ###    dimension and shape
     @property
@@ -1283,7 +1275,7 @@ class Histogram(object):
             except TypeError as e:
                 if debug:
                     print('TypeError:',e)
-                raise RuntimeError('not enough data. TypeError: '+unicode(e))
+                raise RuntimeError('not enough data. TypeError: '+str(e))
 
         ### Make sure the fit converged
         if count == maxcount:

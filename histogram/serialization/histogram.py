@@ -1,5 +1,6 @@
 import sys
 import os
+import io
 from warnings import warn
 
 import numpy as np
@@ -27,7 +28,7 @@ def save_histogram_to_npz(filepath, hist, **kwargs):
     saves a Histogram object to a file
     in npz format
     '''
-    fout = open(filepath,'wb')
+    fout = io.open(filepath,'wb')
     np.savez(fout, **hist.asdict(**kwargs))
     fout.close()
 
@@ -36,7 +37,13 @@ def load_histogram_from_npz(filepath):
     reads in a Histogram object from a file
     in npz format
     '''
-    return Histogram.fromdict(**np.load(filepath))
+    data = dict(np.load(filepath))
+    for k in data:
+        if data[k].dtype.kind == 'S':
+            data[k] = data[k].tostring().decode('utf-8')
+        elif data[k].dtype.kind == 'U':
+            data[k] = data[k].tostring().decode('utf-32')
+    return Histogram.fromdict(**data)
 
 
 def save_histogram(filepath, hist, prefix=None, **kwargs):
