@@ -6,8 +6,4 @@ from .histogram_axis import HistogramAxis
 from .histogram import Histogram
 
 from .serialization import *
-
-try:
-    from .graphics import *
-except ImportError:
-    warn('Could not import matplotlib. Proceeding without graphics...', ImportWarning)
+from .graphics import *

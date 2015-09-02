@@ -1,6 +1,7 @@
 import math
 import numpy as np
 
+from matplotlib import pyplot
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from matplotlib.axes import Axes
@@ -48,8 +49,9 @@ def plothist_polygon(ax, hist, **kwargs):
         xhigh = kwargs.pop('xhigh',None) )
 
     kw = dict(
-        linewidth = 0,
-        alpha = kwargs.pop('alpha',rc.plot.patch.alpha) )
+        linewidth = kwargs.pop('linewidth',kwargs.pop('lw',0)),
+        alpha = kwargs.pop('alpha',rc.plot.patch.alpha),
+        color = kwargs.pop('color',next(ax._get_lines.color_cycle)) )
     kw.update(kwargs)
 
     points, extent = hist.aspolygon(**polygon_kwargs)
@@ -64,6 +66,27 @@ def plothist_polygon(ax, hist, **kwargs):
 
     pt = PathPatch(Path(points, codes), **kw)
     ax.add_patch(pt)
+    return pt
+
+def plothist_line(ax, hist, **kwargs):
+    baseline = kwargs.pop('baseline',rc.plot.baseline)
+    line_kwargs = dict(
+        xlow = kwargs.pop('xlow',None),
+        xhigh = kwargs.pop('xhigh',None) )
+
+    kw = dict(
+        linewidth = kwargs.pop('linewidth',kwargs.pop('lw',1)),
+        alpha = kwargs.pop('alpha',1),
+        color = kwargs.pop('color',next(ax._get_lines.color_cycle)) )
+    kw.update(kwargs)
+
+    x, y, extent = hist.asline(**line_kwargs)
+
+    if baseline == 'left':
+        pt = ax.plot(y,x,**kw)
+    else:
+        pt = ax.plot(x,y,**kw)
+
     return pt
 
 def plothist_fill_between(ax, *hists, **kwargs):
@@ -114,6 +137,8 @@ def plothist_1d(ax, hist, **kwargs):
 
     if style == 'errorbar':
         pt = plothist_errorbar(ax, hist, **kwargs)
+    elif style == 'line':
+        pt = plothist_line(ax, hist, **kwargs)
     else:
         pt = plothist_polygon(ax, hist, **kwargs)
 
