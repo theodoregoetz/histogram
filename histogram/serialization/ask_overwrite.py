@@ -1,5 +1,4 @@
 import sys
-import platform
 import os
 from distutils.util import strtobool
 
@@ -30,7 +29,7 @@ def ask_overwrite(filepath):
         sys.stdout.write('Overwrite file {}? [Yes, No, nEver, Always]\n'.format(filepath))
         while True:
 
-            if platform.python_version().split('.')[0] == '2':
+            if sys.version_info < (3,0):
                 intext = raw_input().lower()
             else:
                 intext = input().lower()

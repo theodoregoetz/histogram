@@ -45,3 +45,11 @@ syntax: regexp
 # Doc build
 ^doc/build$
 /old/
+
+syntax: glob
+
+# misc data files
+*.hist
+*.npz
+*.hdf5
+*.root
