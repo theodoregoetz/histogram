@@ -7,7 +7,7 @@ import numpy as np
 
 from .. import Histogram, HistogramAxis, rc
 from .ask_overwrite import ask_overwrite
-from .strings import encode_dict, decode_dict
+from ..detail.strings import encode_dict, decode_dict
 
 try:
     from .histogram_hdf5 import *

@@ -8,7 +8,7 @@ import numpy as np
 import ROOT
 
 from .. import Histogram, HistogramAxis
-from .strings import encode_str, decode_str
+from ..detail.strings import encode_str, decode_str
 
 def asroot(hist, name):
     '''Convert this histogram to a CERN/ROOT object (TH1F, TH2F, etc)'''

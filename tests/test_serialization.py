@@ -1,31 +1,61 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals
 
+import sys
 import platform
-import os
 import numpy as np
-from numpy import random as rand
 
 from histogram import Histogram, rc
 
-rand.seed(1)
-
-homedir = os.environ['HOME']
-pyvers = platform.python_version().split('.')[0]
-
-rc.histdir = os.path.join(homedir,'.histogram','tests')
 rc.overwrite.overwrite = 'always'
 
-h = Histogram(100,(0,10),'Δx','y','title')
-h.fill(rand.normal(5,2,10000))
+np.random.seed(1)
+
+h = Histogram(100,[0,10],'Δx', 'y', 'title')
+h.fill(np.random.normal(5,2,10000))
 h.uncert = np.sqrt(h.data)
 
-h.save(pyvers+'/serialization_h')
+if sys.version_info < (3,0):
+    def _to_unicode(s):
+        if not isinstance(s,unicode):
+            return unicode(s,'utf-8')
+        else:
+            return s
+    h.title = _to_unicode(h.title)
+    h.label = _to_unicode(h.label)
+    for ax in h.axes:
+        ax.label = _to_unicode(ax.label)
 
-hh = Histogram.load(pyvers+'/serialization_h')
+filename = 'h'
+h.save(filename)
+hh = Histogram.load(filename)
+assert h.isidentical(hh)
 
-compare(h,hh)
 
-othervers = '2' if pyvers == '3' else '3'
-hhh = Histogram.load(othervers+'/serialization_h')
-compare(h,hhh)
+try:
+    import h5py
+    filename = 'h.hdf5'
+    h.save(filename)
+    hh = Histogram.load(filename)
+    assert h.isidentical(hh)
+except ImportError:
+    pass
+
+
+# For CERN/ROOT, we resorted to converting everything
+# into float64's so histograms are not typically
+# "identical" but they should be "close"
+
+try:
+    import ROOT
+    filename = 'h.root'
+    h.save(filename)
+    hh = Histogram.load(filename)
+    assert np.allclose(h.data,hh.data)
+    assert np.allclose(h.uncert,hh.uncert)
+    assert h.label == hh.label
+    assert h.title == hh.title
+    for a,aa in zip(h.axes,hh.axes):
+        assert np.allclose(a.edges,aa.edges)
+        assert a.label == aa.label
+except ImportError:
+    pass

@@ -8,7 +8,7 @@ import h5py
 
 from .. import Histogram, HistogramAxis, rc
 from .ask_overwrite import ask_overwrite
-from .strings import encode_str, decode_str
+from ..detail.strings import encode_str, decode_str
 
 def save_histogram_to_hdf5_group(grp, hist, **kwargs):
     grp.create_dataset('data',
