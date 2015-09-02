@@ -199,16 +199,27 @@ class Histogram(object):
         else:
             self._label = l
 
-    def __eq__(self,hist):
+    def __eq__(self, that):
         try:
-            if not np.allclose(self.data,hist.data):
+            if not np.allclose(self.data,that.data):
                 return False
-            for a,aa in zip(self.axes,hist.axes):
+            for a,aa in zip(self.axes,that.axes):
                 if not (a == aa):
                     return False
         except ValueError:
             return False
+        return True
 
+    def isidentical(self, that):
+        if not (self == that):
+            return False
+        if self.label != that.label:
+            return False
+        if self.title != that.title:
+            return False
+        for a,aa in zip(self.axes,that.axes):
+            if a.label != aa.label:
+                return False
         return True
 
 ### non-modifying information getters

@@ -7,6 +7,7 @@ import numpy as np
 
 from .. import Histogram, HistogramAxis, rc
 from .ask_overwrite import ask_overwrite
+from .strings import encode_dict, decode_dict
 
 try:
     from .histogram_hdf5 import *
@@ -29,7 +30,7 @@ def save_histogram_to_npz(filepath, hist, **kwargs):
     in npz format
     '''
     fout = io.open(filepath,'wb')
-    np.savez(fout, **hist.asdict(**kwargs))
+    np.savez(fout, **encode_dict(hist.asdict(**kwargs)))
     fout.close()
 
 def load_histogram_from_npz(filepath):
@@ -43,7 +44,7 @@ def load_histogram_from_npz(filepath):
             data[k] = data[k].tostring().decode('utf-8')
         elif data[k].dtype.kind == 'U':
             data[k] = data[k].tostring().decode('utf-32')
-    return Histogram.fromdict(**data)
+    return Histogram.fromdict(**decode_dict(data))
 
 
 def save_histogram(filepath, hist, prefix=None, **kwargs):
@@ -52,7 +53,7 @@ def save_histogram(filepath, hist, prefix=None, **kwargs):
     elif rc.histdir is not None:
         if not os.path.isabs(filepath):
             filepath = os.path.join(rc.histdir,filepath)
-    if not any(filepath.endswith(x) for x in ['.hist','.npz','.hdf5','.h5']):
+    if not any(filepath.endswith(x) for x in ['.hist','.npz','.hdf5','.h5','.root']):
         filepath += '.hist'
     if not ask_overwrite(filepath):
         print('not overwriting {}'.format(filepath))
@@ -62,6 +63,11 @@ def save_histogram(filepath, hist, prefix=None, **kwargs):
             if not have_h5py:
                 raise ImportError('Missing module: h5py')
             save_histogram_to_hdf5(filepath,hist,**kwargs)
+        elif filepath.endswith('.root'):
+            global have_pyroot
+            if not have_pyroot:
+                raise ImportError('Missing module: ROOT')
+            save_histogram_to_root(filepath,hist,**kwargs)
         else:
             save_histogram_to_npz(filepath,hist,**kwargs)
 
@@ -74,7 +80,7 @@ def load_histogram(filepath, prefix=None):
     elif rc.histdir is not None:
         if not os.path.isabs(filepath):
             filepath = os.path.join(rc.histdir,filepath)
-    if not any(filepath.endswith(x) for x in ['.hist','.npz','.hdf5','.h5']):
+    if not any(filepath.endswith(x) for x in ['.hist','.npz','.hdf5','.h5','.root']):
         filepath += '.hist'
     if not os.path.exists(filepath):
         raise Exception(filepath+' not found.')
@@ -83,6 +89,8 @@ def load_histogram(filepath, prefix=None):
         if not have_h5py:
             raise ImportError('Missing module: h5py')
         return load_histogram_from_hdf5(filepath)
+    elif filepath.endswith('.root'):
+        return load_histogram_from_root(filepath)
     else:
         return load_histogram_from_npz(filepath)
 

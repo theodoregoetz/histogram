@@ -1,17 +1,26 @@
+from __future__ import print_function
+
+import sys
+import codecs
+from warnings import warn
+import numpy as np
+
 import ROOT
 
 from .. import Histogram, HistogramAxis
+from .strings import encode_str, decode_str
 
 def asroot(hist, name):
     '''Convert this histogram to a CERN/ROOT object (TH1F, TH2F, etc)'''
     if hist.dim > 3:
         raise TypeError('Can not convert histogram with dimensions > 3 to ROOT')
 
-    title = hist.title if hist.title is not None else name
+    title = encode_str(hist.title) if hist.title is not None else encode_str(name)
 
     args = [name,title]
     for ax in hist.axes:
-        argx.append(ax.nbins, ax.edges)
+        args.append(ax.nbins)
+        args.append(ax.edges)
 
     hnew_dispatch = {
         1: ROOT.TH1D,
@@ -20,22 +29,22 @@ def asroot(hist, name):
 
     hnew = hnew_dispatch[hist.dim](*args)
 
-    hnew.SetContent(hist.data)
+    hnew.SetContent(hist.data.astype(np.float64))
     if hist.uncert is not None:
-        hnew.SetError(hist.uncert)
+        hnew.SetError(hist.uncert.astype(np.float64))
 
     axlabel_dispatch = {
-        0: hnew.GetXaxes().SetTitle,
-        1: hnew.GetYaxes().SetTitle,
-        2: hnew.GetZaxes().SetTitle }
+        0: hnew.GetXaxis().SetTitle,
+        1: hnew.GetYaxis().SetTitle,
+        2: hnew.GetZaxis().SetTitle }
 
     for i,ax in enumerate(hist.axes):
         if ax.label is not None:
-            axlabel_dispatch[i](ax.label)
+            axlabel_dispatch[i](encode_str(ax.label))
 
     if hist.label is not None:
         if hist.dim < 3:
-            axlabel_dispatch[hist.dim](hist.label)
+            axlabel_dispatch[hist.dim](encode_str(hist.label))
         else:
             warn('CERN/ROOT 3D Histograms do not store a content label. Information (hist.label = \''+hist.label+'\') has been lost.')
 
@@ -53,19 +62,48 @@ def fromroot(hist):
         2: hist.GetZaxis }
 
     axes = []
+    shape = []
     dim = hist.GetDimension()
     for i in range(dim):
         ax = getax_dispatch[i]()
         nbins = ax.GetNbins()
-        edges = [ax.GetBinLowEdge(b) for b in range(nbins)]
-        edges.append(ax.GetBinHighEdge(nbins-1))
-        label = ax.GetTitle()
+        shape.append(nbins)
+        edges = [ax.GetBinLowEdge(b) for b in range(1,nbins+2)]
+        label = decode_str(ax.GetTitle())
 
         axes.append(HistogramAxis(edges, label=label))
 
-    title = hist.GetTitle()
-    label = getax_dispatch[dim]().GetTitle()
+    nbins = np.prod(shape)
+    data = np.empty((nbins,), dtype=np.float64)
+    for i in range(nbins):
+        data[i] = hist.At(i)
+    data.shape = shape
 
-    return Histogram(*axes,label=label,title=title)
+    uncert = np.empty((nbins,), dtype=np.float64)
+    for i in range(nbins):
+        uncert[i] = hist.GetBinError(i)
+    uncert.shape = shape
+
+    title = decode_str(hist.GetTitle())
+    label = decode_str(getax_dispatch[dim]().GetTitle())
+
+    return Histogram(
+        *axes,
+        label=label,
+        title=title,
+        data=data,
+        uncert=uncert )
 
 Histogram.fromroot = fromroot
+
+
+def save_histogram_to_root(filepath,hist,**kwargs):
+    fout = ROOT.TFile(filepath,'RECREATE')
+    h = hist.asroot('h')
+    fout.Write('h')
+    fout.Close()
+
+def load_histogram_from_root(filepath):
+    fin = ROOT.TFile(filepath)
+    h = fin.Get('h')
+    return Histogram.fromroot(h)

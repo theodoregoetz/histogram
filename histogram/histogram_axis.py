@@ -78,6 +78,14 @@ class HistogramAxis(object):
         except ValueError:
             return False
 
+    def isindentical(self, that):
+        r'''Deep comparison of this axis with another.'''
+        if not (self == that):
+            return False
+        if self.label != that.label:
+            return False
+        return True
+
     @property
     def edges(self):
         '''The list of bin edges from low to high.'''

@@ -1,3 +1,4 @@
+import platform
 import sys
 import os
 
@@ -7,6 +8,7 @@ import h5py
 
 from .. import Histogram, HistogramAxis, rc
 from .ask_overwrite import ask_overwrite
+from .strings import encode_str, decode_str
 
 def save_histogram_to_hdf5_group(grp, hist, **kwargs):
     grp.create_dataset('data',
@@ -15,14 +17,14 @@ def save_histogram_to_hdf5_group(grp, hist, **kwargs):
         grp.create_dataset('uncert',
             hist.uncert.shape, hist.uncert.dtype, data=hist.uncert[...])
     for i,ax in enumerate(hist.axes):
-        edge = grp.create_dataset('edges'+str(i),
+        edge = grp.create_dataset('edges{}'.format(i),
             (len(ax.edges),), 'f', data=ax.edges)
         if ax.label is not None:
-            edge.attrs['label'] = ax.label.decode('utf-8')
+            edge.attrs['label'] = encode_str(ax.label)
     if hist.label is not None:
-        grp.attrs['label'] = hist.label.decode('utf-8')
+        grp.attrs['label'] = encode_str(hist.label)
     if hist.title is not None:
-        grp.attrs['title'] = hist.title.decode('utf-8')
+        grp.attrs['title'] = encode_str(hist.title)
 
 def load_histogram_from_hdf5_group(grp):
     data = grp['data']
@@ -32,13 +34,13 @@ def load_histogram_from_hdf5_group(grp):
         axes.append(
             HistogramAxis(
                 np.asarray(edges),
-                label = edges.attrs.get('label', None) ) )
+                label = decode_str(edges.attrs.get('label',None)) ) )
     return Histogram(
         *axes,
         data = data,
         uncert = grp.get('uncert',None),
-        title = grp.attrs.get('title', None),
-        label = grp.attrs.get('label', None))
+        title = decode_str(grp.attrs.get('title',None)),
+        label = decode_str(grp.attrs.get('label',None)) )
 
 
 def save_histogram_to_hdf5(filepath, hist, **kwargs):
