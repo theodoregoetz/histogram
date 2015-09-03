@@ -17,6 +17,9 @@ def plothist_errorbar(ax, hist, **kwargs):
         linestyle = kwargs.pop('linestyle','none') )
     kw.update(kwargs)
 
+    if hist.uncert is None:
+        hist.uncert = np.sqrt(hist.data)
+
     if mask is not None:
         x,y = hist.grid[mask], hist.data[mask]
         xerr,yerr = [e[mask] for e in hist.errorbars()]
@@ -83,11 +86,9 @@ def plothist_line(ax, hist, **kwargs):
     x, y, extent = hist.asline(**line_kwargs)
 
     if baseline == 'left':
-        pt = ax.plot(y,x,**kw)
-    else:
-        pt = ax.plot(x,y,**kw)
+        x,y = y,x
 
-    return pt
+    return ax.plot(x,y,**kw)
 
 def plothist_fill_between(ax, *hists, **kwargs):
     points = []
@@ -117,19 +118,19 @@ def plothist_1d(ax, hist, **kwargs):
     if overlay:
         ax.set_autoscale_on(False)
 
-    if hist.uncert is None:
-        hist.uncert = np.sqrt(hist.data)
-
     if kwargs.get('mask',None) is not None:
         if style is None:
             style = 'errorbar'
 
     if style is None:
-        maxratios = np.array([x.max() for x in hist.errorbars(asratio=True)])
-        if np.any(maxratios > 0.2):
-            style = 'errorbar'
-        else:
+        if hist.uncert is None:
             style = 'polygon'
+        else:
+            maxratios = np.array([x.max() for x in hist.errorbars(asratio=True)])
+            if np.any(maxratios > 0.2):
+                style = 'errorbar'
+            else:
+                style = 'polygon'
 
     extent_kwargs = dict(
         pad = kwargs.pop('pad',[0,0,0,0.05]),
@@ -208,9 +209,16 @@ def plothist_pcolor(ax, hist, **kwargs):
     return ret
 
 def plothist_contour(ax, hist, **kwargs):
-    X,Y = hist.grid
-    Z = hist.data
-    return ax.contour(X, Y, Z, **kwargs)
+    levels = kwargs.pop('levels',None)
+    filled = kwargs.pop('filled',False)
+    args = list(hist.grid)
+    args.append(hist.data)
+    if levels is not None:
+        args.append(levels)
+    if filled:
+        return ax.contourf(*args, **kwargs)
+    else:
+        return ax.contour(*args, **kwargs)
 
 def add_colorbar(ax, plt, hist, **kwargs):
     scale = kwargs.pop('scale',None)

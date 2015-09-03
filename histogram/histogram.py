@@ -723,7 +723,7 @@ class Histogram(object):
                 wt = np.empty((sample.T.shape[0],))
                 wt[...] = weights
         h,e = np.histogramdd(sample.T, self.edges, weights=wt)
-        self.data += h
+        self.data += h.astype(self.data.dtype)
 
 ### operations
     def clone(self,dtype=None,**kwargs):
