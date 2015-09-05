@@ -57,17 +57,18 @@ def plothist_polygon(ax, hist, **kwargs):
         color = kwargs.pop('color',next(ax._get_lines.color_cycle)) )
     kw.update(kwargs)
 
-    points, extent = hist.aspolygon(**polygon_kwargs)
-    points += [points[0]]
+    x,y,extent = hist.aspolygon(**polygon_kwargs)
+    x = np.hstack([x,x[0]])
+    y = np.hstack([y,y[0]])
     codes = [Path.MOVETO] \
-          + [Path.LINETO]*(len(points) - 3) \
+          + [Path.LINETO]*(len(x) - 3) \
           + [Path.MOVETO,
              Path.CLOSEPOLY]
 
     if baseline == 'left':
-        points = [p[::-1] for p in points]
+        x,y = y,x
 
-    pt = PathPatch(Path(points, codes), **kw)
+    pt = PathPatch(Path(np.vstack([x,y]).T, codes), **kw)
     ax.add_patch(pt)
     return pt
 
@@ -311,7 +312,7 @@ def plothist(ax, hist, **kwargs):
     elif hist.dim == 2:
         ret = plothist_2d(ax, hist, **kwargs)
     else:
-        raise Exception('can not plot histogram of dim > 2')
+        raise NotImplementedError('Can not plot histograms of dim > 2.')
 
     if hist.title is not None:
         ax.set_title(hist.title)

@@ -3,30 +3,24 @@ import unittest
 from histogram.detail import RunControl
 
 class TestRunControl(unittest.TestCase):
-    def setUp(self):
-        pass
 
-    def runTest(self):
-        pass
-
-    def test(self):
+    def test_lock(self):
         rc = RunControl()
+
+        try:
+            rc.a.b = 1
+            assert False
+        except KeyError:
+            assert True
+
         rc.unlock()
-
         rc.a.b = 1
-
-        print(rc)
-
+        assert rc.a.b == 1
         rc.lock()
+        assert rc.a.b == 1
 
-        rc.plot.patch.alpha = 0.8
-
-        #rc.c = 3
-        #rc.c.d = 3
-
-        print('\n')
-        print(rc)
-
+        rc.a.b = 2
+        assert rc.a.b == 2
 
 if __name__ == '__main__':
     test = TestRunControl()

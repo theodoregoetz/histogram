@@ -1,6 +1,8 @@
+import os
 from warnings import warn
 
-from .. import Histogram
+from .. import Histogram, rc
+from .ask_overwrite import ask_overwrite
 from .histogram_np import save_histogram_to_npz, load_histogram_from_npz
 
 try:

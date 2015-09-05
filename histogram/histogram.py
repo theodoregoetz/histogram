@@ -561,42 +561,39 @@ class Histogram(object):
             y
                 `(scalar array)` y-position of points
         '''
-        if self.dim != 1:
-            raise Exception('only 1D histograms can be translated into a line.')
+        assert self.dim == 1, 'only 1D histograms can be translated into a line.'
 
-        edges = self.axes[0].edges
-        data = self.data
+        x = self.axes[0].edges
+        y = self.data
 
-        x = np.array(list(it.chain.from_iterable(zip(*it.tee(edges))))[1:-1])
-        y = np.array(list(it.chain.from_iterable(zip(*it.tee(data)))))
+        xx = np.column_stack([x[:-1],x[1:]]).ravel()
+        yy = np.column_stack([y,y]).ravel()
 
         if (xlow is not None) or (xhigh is not None):
-            mask = np.ones(len(x),dtype=np.bool)
+            mask = np.ones(len(xx),dtype=np.bool)
             if xlow is not None:
-                mask &= (xlow < x)
+                mask &= (xlow <= xx)
             if xhigh is not None:
-                mask &= (x <= xhigh)
+                mask &= (xx < xhigh)
             if not mask.any():
                 raise Exception('range is not valid')
             if not mask.all():
-                x = x[mask]
-                y = y[mask]
+                xx = xx[mask]
+                yy = yy[mask]
 
-                if not mask[0]:
-                    a = 1
-                else:
-                    a = None
+            a,b = None,None
+            if not mask[0]:
+                a = 1
+            if not mask[-1]:
+                b = -1
+            if (a is not None) or (b is not None):
+                xx = xx[a:b]
+                yy = yy[a:b]
 
-                if not mask[-1]:
-                    b = -1
-                else:
-                    b = None
+        extent = [min(xx), max(xx), min(yy), max(yy)]
+        return xx,yy,extent
 
-                x = x[a:b]
-                y = y[a:b]
 
-        extent = [min(x), max(x), min(y), max(y)]
-        return x,y,extent
 
     def aspolygon(self, xlow=None, xhigh=None, ymin=0):
         '''Return a polygon of the histogram
@@ -617,20 +614,17 @@ class Histogram(object):
             extent
                 `(scalar tuple)` Extent of the resulting polygon in the form: ``[xmin, xmax, ymin, ymax]``.
         '''
-        if self.dim != 1:
-            raise Exception('only 1D histograms can be translated into a polygon.')
+        assert self.dim == 1, 'only 1D histograms can be translated into a polygon.'
 
-        xarr,yarr,extent = self.asline(xlow,xhigh)
+        ymin = ymin if ymin is not None else extent[2]
 
-        points = [x for x in it.chain(
-            [(xarr[0], ymin)],
-            zip(xarr, yarr),
-            [(xarr[-1], ymin)],
-            [(xarr[0],  ymin)] )]
+        xx,yy,extent = self.asline(xlow,xhigh)
+
+        xx = np.hstack([xx[0],xx,xx[-1],xx[0]])
+        yy = np.hstack([ymin,yy,ymin,ymin])
 
         extent[2] = ymin
-
-        return points,extent
+        return xx,yy,extent
 
 ### self modifying methods (set, fill)
     def __getitem__(self,*args):

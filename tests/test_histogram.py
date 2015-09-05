@@ -211,9 +211,9 @@ class TestHistogram(unittest.TestCase):
         h.data = np.array([1,2,3,4,5,0,1,2,9,0],dtype=np.int64)
 
         x,y,ext = h.asline(2)
-        self.assertTrue(np.allclose(x,[3,4,4,5,5,6,6,7,7,8,8,9,9,10]))
-        self.assertTrue(np.allclose(y,[4,4,5,5,0,0,1,1,2,2,9,9,0, 0]))
-        self.assertTrue(np.allclose(ext,[3,10,0,9]))
+        self.assertTrue(np.allclose(x,[2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10]))
+        self.assertTrue(np.allclose(y,[3,3,4,4,5,5,0,0,1,1,2,2,9,9,0, 0]))
+        self.assertTrue(np.allclose(ext,[2,10,0,9]))
 
         x,y,ext = h.asline(1.9)
         self.assertTrue(np.allclose(x,[2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10]))
@@ -221,9 +221,9 @@ class TestHistogram(unittest.TestCase):
         self.assertTrue(np.allclose(ext,[2,10,0,9]))
 
         x,y,ext = h.asline(2.9,7)
-        self.assertTrue(np.allclose(x,[3,4,4,5,5,6,6,7]))
-        self.assertTrue(np.allclose(y,[4,4,5,5,0,0,1,1]))
-        self.assertTrue(np.allclose(ext,[3,7,0,5]))
+        self.assertTrue(np.allclose(x,[3,4,4,5,5,6]))
+        self.assertTrue(np.allclose(y,[4,4,5,5,0,0]))
+        self.assertTrue(np.allclose(ext,[3,6,0,5]))
 
 
     def test_aspolygon(self):

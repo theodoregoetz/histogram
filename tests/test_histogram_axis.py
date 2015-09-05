@@ -63,9 +63,11 @@ class TestHistogramAxis(unittest.TestCase):
             assert True
         try:
             a1.edges = [[1,2],[1,2]]
-            assert False
+            raise Exception
         except AssertionError:
             assert True
+        except Exception:
+            assert False
 
     def test_label(self):
         a1 = HistogramAxis(100,[0,10],'label ω')

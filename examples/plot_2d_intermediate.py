@@ -16,7 +16,7 @@ rc('font', family=['Liberation Serif', 'DejaVu Serif', 'Arial'])
 np.random.seed(1)
 
 dx = (80, [0,10], 'x (cm)')
-dy = (40, [-5,5], r'ε (J/cm$^2$)')
+dy = (40, [-5,5], 'ε (J/cm$^2$)')
 h = Histogram(dx, dy, 'counts', 'Random Data')
 
 npoints = 10000
