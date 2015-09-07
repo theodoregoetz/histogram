@@ -26,7 +26,7 @@ fout.close()
 
 bokeh.output_file(fname)
 fig = bokeh.figure()
-pt = fig.plothist(h)
+pt = fig.plothist(h, style='errorbar')
 
 bokeh.show(fig)
 _ = input('press ENTER to exit.\n')

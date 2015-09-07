@@ -22,11 +22,10 @@ def encode_str(s):
     return codecs.decode(s, 'latin-1')
 
 def encode_dict(data):
-    d = copy(data)
-    for k in d:
-        if isstr(d[k]):
-            d[k] = encode_str(d[k])
-    return d
+    for k in data:
+        if isstr(data[k]):
+            data[k] = encode_str(data[k])
+    return data
 
 def decode_str(s):
     if s is None:
@@ -34,8 +33,7 @@ def decode_str(s):
     return codecs.decode(s, 'unicode-escape')
 
 def decode_dict(data):
-    d = copy(data)
-    for k in d:
-        if isstr(d[k]):
-            d[k] = decode_str(d[k])
-    return d
+    for k in data:
+        if isstr(data[k]):
+            data[k] = decode_str(data[k])
+    return data
