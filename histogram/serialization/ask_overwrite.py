@@ -17,10 +17,11 @@ def ask_overwrite(filepath):
                 print('could not create directory: {}'.format(dirpath))
                 return False
         return True
-    if rc.overwrite.timestamp is not None:
-        if (datetime.datetime.now() - rc.overwrite.timestamp).seconds > rc.overwrite.timeout:
-            rc.overwrite.overwrite = 'ask'
-            rc.overwrite.timestamp = None
+    if rc.overwrite.timeout is not None:
+        if rc.overwrite.timestamp is not None:
+            if (datetime.datetime.now() - rc.overwrite.timestamp).seconds > rc.overwrite.timeout:
+                rc.overwrite.overwrite = 'ask'
+                rc.overwrite.timestamp = None
     if rc.overwrite.overwrite == 'never':
         return False
     elif rc.overwrite.overwrite == 'always':
@@ -46,5 +47,6 @@ def ask_overwrite(filepath):
                     rc.overwrite.timestamp = datetime.datetime.now()
                     return True
                 sys.stdout.write('Please respond with: Yes, No, nEver, Always.\n')
-                sys.stdout.write('nEver and Always will be stickied for {} minutes'.format(int(rc.overwrite.timeout / 60.))+'\n')
+                if rc.overwrite.timeout is not None:
+                    sys.stdout.write('nEver and Always will be stickied for {} minutes'.format(int(rc.overwrite.timeout / 60.))+'\n')
 

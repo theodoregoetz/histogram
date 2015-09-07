@@ -10,7 +10,7 @@ from .. import Histogram, HistogramAxis, rc
 from .ask_overwrite import ask_overwrite
 from ..detail.strings import encode_str, decode_str
 
-def save_histogram_to_hdf5_group(grp, hist, **kwargs):
+def save_histogram_to_hdf5_group(grp, hist):
     grp.create_dataset('data',
         hist.data.shape, hist.data.dtype, data=hist.data[...])
     if hist.uncert is not None:
@@ -43,13 +43,13 @@ def load_histogram_from_hdf5_group(grp):
         label = decode_str(grp.attrs.get('label',None)) )
 
 
-def save_histogram_to_hdf5(filepath, hist, **kwargs):
+def save_histogram_to_hdf5(filepath, hist):
     '''
     saves a Histogram object to a file
     in hdf5 format
     '''
     h5file = h5py.File(filepath, 'w')
-    save_histogram_to_hdf5_group(h5file, hist, **kwargs)
+    save_histogram_to_hdf5_group(h5file, hist)
     h5file.close()
 
 def load_histogram_from_hdf5(filepath):
