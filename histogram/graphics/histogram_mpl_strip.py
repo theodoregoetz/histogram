@@ -1,12 +1,11 @@
 import math
+from copy import copy
 import numpy as np
 
-from matplotlib import pyplot
-from matplotlib.patches import PathPatch
-from matplotlib.path import Path
-from matplotlib.axes import Axes
-from matplotlib.ticker import MaxNLocator
+import matplotlib
 from matplotlib.gridspec import GridSpec
+
+from .detail import mpl_subplots
 
 def calc_2d_grid_dimensions(ncells):
     a = math.sqrt(ncells)
@@ -24,17 +23,16 @@ def calc_2d_grid_dimensions(ncells):
         rows = int(b)
     return rows, cols
 
-def plothist_strip(hlist, haxis, hook=None, hook_kw=None, **kwargs):
+def plothist_strip(fig, hlist, haxis, hook=None, hook_kw={}, **kwargs):
     assert haxis.isuniform()
 
     n = len(hlist)
     rows,cols = calc_2d_grid_dimensions(n)
 
-    fig,axs = pyplot.subplots(rows,cols,
-        sharex=True,
-        sharey='row',
-        subplot_kw = kwargs.pop('subplot_kw',None),
-        figsize = kwargs.pop('figsize',None),)
+    axs = subplots(fig,rows,cols,
+        sharex=kwargs.pop('sharex',True),
+        sharey=kwargs.pop('sharex','row'),
+        subplot_kw = kwargs.pop('subplot_kw',None))
     fig.subplots_adjust(wspace=0)
 
     fig.suptitle(hlist[0].title)
@@ -61,11 +59,9 @@ def plothist_strip(hlist, haxis, hook=None, hook_kw=None, **kwargs):
                             style=kwargs.pop('style','errorbar'),
                             **kwargs ) )
                 else:
-
-                    if isinstance(hook_kw, dict):
-                        hook_output.append(hook(axs[r,c], hlist[i], **hook_kw))
-                    else:
-                        hook_output.append(hook(axs[r,c], hlist[i], **hook_kw[i]))
+                    kw = hook_kw[i]
+                    kw.update(kwargs)
+                    hook_output.append(hook(axs[r,c], hlist[i], **kw))
 
                 this_ymax = 1.05 * np.nanmax(hlist[i].data + hlist[i].uncert)
                 if this_ymax > ymax:
@@ -128,7 +124,9 @@ def plothist_strip(hlist, haxis, hook=None, hook_kw=None, **kwargs):
         for lab in ax.get_xticklabels()[:2]:
             lab.set_visible(False)
 
-    ret = fig,axs,pts
     if hook is not None:
-        ret = [ret, hook_output]
-    return ret
+        return (axs, strip_axs), hook_output
+    else:
+        return axs, strip_axs
+
+matplotlib.figure.Figure.plothist_strip = plothist_strip

@@ -34,7 +34,7 @@ ax.set_autoscale_on(True)
 
 # all kwargs unknown by histogram will
 # be passed onto the underlying plotting
-# method Axes.errorbar() in this case
+# method. (Axes.errorbar() in this case)
 pttot = ax.plothist(htot, style='errorbar', lw=2,
                     capsize=4, markeredgewidth=2,
                     zorder=2)

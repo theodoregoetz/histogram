@@ -1,13 +1,13 @@
 import math
 import numpy as np
 
-from matplotlib import pyplot
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from matplotlib.axes import Axes
 from matplotlib.ticker import MaxNLocator, LogLocator
 from matplotlib.colors import LogNorm
 
+from . import histogram_mpl_strip, histogram_mpl_grid
 from .. import rc
 
 def plothist_errorbar(ax, hist, **kwargs):
@@ -144,37 +144,7 @@ def plothist_1d(ax, hist, **kwargs):
     else:
         pt = plothist_polygon(ax, hist, **kwargs)
 
-    autoscale = ax.get_autoscale_on() and not overlay
-    if autoscale:
-        try:
-            yformatter = ax.yaxis.get_major_formatter()
-            yformatter.set_scientific(True)
-        except AttributeError:
-            pass
-
-        hmin = hist.min()
-        if not np.isclose(hmin,0):
-            if (hmin > 0) and (hmin > 0.3 * abs(hist.max() - hmin)):
-                extent_kwargs['pad'][2] = 0.05
-
-        xmin,xmax,y0,ymax = hist.extent(**extent_kwargs)
-
-        if yscale == 'log':
-            ax.set_yscale('log', nonposy='clip')
-            data_min = np.min(hist.data[np.where(hist.data>0)])
-            minexp = int(math.log(data_min, 10))
-            maxexp = int(math.log(np.max(hist.data), 10)+0.2)
-            y0,ymax = 10**(minexp-1), 10**(maxexp+1)
-
-        if ymin is None:
-            ymin = y0
-
-        if baseline == 'left':
-            xmin,xmax,ymin,ymax = ymin,ymax,xmin,xmax
-
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
-
+    if not overlay:
         if hist.axes[0].label is not None:
             if baseline == 'left':
                 ax.set_ylabel(hist.axes[0].label)
@@ -185,6 +155,37 @@ def plothist_1d(ax, hist, **kwargs):
                 ax.set_xlabel(hist.label)
             elif baseline == 'bottom':
                 ax.set_ylabel(hist.label)
+
+        autox = ax.get_autoscalex_on()
+        autoy = ax.get_autoscaley_on()
+
+        if autox or autoy:
+
+            hmin = hist.min()
+            if not np.isclose(hmin,0):
+                if (hmin > 0) and (hmin > 0.3 * abs(hist.max() - hmin)):
+                    extent_kwargs['pad'][2] = 0.05
+
+            xmin,xmax,y0,ymax = hist.extent(**extent_kwargs)
+
+            if yscale == 'log':
+                ax.set_yscale('log', nonposy='clip')
+                data_min = np.min(hist.data[np.where(hist.data>0)])
+                minexp = int(math.log(data_min, 10))
+                maxexp = int(math.log(np.max(hist.data), 10)+0.2)
+                y0,ymax = 10**(minexp-1), 10**(maxexp+1)
+
+            if ymin is None:
+                ymin = y0
+
+            if baseline == 'left':
+                xmin,xmax,ymin,ymax = ymin,ymax,xmin,xmax
+
+            if autoy:
+                ax.set_ylim(ymin, ymax)
+
+            if autox:
+                ax.set_xlim(xmin, xmax)
 
     return pt
 
