@@ -7,7 +7,8 @@ from matplotlib.axes import Axes
 from matplotlib.ticker import MaxNLocator, LogLocator
 from matplotlib.colors import LogNorm
 
-from . import histogram_mpl_strip, histogram_mpl_grid
+from . import (histogram_mpl_strip, histogram_mpl_grid,
+               histogram_mpl_profile)
 from .. import rc
 
 def plothist_errorbar(ax, hist, **kwargs):
@@ -53,8 +54,9 @@ def plothist_polygon(ax, hist, **kwargs):
 
     kw = dict(
         linewidth = kwargs.pop('linewidth',kwargs.pop('lw',0)),
-        alpha = kwargs.pop('alpha',rc.plot.patch.alpha),
-        color = kwargs.pop('color',next(ax._get_lines.color_cycle)) )
+        alpha = kwargs.pop('alpha',rc.plot.patch.alpha))
+    if not any([x in kwargs for x in ['facecolor','edgecolor']]):
+        kw['color'] = kwargs.pop('color',next(ax._get_lines.color_cycle))
     kw.update(kwargs)
 
     x,y,extent = hist.aspolygon(**polygon_kwargs)

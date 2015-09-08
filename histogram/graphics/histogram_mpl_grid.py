@@ -1,18 +1,7 @@
 import math
-from copy import copy
 import numpy as np
 
 import matplotlib
-from matplotlib.gridspec import GridSpec
-
-
-import numpy as np
-
-import matplotlib
-from matplotlib.patches import PathPatch
-from matplotlib.path import Path
-from matplotlib.axes import Axes
-from matplotlib.ticker import MaxNLocator
 from matplotlib.colors import Normalize
 from matplotlib.cm import get_cmap
 from mpl_toolkits.axes_grid1.inset_locator import \

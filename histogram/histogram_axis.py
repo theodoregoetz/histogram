@@ -132,6 +132,11 @@ class HistogramAxis(object):
         return self.edges[-1]
 
     @property
+    def mid(self):
+        '''Value of middle of this axis.'''
+        return 0.5 * (self.min + self.max)
+
+    @property
     def limits(self):
         '''2-tuple of the lowest and highest edges.'''
         return (self.min, self.max)
