@@ -976,7 +976,7 @@ class Histogram(object):
         axes = []
         for i in range(self.dim):
             if i != axis:
-                axes += [self.axes[i].clone()]
+                axes.append(self.axes[i])
 
         data_slices = self.slices_data(axis)
         uncert_slices = self.slices_uncert(axis)

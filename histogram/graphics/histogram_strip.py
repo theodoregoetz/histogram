@@ -8,8 +8,6 @@ from matplotlib.axes import Axes
 from matplotlib.ticker import MaxNLocator
 from matplotlib.gridspec import GridSpec
 
-from .cmap import flame
-
 def calc_2d_grid_dimensions(ncells):
     a = math.sqrt(ncells)
     if a > 4:
@@ -24,144 +22,65 @@ def calc_2d_grid_dimensions(ncells):
         rows = int(b) + 1
     else:
         rows = int(b)
-    return cols, rows
+    return rows, cols
 
-def calc_figure_size(cols,rows):
-    return min(cols*5+1,12), min(rows*3+1,8)
+def plothist_strip(hlist, haxis, hook=None, hook_kw=None, **kwargs):
+    assert haxis.isuniform()
 
-def plothist_strip(hist, stripaxis=0, **kwargs):
-    if hist.dim not in [2,3]:
-        raise Exception('histogram must be of dimension 2 or 3')
+    n = len(hlist)
+    rows,cols = calc_2d_grid_dimensions(n)
 
-    mask = kwargs.pop('mask',None)
+    fig,axs = pyplot.subplots(rows,cols,
+        sharex=True,
+        sharey='row',
+        subplot_kw = kwargs.pop('subplot_kw',None),
+        figsize = kwargs.pop('figsize',None),)
+    fig.subplots_adjust(wspace=0)
 
-    hook = kwargs.pop('hook', None)
+    fig.suptitle(hlist[0].title)
+
+    for h in hlist:
+        h.title = None
+
     if hook is not None:
-        hook_output = None
-        hook_args = kwargs.pop('hook_args',None)
-
-    first_index = 0
-    for i,d in enumerate(hist.slices_data(stripaxis)):
-        nans = ~np.isfinite(d)
-        if np.all(nans):
-            first_index = i+1
-        elif np.allclose(d[~nans],d[~nans].mean()):
-            first_index = i+1
-        else:
-            break
-
-    if first_index > 0:
-        stripmin = hist.axes[stripaxis].edges[first_index]
-        hist = hist.cut(stripmin,axis=stripaxis)
-
-    saxis = hist.axes[stripaxis]
-    sbins = saxis.nbins
-
-    cols,rows = calc_2d_grid_dimensions(sbins)
-
-    fig_kw = dict(
-        figsize = kwargs.pop('figsize',calc_figure_size(cols,rows)),
-        dpi = kwargs.pop('dpi',90) )
-
-    fig = pyplot.figure(**fig_kw)
-    fig.subplots_adjust(left=.07,bottom=.07,right=.95,top=.9,
-                        wspace=0,hspace=1.)
-
-    # create all subplots
-    # share x with the first plot
-    # share y with the first of the current row
-    axs = []
-    for i in range(sbins):
-        kw = {}
-        if i > 0:
-            kw['sharex'] = axs[0]
-            if (i%cols) > 0:
-                kw['sharey'] = axs[int(i/cols)*cols]
-
-        axs += [fig.add_subplot(rows,cols,i+1,**kw)]
-        axs[-1].locator_params(tight=True, nbins=5)
-        axs[-1].xaxis.labelpad = -1
-
-    fig.suptitle(hist.title)
-    hist.title = None
+        hook_output = []
 
     strip_axs = []
-    hslices = list(hist.slices(stripaxis))
-    if mask is not None:
-        masks = [m for m in np.rollaxis(mask,stripaxis)]
-
+    pts = []
     for r in range(rows):
         ymax = 0
         for c in range(cols):
             i = c + r*cols
-            if i < len(hslices):
+
+            if i < n:
 
                 if hook is None:
-
-                    axs[i].grid(True)
-                    if mask is not None:
-                        axs[i].plothist(hslices[i], mask=masks[i], style='errorbar')
-                    else:
-                        axs[i].plothist(hslices[i], style='errorbar')
-
+                    pts.append(
+                        axs[r,c].plothist(
+                            hlist[i],
+                            style=kwargs.pop('style','errorbar'),
+                            **kwargs ) )
                 else:
 
-                    hook_kw = {}
-                    if mask is not None:
-                        hook_kw['mask'] = masks[i]
+                    if isinstance(hook_kw, dict):
+                        hook_output.append(hook(axs[r,c], hlist[i], **hook_kw))
+                    else:
+                        hook_output.append(hook(axs[r,c], hlist[i], **hook_kw[i]))
 
-                    if hook_args is not None:
-                        hook_kw['hook_args'] = [x[i] for x in hook_args]
-
-                    hout = hook(axs[i], hslices[i], **hook_kw)
-
-                    # setup hook output if it doesn't exist
-                    if hook_output is None:
-                        hook_output = []
-                        for _i in range(len(hout)):
-                            tmp = []
-                            for _j in range(len(axs)):
-                                tmp.append(None)
-                            hook_output.append(tmp)
-
-                    for a,o in enumerate(hout):
-                        hook_output[a][i] = o
-
-                this_ymax = 1.05 * np.nanmax(hslices[i].data + hslices[i].uncert)
+                this_ymax = 1.05 * np.nanmax(hlist[i].data + hlist[i].uncert)
                 if this_ymax > ymax:
                     ymax = this_ymax
-                    axs[r*cols].set_ylim(None,ymax)
-
-                # hide certain labels
-                if c > 0:
-                    axs[i].set_xlabel(r'')
-                    axs[i].set_ylabel(r'')
-                    pyplot.setp(axs[i].get_yticklabels(), visible=False)
-
-                keep_tick = 'first'
-                if keep_tick == 'first':
-                    # remove the first tick label of all but the
-                    # first axis in this row
-                    if c > 0:
-                        xticks = axs[i].xaxis.get_major_ticks()
-                        for t in xticks[:1]:
-                            t.label1.set_visible(False)
-                else: # if keep_tick == 'last':
-                    # remove the last tick label of all but the
-                    # last axis in this row
-                    if (c+1) < cols:
-                        xticks = axs[i].xaxis.get_major_ticks()
-                        for t in xticks[-2:]:
-                            t.label1.set_visible(False)
+                    axs[r,0].set_ylim(None,ymax)
 
         ilow  = r*cols
         ihigh = (r+1)*cols
-        if ihigh > len(hslices):
-            nplots_in_last_row = len(hslices) % cols
+        if ihigh > n:
+            nplots_in_last_row = n % cols
             gs = GridSpec(rows,cols)
             ax = fig.add_subplot(gs[rows-1,:nplots_in_last_row])
         else:
             ax = fig.add_subplot(rows,1,r+1)
+
         ax.axesPatch.set_alpha(0.)
         ax.yaxis.set_visible(False)
 
@@ -169,35 +88,47 @@ def plothist_strip(hist, stripaxis=0, **kwargs):
         ax.xaxis.tick_top()
         ax.xaxis.set_label_position('top')
 
-        ax.spines['top'].set_position(('outward',5))
+        ax.spines['top'].set_position(('outward',7))
 
-        if ilow < len(saxis.edges):
-            if ihigh < len(saxis.edges):
-                ax.set_xlim(saxis.edges[ilow],saxis.edges[ihigh])
-                ax.xaxis.set_ticks(saxis.edges[ilow:ihigh+1])
+        if ilow < len(haxis.edges):
+            if ihigh < len(haxis.edges):
+                ax.set_xlim(haxis.edges[ilow],haxis.edges[ihigh])
+                ax.xaxis.set_ticks(haxis.edges[ilow:ihigh+1])
             else:
-                ax.set_xlim(saxis.edges[ilow],saxis.edges[-1])
-        ax.set_xlabel(saxis.label, x=0.15)
+                ax.set_xlim(haxis.edges[ilow],haxis.edges[-1])
         ax.xaxis.labelpad = -3
 
         # disable interactive pan/zoom for this axis
         ax.set_xlim = lambda *args,**kwargs: None
 
-        ax.rasterize = False
+        strip_axs.append(ax)
 
-        strip_axs += [ax]
+    axs[0,0].set_xlabel('')
+    axs[-1,0].set_xlabel(hlist[0].axes[0].label)
+    for ax in axs[...,0]:
+        ax.set_ylabel(hlist[0].label)
+    strip_axs[0].set_xlabel(haxis.label, x=0.15)
 
+    for ax in axs.flat:
+        ax.label_outer()
+
+    if n < (rows*cols):
+        for ax in axs.flat[n:]:
+            ax.set_visible(False)
+        for ax in axs.flat[n-cols:n]:
+            for xt in ax.get_xticklabels():
+                xt.set_visible(True)
+        o = n % cols
+        for ax in axs.flat[n-cols+1:n-cols+o]:
+            for lab in ax.get_xticklabels()[:2]:
+                lab.set_visible(False)
+        axs.flat[n-cols].set_xlabel(hlist[0].axes[0].label)
+
+    for ax in axs[-1,1:]:
+        for lab in ax.get_xticklabels()[:2]:
+            lab.set_visible(False)
+
+    ret = fig,axs,pts
     if hook is not None:
-        return (fig,axs,strip_axs),hook_output
-    else:
-        return fig,axs,strip_axs
-
-if __name__ == '__main__':
-    from pyhep import Histogram
-
-    d0 = (10, [0,100],'x')
-    d1 = (10,[-0.5,100.5],'y')
-    h2 = Histogram(d0,d1,'hist title','hist label')
-    h2.fill(np.random.normal(100,50,10000),np.random.normal(50,10,10000))
-    plothist_strip(h2)
-    pyplot.show()
+        ret = [ret, hook_output]
+    return ret
