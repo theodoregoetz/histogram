@@ -1,6 +1,6 @@
 import numpy as np
 
-import matplotlib
+from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 
 def subplots(fig, nrows=1, ncols=1, sharex=False, sharey=False,
@@ -115,4 +115,4 @@ def subplots(fig, nrows=1, ncols=1, sharex=False, sharey=False,
 
     return ret
 
-matplotlib.figure.Figure.subplots = subplots
+Figure.subplots = subplots

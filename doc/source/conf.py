@@ -49,7 +49,6 @@ issuetracker = 'github'
 issuetracker_project = 'theodoregoetz/histogram'
 issuetracker_plaintext_issues = False
 
-
 # numpydoc
 #numpydoc_show_class_members = False
 

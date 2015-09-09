@@ -1,9 +1,9 @@
 import math
 import numpy as np
 
+import matplotlib
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
-from matplotlib.axes import Axes
 from matplotlib.ticker import MaxNLocator, LogLocator
 from matplotlib.colors import LogNorm
 
@@ -22,10 +22,10 @@ def plothist_errorbar(ax, hist, **kwargs):
         hist.uncert = np.sqrt(hist.data)
 
     if mask is not None:
-        x,y = hist.grid[mask], hist.data[mask]
+        (x,),y = hist.grid[mask], hist.data[mask]
         xerr,yerr = [e[mask] for e in hist.errorbars()]
     else:
-        x,y = hist.grid, hist.data
+        (x,),y = hist.grid, hist.data
         xerr,yerr = hist.errorbars()
 
     nans = ~np.isfinite(yerr)
@@ -322,4 +322,4 @@ def plothist(ax, hist, **kwargs):
 
     return ret
 
-Axes.plothist = plothist
+matplotlib.axes.Axes.plothist = plothist

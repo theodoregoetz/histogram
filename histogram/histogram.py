@@ -5,6 +5,7 @@ import numpy as np
 import itertools as it
 from scipy import optimize as opt
 from scipy import stats, ndimage, interpolate
+from warnings import warn
 
 from .histogram_axis import HistogramAxis
 from .detail import isstr
@@ -352,17 +353,15 @@ class Histogram(object):
         bin-centers of the x-axis. For 2D histograms, this is a
         tuple of two 2D arrays:
 
-            XX,YY = h2.grid()
+            XX,YY = h2.grid
 
-        Here, XX and YY are arrays of shape (xbins,ybins...)
+        Here, XX and YY are arrays of shape (xbins,ybins)
         '''
         if self.dim == 1:
-            return self.axes[0].bincenters
-        elif self.dim == 2:
+            return (self.axes[0].bincenters,)
+        else:
             centers = [ax.bincenters for ax in self.axes]
             return np.meshgrid(*centers, indexing='ij')
-        else:
-            raise Exception('not implemented')
 
     @property
     def edge_grid(self):
@@ -372,17 +371,15 @@ class Histogram(object):
         edges of the x-axis. For 2D histograms, this is a
         tuple of two 2D arrays:
 
-            XX,YY = h2.grid()
+            XX,YY = h2.edge_grid
 
-        Here, XX and YY are arrays of shape (xedges,yedges...)
+        Here, XX and YY are arrays of shape (xedges,yedges)
         '''
         if self.dim == 1:
             return self.axes[0].edges
-        elif self.dim == 2:
+        else:
             edges = [ax.edges for ax in self.axes]
             return np.meshgrid(*edges, indexing='ij')
-        else:
-            raise Exception('not implemented')
 
     @property
     def binwidths(self):
@@ -1220,46 +1217,15 @@ class Histogram(object):
         a tuple containing the specified test result
         (chi-square test is default).
         '''
-        debug = kwargs.pop('debug',False)
 
-        ### Range, validity and bounds checking
-        assert(self.dim == 1)
-
-        # only allow this many iterations when the minimization
-        # routine fails and we do a random walk on the parameters
-        maxcount = kwargs.pop('maxcount',20)
         test = kwargs.pop('test','chisquare').lower()
         uncert = kwargs.pop('uncert',self.uncert)
+        sel = kwargs.pop('sel',np.ones(self.data.shape,dtype=bool))
 
-        sel = np.isfinite(self.grid) & np.isfinite(self.data)
-
-        if uncert is None:
-            xx = self.grid[sel].astype(np.float64)
-            yy = self.data[sel].astype(np.float64)
-
-        else:
-            minuncert = kwargs.pop('minuncert',0)
-            mindata = kwargs.pop('mindata',0.05)
-
-            # only consider points where the uncertainty
-            # is greater than minuncert
-            sel &= uncert > minuncert
-
-            # and only try to fit the data if at least mindata of the
-            # bins have non-zero uncertainty
-            ndatapoints = np.count_nonzero(sel)
-            datasize = len(self.data)
-            if (ndatapoints / datasize) < mindata:
-                raise RuntimeError('not enough data to fit')
-
-            ### Set up the data
-            xx = self.grid[sel].astype(np.float64)
-            yy = self.data[sel].astype(np.float64)
-
-            if 'sigma' not in kwargs:
-                kwargs['sigma'] = uncert[sel].astype(np.float64)
-            if 'absolute_sigma' not in kwargs:
-                kwargs['absolute_sigma'] = True
+        if 'sigma' in kwargs:
+            warn('"sigma" keyword not accepted, use "uncert".')
+        if 'abolute_sigma' in kwargs:
+            warn('"absolue_sigma" keyword not used (always considered True).')
 
         # initial parameters
         if hasattr(p0, '__call__'):
@@ -1269,40 +1235,32 @@ class Histogram(object):
 
         npar = len(kwargs['p0'])
 
+        ### Setup data selection
+        sel &= np.isfinite(self.data)
+
+        xx = self.grid
+        for x in xx:
+            sel &= np.isfinite(x)
+        xx = np.squeeze(tuple(x[sel].astype(np.float64) for x in xx))
+
+        if uncert is not None:
+            sel &= np.isfinite(uncert)
+
+        if np.count_nonzero(sel) < npar:
+            raise RuntimeError('Not enough data.')
+
+        ## Setup data at grid points
+        yy = self.data[sel].astype(np.float64)
+
+        if uncert is not None:
+            kwargs['sigma'] = uncert[sel].astype(np.float64)
+            kwargs['absolute_sigma'] = True
+
         ### Do the fit
-        count = 0
-        while count < maxcount:
-            try:
-                pfit,pcov = opt.curve_fit(fcn, xx, yy, **kwargs)
+        pfit,pcov = opt.curve_fit(fcn, xx, yy, **kwargs)
 
-                if not isinstance(pcov,np.ndarray):
-                    raise RuntimeError('bad fit')
-
-                if debug:
-                    print('init:',kwargs['p0'])
-                    print('fit:',pfit)
-                    print('pcov:',pcov)
-                    print('kwargs:',kwargs)
-
-                break
-            except RuntimeError as e:
-                if debug:
-                    print('RuntimeError:',e)
-                # random walk of the initial parameters
-                # gradually increasing step size from 5% to 20%
-                a = (float(count)/maxcount) * 0.15 + 0.05
-                for i in range(npar):
-                    kwargs['p0'][i] *= np.random.uniform(1.-a,1.+a)
-                count = count + 1
-            except TypeError as e:
-                if debug:
-                    print('TypeError:',e)
-                raise RuntimeError('not enough data. TypeError: '+str(e))
-
-        ### Make sure the fit converged
-        if count == maxcount:
-            # maybe try another fitting method here?
-            raise RuntimeError('fit did not converge')
+        if not isinstance(pcov, np.ndarray):
+            raise RuntimeError('Bad fit.')
 
         ### perform goodness of fit test
         if test not in [None,'none']:
@@ -1316,11 +1274,7 @@ class Histogram(object):
             # used to disambiguate goodness of fit tests
             # at the moment, one letter is sufficient.
             nchar = 1
-            if test[:nchar] == 'chisquare'[:nchar]:
-                # simple Chi-squared test
-                chisq,pval = stats.chisquare(yy,yyfit,len(pfit))
-                ptest = (chisq/ndf,pval)
-            elif test[:nchar] == 'kstest'[:nchar]:
+            if test[:nchar] == 'kstest'[:nchar]:
                 # two-sided Kolmogorov-Smirov test
                 D,pval = stats.kstest(dyy,
                             stats.norm(0,dyy.std()).cdf)
@@ -1329,8 +1283,10 @@ class Histogram(object):
                 # Shapiro-Wilk test
                 W,pval = sp.stats.shapiro(dyy)
                 ptest = (W,pval)
-            else:
-                raise RuntimeError('unknown goodness of fit test')
+            else: # test[:nchar] == 'chisquare'[:nchar]:
+                # simple Chi-squared test
+                chisq,pval = stats.chisquare(yy,yyfit,len(pfit))
+                ptest = (chisq/ndf,pval)
 
             return pfit,pcov,ptest
 
