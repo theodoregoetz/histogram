@@ -13,7 +13,7 @@ except ImportError:
     warn('Could not import h5py. You will not be able to load/save histograms stored in hdf5 format.', ImportWarning)
 
 try:
-    from . import histogram_root
+    from .histogram_root import save_histogram_to_root, load_histogram_from_root
     have_pyroot = True
 except ImportError:
     have_pyroot = False

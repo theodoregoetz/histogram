@@ -4,14 +4,14 @@ import numpy as np
 import ROOT
 
 from .. import Histogram, HistogramAxis
-from ..detail.strings import encode_str, decode_str
+from ..detail.strings import encoded_str, decoded_str
 
 def asroot(hist, name):
     '''Convert this histogram to a CERN/ROOT object (TH1F, TH2F, etc)'''
     if hist.dim > 3:
         raise TypeError('Can not convert histogram with dimensions > 3 to ROOT')
 
-    title = encode_str(hist.title) if hist.title is not None else encode_str(name)
+    title = encoded_str(hist.title) if hist.title is not None else encoded_str(name)
 
     args = [name,title]
     for ax in hist.axes:
@@ -36,11 +36,11 @@ def asroot(hist, name):
 
     for i,ax in enumerate(hist.axes):
         if ax.label is not None:
-            axlabel_dispatch[i](encode_str(ax.label))
+            axlabel_dispatch[i](encoded_str(ax.label))
 
     if hist.label is not None:
         if hist.dim < 3:
-            axlabel_dispatch[hist.dim](encode_str(hist.label))
+            axlabel_dispatch[hist.dim](encoded_str(hist.label))
         else:
             warn('CERN/ROOT 3D Histograms do not store a content label. Information (hist.label = \''+hist.label+'\') has been lost.')
 
@@ -65,7 +65,7 @@ def fromroot(hist):
         nbins = ax.GetNbins()
         shape.append(nbins)
         edges = [ax.GetBinLowEdge(b) for b in range(1,nbins+2)]
-        label = decode_str(ax.GetTitle())
+        label = decoded_str(ax.GetTitle())
 
         axes.append(HistogramAxis(edges, label=label))
 
@@ -80,8 +80,8 @@ def fromroot(hist):
         uncert[i] = hist.GetBinError(i)
     uncert.shape = shape
 
-    title = decode_str(hist.GetTitle())
-    label = decode_str(getax_dispatch[dim]().GetTitle())
+    title = decoded_str(hist.GetTitle())
+    label = decoded_str(getax_dispatch[dim]().GetTitle())
 
     return Histogram(
         *axes,

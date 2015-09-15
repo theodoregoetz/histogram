@@ -11,7 +11,9 @@ def save_histogram_to_npz(filepath, hist):
     in npz format
     '''
     fout = io.open(filepath,'wb')
-    np.savez(fout, **encode_dict(hist.asdict()))
+    data = hist.asdict()
+    encode_dict(data)
+    np.savez(fout, **data)
     fout.close()
 
 def load_histogram_from_npz(filepath):
@@ -25,4 +27,5 @@ def load_histogram_from_npz(filepath):
             data[k] = data[k].tostring().decode('utf-8')
         elif data[k].dtype.kind == 'U':
             data[k] = data[k].tostring().decode('utf-32')
-    return Histogram.fromdict(**decode_dict(data))
+    decode_dict(data)
+    return Histogram.fromdict(**data)

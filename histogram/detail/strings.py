@@ -10,7 +10,7 @@ except NameError:
     def isstr(s):
         return isinstance(s, str) or isinstance(s, bytes)
 
-def encode_str(s):
+def encoded_str(s):
     if s is None:
         return None
     if sys.version_info < (3,0):
@@ -21,19 +21,17 @@ def encode_str(s):
     s = codecs.encode(s,'unicode-escape')
     return codecs.decode(s, 'latin-1')
 
-def encode_dict(data):
-    for k in data:
-        if isstr(data[k]):
-            data[k] = encode_str(data[k])
-    return data
-
-def decode_str(s):
+def decoded_str(s):
     if s is None:
         return None
     return codecs.decode(s, 'unicode-escape')
 
+def encode_dict(data):
+    for k in data:
+        if isstr(data[k]):
+            data[k] = encoded_str(data[k])
+
 def decode_dict(data):
     for k in data:
         if isstr(data[k]):
-            data[k] = decode_str(data[k])
-    return data
+            data[k] = decoded_str(data[k])

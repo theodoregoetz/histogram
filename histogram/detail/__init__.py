@@ -1,3 +1,3 @@
 from .run_control import RunControl
-from .strings import isstr, encode_dict, encode_str, decode_dict, \
-                     decode_str
+from .strings import isstr, encode_dict, encoded_str, decode_dict, \
+                     decoded_str

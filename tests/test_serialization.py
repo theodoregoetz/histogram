@@ -3,15 +3,17 @@
 import unittest
 
 import sys
+from copy import copy
 import platform
 import numpy as np
 
 from histogram import Histogram, rc
-
-rc.overwrite.overwrite = 'always'
+from histogram.detail.strings import isstr, encoded_str, encode_dict, \
+                                     decoded_str, decode_dict
 
 class TestSerialization(unittest.TestCase):
     def setUp(self):
+        rc.overwrite.overwrite = 'always'
         np.random.seed(1)
         h = Histogram(100,[0,10],'Δx', 'y', 'title')
         h.fill(np.random.normal(5,2,10000))
@@ -68,3 +70,32 @@ class TestSerialization(unittest.TestCase):
                 assert a.label == aa.label
         except ImportError:
             pass
+
+    def test_strings(self):
+        assert isstr('a')
+        assert isstr(r'a')
+        assert isstr(u'a')
+        assert isstr(b'a')
+
+        s = 'α'
+        es = r'\u03b1'
+        assert encoded_str(s) == es
+        assert s == decoded_str(es)
+
+        d = {'a':'α'}
+        ed = {'a':r'\u03b1'}
+
+        encoded_d_copy = copy(d)
+        encode_dict(encoded_d_copy)
+
+        decoded_ed_copy = copy(ed)
+        decode_dict(decoded_ed_copy)
+
+        assert encoded_d_copy == ed
+        assert decoded_ed_copy == d
+
+        assert encoded_str(None) is None
+        assert encoded_str(b'a') == 'a'
+
+if __name__ == '__main__':
+    unittest.main()
