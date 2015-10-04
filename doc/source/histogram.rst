@@ -29,24 +29,11 @@ Histogram
         overflow
         shape
         size
+        uncert_ratio
 
     **Methods**
 
     .. autosummary::
-        __add__
-        __call__
-        __truediv__
-        __iadd__
-        __itruediv__
-        __imul__
-        __isub__
-        __mul__
-        __radd__
-        __rtruediv__
-        __rmul__
-        __rsub__
-        __str__
-        __sub__
         added_uncert
         added_uncert_ratio
         asdict
@@ -56,7 +43,6 @@ Histogram
         clear_nans
         clone
         cut
-        cut_data
         errorbars
         extent
         fill
@@ -79,6 +65,24 @@ Histogram
         smooth
         std
         sum
+
+    **Operators and Special Methods**
+
+    .. autosummary::
+        __add__
+        __call__
+        __truediv__
+        __iadd__
+        __itruediv__
+        __imul__
+        __isub__
+        __mul__
+        __radd__
+        __rtruediv__
+        __rmul__
+        __rsub__
+        __str__
+        __sub__
 
 Axes, Shape and Labels
 ----------------------
@@ -133,13 +137,15 @@ Access to the filled data, associated uncertainty and various properties of the 
 
 .. autoattribute:: Histogram.data
 .. autoattribute:: Histogram.uncert
-.. automethod:: Histogram.dtype
-.. automethod:: Histogram.errorbars
-.. automethod:: Histogram.integral
+.. autoattribute:: Histogram.uncert_ratio
 .. automethod:: Histogram.max
-.. automethod:: Histogram.mean
 .. automethod:: Histogram.min
+.. automethod:: Histogram.mean
 .. automethod:: Histogram.std
+.. automethod:: Histogram.sum
+.. automethod:: Histogram.integral
+.. automethod:: Histogram.projection
+.. automethod:: Histogram.occupancy
 
 Filling Histogram with Data
 ---------------------------
@@ -157,13 +163,9 @@ Transformations
 Methods which generally return a new histogram representing the same data in some transformed view, sometimes with a loss of information (eg. merged bins).
 
 .. automethod:: Histogram.cut
-.. automethod:: Histogram.cut_data
-.. automethod:: Histogram.interpolate_nans
-.. automethod:: Histogram.occupancy
-.. automethod:: Histogram.projection
 .. automethod:: Histogram.rebin
+.. automethod:: Histogram.interpolate_nans
 .. automethod:: Histogram.smooth
-.. automethod:: Histogram.sum
 
 Iterating
 ---------
@@ -198,10 +200,12 @@ Misc
 
 .. automethod:: Histogram.asdict
 .. automethod:: Histogram.fromdict
-.. automethod:: Histogram.added_uncert
-.. automethod:: Histogram.added_uncert_ratio
 .. automethod:: Histogram.asline
 .. automethod:: Histogram.aspolygon
+.. automethod:: Histogram.errorbars
 .. automethod:: Histogram.clone
 .. automethod:: Histogram.__str__
 .. automethod:: Histogram.__call__
+.. automethod:: Histogram.added_uncert
+.. automethod:: Histogram.added_uncert_ratio
+.. automethod:: Histogram.dtype

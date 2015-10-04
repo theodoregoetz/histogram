@@ -1246,7 +1246,7 @@ class Histogram(object):
 
 ### interpolating and smoothing
     def interpolate_nans(self, method='cubic', **kwargs):
-        '''Replace non-finite (nan or inf) bins with interpolated values
+        '''Replace non-finite bins with interpolated values
 
         Keyword Args:
 
@@ -1304,6 +1304,7 @@ class Histogram(object):
 
 ### slicing and shape changing
     def slices(self, axis=0):
+        '''Generator of histograms along specified axis'''
         axes = []
         for i in range(self.dim):
             if i != axis:
@@ -1321,12 +1322,16 @@ class Histogram(object):
                 label = copy(self.label))
 
     def slices_data(self, axis=0):
+        '''Iterable over the data along specified axis'''
         if axis == 0:
             return self.data
         else:
             return np.rollaxis(self.data,axis)
 
     def slices_uncert(self, axis=0):
+        '''Iterable over the uncertainty along specified axis
+
+        This will assume Poisson statistics if ``uncert is None``.'''
         if self.uncert is None:
             self.uncert = np.sqrt(self.data)
         if axis == 0:
@@ -1335,10 +1340,13 @@ class Histogram(object):
             return np.rollaxis(self.uncert,axis)
 
     def rebin(self, nbins=2, axis=0, snap='low', clip=True):
-        '''
-        nbins describes the number of bins to merge
-        along each axis, or along one axis specified by
-        the argument "axis".
+        '''Create new histogram with merged bins
+
+        Keyword Args:
+            nbins (int): Number of bins to merge
+            axis (int): Axis along which to merge bins
+            snap (str): Controls edge behavior if `nbins` does not even divide the number of bins in this `axis`.
+            clip (bool): Wether or not to include the non-uniform bin in the case the `bins` does not evenly divide the number of bins in this `axis`.
         '''
         if not hasattr(nbins,'__iter__'):
             ones = [1]*self.dim
@@ -1478,13 +1486,8 @@ class Histogram(object):
             title = kwargs.get('title',copy(self.title)),
             label = kwargs.get('label',copy(self.label)))
 
-    def cut_data(self, *rng, **kwargs):
-        raise Exception('not implemented')
-
     def projection(self, axis=0):
-        '''
-        projection onto a single axis
-        '''
+        '''Projection onto a single axis'''
         sumaxes = list(range(self.dim))
         sumaxes.remove(axis)
 
@@ -1504,25 +1507,23 @@ class Histogram(object):
             title = copy(self.title),
             label = copy(self.label))
 
-    def occupancy(self,bins=100,rng=None,**kwargs):
-        '''
-        returns a new histogram showing the occupancy of the
-        data. This is effectively histograming the data points.
+    def occupancy(self,bins=100,limits=None,**kwargs):
+        '''Histogram the filled data of this histogram
+
+        Returns a new histogram showing the occupancy of the data. This is effectively histograming the data points, ignoring the axes and uncertanties.
         '''
         nans = np.isnan(self.data)
-        if rng is None:
-            rng = [self[~nans].min(),self[~nans].max()]
-        ret = Histogram(bins,rng,**kwargs)
+        if limits is None:
+            limits = [self[~nans].min(),self[~nans].max()]
+        ret = Histogram(bins,limits,**kwargs)
         ret.fill_from_sample(self[~nans].ravel())
         return ret
 
 ### curve fitting
     def fit(self, fcn, p0, **kwargs):
-        '''
-        Fits the function fcn to the histogram, returning
-        estimated parameters, their covariance matrix and
-        a tuple containing the specified test result
-        (chi-square test is default).
+        '''Fit a function to the histogram
+
+        Fits the function ``fcn`` to the histogram, returning estimated parameters, their covariance matrix and a tuple containing the specified test result (chi-square test is default).
         '''
 
         test = kwargs.pop('test','chisquare').lower()
