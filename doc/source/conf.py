@@ -80,10 +80,10 @@ def linkcode_resolve(domain, info):
         else:
             first,last = name.split('.',maxsplit=1)
             mod = __import__(mod, fromlist=[first])
-            print('getattr',mod,first)
+            #print('getattr',mod,first)
             obj = getattr(mod,first)
             for i in last.split('.'):
-                print('getattr',obj,i)
+                #print('getattr',obj,i)
                 obji = getattr(obj,i)
                 if isinstance(obji,property):
                     obj = getattr(get_dict_attr(obj,i),'fget')
@@ -119,10 +119,10 @@ def linkcode_resolve(domain, info):
 
         return lnk.format(**opts)
     except TypeError as e:
-        print(e)
+        #print(e)
         return None
     except AttributeError as e:
-        print(e)
+        #print(e)
         return None
 
 

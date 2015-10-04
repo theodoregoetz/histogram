@@ -395,9 +395,9 @@ class TestHistogram(unittest.TestCase):
         assert True # TODO: implement your test here
 
     def test_mean(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.mean(axis))
-        assert True # TODO: implement your test here
+        h = Histogram(10,[0,10])
+        h.fill([3,3,3])
+        print(h.mean())
 
     def test_min(self):
         # histogram = Histogram(*axes, **kwargs)

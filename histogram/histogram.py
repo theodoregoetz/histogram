@@ -14,11 +14,12 @@ from .detail import isstr
 np.seterr(divide='ignore', invalid='ignore')
 
 class Histogram(object):
-    '''An N-dimensional histogram over a continuous range.
+    '''N-dimensional histogram over a continuous range
 
-    This is an ND histogram where each axis is
+    This is a histogram where each axis is
     a continuous (non-discrete) range with a set
-    number of bins.
+    number of bins. The binning does not have to be
+    evenly spaced.
 
     Args:
         axes (list): List of :py:class:`HistogramAxis` or constructor
@@ -115,7 +116,7 @@ class Histogram(object):
 ### properties
     @property
     def data(self):
-        ''':py:class:`numpy.ndarray` of the filled data for this :py:class:`Histogram`.
+        ''':py:class:`numpy.ndarray` of the filled data
 
         The indexes are in the same order as the :py:class:`HistogramAxis` objects in the list stored in :py:attr:`Histogram.axes`. One can set this directly - shape is checked and data is written "in-place" when possible.
 
@@ -129,7 +130,7 @@ class Histogram(object):
 
                 h = Histogram(50, [0,10])
 
-                xx = h.grid
+                xx, = h.grid
                 h.data = 1000 * stats.norm(5,2).pdf(xx)
 
                 fig,ax = pyplot.subplots(figsize=(4,2.5))
@@ -152,6 +153,37 @@ class Histogram(object):
 
     @property
     def uncert(self):
+        ''':py:class:`numpy.ndarray` of the absolute uncertainty
+
+        This has the same shape as :py:attr:`Histogram.data` or None. Under certain cases, this will be set automatically to the square-root of the data (Poisson statistics assumption).
+
+        Example:
+
+            When histogramming a sample of randomly distributed data, the uncertainty of each bin is the equal to the square-root of the counts in that bin::
+
+                import numpy as np
+                from scipy import stats
+                from numpy import random as rand
+                from matplotlib import pyplot
+                from histogram import Histogram
+
+                rand.seed(1)
+
+                h = Histogram(30, [0,10])
+
+                xx, = h.grid
+                h.data = 1000 * stats.norm(5,2).pdf(xx)
+                h.data += rand.normal(0,10,xx.shape)
+
+                h.uncert = np.sqrt(h.data)
+
+                fig,ax = pyplot.subplots(figsize=(4,2.5))
+                fig.subplots_adjust(left=.15,bottom=.2,right=.9,top=.85)
+                pt = ax.plothist(h,style='errorbar')
+                pyplot.show()
+
+        .. image:: images/histogram_uncert_1dnorm.png
+        '''
         return getattr(self,'_uncert',None)
 
     @uncert.setter
@@ -169,10 +201,21 @@ class Histogram(object):
             else:
                 self._uncert = np.full(self.shape, u, dtype=np.float64)
 
+    @property
+    def uncert_ratio(self):
+        '''The untertainty as ratios of the data'''
+        if self.uncert is None:
+            return None
+        return self.uncert / self.data
+
+    @uncert_ratio.setter
+    def uncert_ratio(self, u):
+        '''Set the uncertainty by ratio of the data'''
+        self.uncert = (u * self.data).astype(np.float64)
 
     @property
     def title(self):
-        '''Title (string) of this histogram'''
+        '''Title of this histogram'''
         return getattr(self,'_title',None)
 
     @title.setter
@@ -187,7 +230,9 @@ class Histogram(object):
 
     @property
     def label(self):
-        '''The (string) label of the filled data in this histogram. Usually something like "counts".'''
+        '''Label of the filled data in this histogram
+
+        This is usually something like "counts".'''
         return getattr(self,'_label',None)
 
     @label.setter
@@ -201,6 +246,28 @@ class Histogram(object):
             self._label = l
 
     def __eq__(self, that):
+        '''Check if data and axes are equal
+
+        Uncertainty, labels and titles are not considered. For complete equality, see :py:meth:`Histogram.isidentical`. For finer control of histogram comparison, consider using :py:func:`numpy.allclose()` on the data::
+
+            import numpy as np
+            from histogram import Histogram
+
+            h1 = Histogram(10,(0,10))
+            h2 = Histogram(10,(0,10))
+            h3 = Histogram(10,(-10,10))
+
+            h1.data[2] = 1
+            h2.data[2] = 1
+            h3.data[3] = 1
+
+            # checks data and axes:
+            assert h1 == h2
+            assert not (h1 == h3)
+
+            # checks only data:
+            assert np.allclose(h1.data, h2.data)
+        '''
         try:
             if not np.allclose(self.data,that.data):
                 return False
@@ -212,7 +279,18 @@ class Histogram(object):
         return True
 
     def isidentical(self, that):
+        '''Check if histograms are identical including uncertainty and labels
+
+        See also :py:meth:`Histogram.__eq__`.'''
         if not (self == that):
+            return False
+        if self.uncert is not None:
+            if that.uncert is not None:
+                if not np.allclose(self.uncert,that.uncert):
+                    return False
+            else:
+                return False
+        elif that.uncert is not None:
             return False
         if self.label != that.label:
             return False
@@ -225,19 +303,57 @@ class Histogram(object):
 
 ### non-modifying information getters
     def __str__(self):
-        '''
-        the str() representation of the numpy array containing
-        the data only (axes, uncertainty and labels are ignored).
+        '''Breif string representation of the data
+
+        Returns the string representation of the numpy array containing the data only. Axes, uncertainty and labels are ignored.
+
+        Example::
+
+            from numpy import random as rand
+            from histogram import Histogram
+
+            rand.seed(1)
+
+            h = Histogram(10,[0,10])
+            h.fill(rand.normal(5,2,10000))
+            print(h)
+
+        output::
+
+            [ 164  428  909 1484 1915 1934 1525  873  467  175]
+
         '''
         return str(self.data)
 
     def __call__(self,*xx,**kwargs):
-        '''
-        the value of the histogram at a specific
-        point (x,y..) or array of points (xx,yy...)
+        '''Value of histogram at a point
 
-        optional arguements:
-            overflow - return value when the point lies outside this histogram. (default: 0)
+        Returns the value of the histogram at a specific point ``(x,y...)`` or array of points ``(xx,yy...)``.
+
+        Args:
+            xx (tuple of numbers or arrays): Point(s) inside the axes of this histogram.
+
+        Keyword Args:
+            overflow (number): Return value when the point lies outside this histogram. (default: 0)
+
+        Example::
+
+            from numpy import random as rand
+            from histogram import Histogram
+
+            rand.seed(1)
+
+            h = Histogram(10,[0,10])
+            h.fill(rand.normal(5,2,10000))
+            for x in [0.5,1.5,2.5]:
+                print( h(x) )
+
+        output::
+
+            164
+            428
+            909
+
         '''
         overflow = kwargs.pop('overflow',0)
 
@@ -251,6 +367,10 @@ class Histogram(object):
         return self.data[tuple(bin)]
 
     def asdict(self):
+        '''Dictionary representation of this histogram
+
+        This includes uncertainty, axes, labels and title and is used to serialize the histogram to NumPy's binary format (see :py:func:`save_histogram_to_npz`).
+        '''
         ret = {'data' : self.data}
         if self.uncert is not None:
             ret['uncert'] = self.uncert
@@ -268,29 +388,27 @@ class Histogram(object):
 
     @staticmethod
     def fromdict(**kwargs):
-        '''
-        convert the dict object to a Histogram using these keys:
+        '''Create new :py:class:`Histogram` from a dictionary
 
-        required keywords:
+        Required Keywords:
 
             * data
             * edges0, edges1 ... edgesN
 
-        optional keywords:
+        Optional Keywords:
 
-            * label0, label1 ... labelN
             * uncert
+            * label0, label1 ... labelN
             * label
             * title
 
-        where `data` is an N-dimensional numpy.ndarray, and edgei
-        for i in [0,N] are 1-dimensional arrays specifying the edges
-        along the ith dimension.
+        where ``data`` is an N-dimensional :py:class:`numpy.ndarray`, and edgei for i in [0,N] are 1-dimensional arrays specifying the edges along the ith dimension.
 
-        `uncert` is either the same shape array as `data` or None.
-        `label` is the "counts" axis label of the histogram (string
-        or None), and `title` is the overall title of the histogram
-        object (string or None).
+        ``uncert`` is either the same shape array as ``data`` or ``None``. ``label`` is the "counts" axis label of the histogram (string or ``None``), and ``title`` is the overall title of the histogram object (string or ``None``).
+
+        Notes:
+
+            This is not typically used to create new :py:class:`Histogram` objects, but is meant to be the counter-part to :py:meth:`Histogram.asdict` for deserialization.
         '''
         data = kwargs.pop('data')
 
@@ -307,55 +425,54 @@ class Histogram(object):
 ###    dimension and shape
     @property
     def dim(self):
-        '''
-        the dimension of this histogram (number of axes)
-        '''
-        return len(self.data.shape)
+        '''Dimension of this histogram (number of axes)'''
+        return len(self.axes)
 
     @property
     def shape(self):
-        '''
-        the shape of this histogram. This is a tuple
-        of the number of bins in each axis (x,y...)
+        '''Shape of the histogram data
+
+        This is a tuple of the number of bins in each axis ``(x,y...)``. This is the same as :py:attr:`Histogram.data.shape`.
         '''
         return self.data.shape
 
     @property
     def size(self):
-        '''
-        the total number of bins. This is the product
-        of the number of bins in each axis
+        '''Total number of bins (size of data)
+
+        This is the product of the number of bins in each axis. This is the same as :py:meth:`Histogram.data.size`.
         '''
         return self.data.size()
 
 ###    axes information (bin edges and centers)
-    def isuniform(self,*args,**kwargs):
+    def isuniform(self, rtol=1e-05, atol=1e-08):
+        '''Check if all axes are uniform
+
+        Returns "and" of :py:meth:`HistogramAxis.isuniform` for each axis.
         '''
-        true or false depending on if all
-        axes are uniform (to within a certain tolerace)
-        see HistogramAxis.isuniform() for more details
-        '''
-        return all([ax.isuniform(*args,**kwargs) for ax in self.axes])
+        return all([ax.isuniform(rtol=rtol,atol=atol) for ax in self.axes])
 
     @property
     def edges(self):
-        '''
-        the edges of each axis a tuple:
+        '''Edges of each axis as a tuple
+
+        Output is in the form::
+
             ( [x0,x1..], [y0,y1...] ... )
         '''
         return tuple([ax.edges for ax in self.axes])
 
     @property
     def grid(self):
-        '''
-        a tuple of the "meshgrid" of the bincenters of each axis.
-        This is just a single array for 1D histograms - i.e. the
-        bin-centers of the x-axis. For 2D histograms, this is a
-        tuple of two 2D arrays:
+        '''Meshgrid of the bincenters of each axis
+
+        This is a single array for 1D histograms - i.e. the bin-centers of the x-axis. For 2D histograms, this is a tuple of two 2D arrays::
 
             XX,YY = h2.grid
 
-        Here, XX and YY are arrays of shape (xbins,ybins)
+        Here, ``XX`` and ``YY`` are arrays of shape ``(xbins,ybins)``. For 1D histograms, the output is still a tuple so typically, one should expand this out with a comma::
+
+            xx, = h1.grid
         '''
         if self.dim == 1:
             return (self.axes[0].bincenters,)
@@ -365,56 +482,52 @@ class Histogram(object):
 
     @property
     def edge_grid(self):
-        '''Return the meshgrid built from the axes' edges.
+        '''Meshgrid built from the axes' edges
 
-        This is just a single array for 1D histograms - i.e. the
-        edges of the x-axis. For 2D histograms, this is a
-        tuple of two 2D arrays:
-
-            XX,YY = h2.edge_grid
-
-        Here, XX and YY are arrays of shape (xedges,yedges)
+        This is the same as :py:meth:`Histogram.grid` but for the edges of each axis instead of the bin centers.
         '''
         if self.dim == 1:
-            return self.axes[0].edges
+            return (self.axes[0].edges,)
         else:
             edges = [ax.edges for ax in self.axes]
             return np.meshgrid(*edges, indexing='ij')
 
     @property
     def binwidths(self):
+        '''Widths of all bins along each axis
+
+        This will always return a tuple::
+
+            dx,dy = h2.binwidths
+
+        Here, ``dx`` and ``dy`` are arrays of the widths of each bin along the `x` and `y` axes respecitively. For 1D histograms, the output is still a tuple so typically, one should expand this out with a comma::
+
+            dx, = h1.binwidths
         '''
-        tuple (or single array for 1D histogram) of the binwidths
-        of each axis
-        '''
-        if self.dim == 1:
-            return self.axes[0].binwidths
-        else:
-            return tuple([ax.binwidths for ax in self.axes])
+        return tuple([ax.binwidths for ax in self.axes])
 
     def binwidth(self, b=1, axis=0):
-        '''
-        the bin-width for a specific bin b on the axis
-        specified. default is the first (0) x-axis
+        '''Width of a specific bin ``b`` along an axis
+
+        Args:
+            b (int): Bin index (from zero, default: 1).
+            axis (int): Axis index (default: 0).
+
+        Note:
+
+            Default is the second bin (index = 1) in the first (index = 0) axis.
         '''
         return self.axes[axis].binwidth(b)
 
     @property
     def binvolumes(self):
-        '''
-        array of the volume of each bin. Volume is defined as the
-        product of the bin-widths along each axis for the given
-        bin.
+        '''Volumes of each bin
 
-        For 1D histogram, this is the same as h.binwidths
-
-        for 2D histograms, this returns a 2D array like the
-        following where dxi is the width of the ith bin along
-        the x-axis (first, index = 0)
+        Volume is defined as the product of the bin-widths along each axis for the given bin. For 1D histogram, this is the same as :py:attr:`Histogram.binwidths`. For 2D histograms, this returns a 2D array like the following where dxi is the width of the ith bin along the x-axis (first, index = 0)::
 
             [ [ dx0*dy0, dx0*dy1 ... ],
               [ dx1*dy0, dx1*dy1 ... ],
-              ... ]
+              ... ] = h2.binvolumes
 
             h.binvolumes[i,j] = dxi * dyj
         '''
@@ -426,35 +539,85 @@ class Histogram(object):
 
     @property
     def overflow(self):
-        '''
-        a value that is guaranteed to be an overflow
-        when filling this histogram.
+        '''Guaranteed overflow point when filling this histogram
+
+        For 1D histograms, this is a tuple of one value ``(x,)`` generated by :py:attr:`HistogramAxis.overflow`. For 2D histograms, this will look like ``(x,y)``.
+
+        Example::
+
+            from histogram import Histogram
+
+            ha = Histogram(10,[0,10])
+            print(h)
+
+            ha.fill(ha.overflow)
+            print(h)
+
+        Output::
+
+            [0 0 0 0 0 0 0 0 0 0]
+            [0 0 0 0 0 0 0 0 0 0]
         '''
         return tuple(ax.overflow for ax in self.axes)
 
 ###    data information (limits, sum, extent)
-    def sum(self, *axes, **kwargs):
+    def sum(self, *axes):
+        '''Sum of bin values or sum along one or more axes
+
+        Optional Args:
+
+            axes (tuple of integers): Axes to sum over.
+
+        Returns the sum over all values or sums only over specific axes and returns a new :py:class:`Histogram` with reduced dimension.
+
+        Example::
+
+            from histogram import Histogram
+
+            h = Histogram(10,[0,10])
+            h.fill([1,2,2,3,3,3,4,4,4,4])
+
+            print('sum of h:',h.sum())
+
+            h2 = Histogram(10,[0,10],10,[0,10])
+            h2.fill([1,2,2,3,3,3,4,4,4,4],
+                    [1,1,1,1,1,1,2,2,2,2])
+
+            print('h2 sum along axis 0:',h2.sum(0))
+
+        Output::
+
+            sum of h: 10
+            h2 sum along axis 0: [0 6 4 0 0 0 0 0 0 0]
         '''
-        summation over all values or specific axes, reducing
-        the dimensionality of the histogram
-        '''
-        if (len(axes) > 0) and (len(axes) < self.dim):
-            ret = self.sum_over_axes(*axes)
+        if (len(axes)==0) or all(d in axes for d in range(self.dim)):
+            return self.data.sum()
+
+        ii = sorted(set(range(self.dim)) - set(axes))
+        newaxes = [self.axes[i] for i in ii]
+
+        newdata = np.apply_over_axes(np.sum, self.data, axes)
+        newdata = np.squeeze(newdata)
+
+        if self.uncert is None:
+            newuncert = None
         else:
-            uncert = kwargs.get('uncert',False)
-            ret = self.data.sum()
-            if uncert:
-                if self.uncert is None:
-                    e = np.sqrt(ret)
-                else:
-                    e = np.sqrt(np.sum(self.uncert*self.uncert))
-                ret = ret,e
-        return ret
+            uncratio_sq = np.power(self.uncert / self.data, 2)
+            uncratio_sqsum = np.apply_over_axes(np.sum, uncratio_sq, axes)
+            newuncert = np.sqrt(uncratio_sqsum) * newdata
+            newuncert = np.squeeze(newuncert)
+
+        return Histogram(
+            *newaxes,
+            data = newdata,
+            uncert = newuncert,
+            title = copy(self.title),
+            label = copy(self.label))
 
     def integral(self,uncert=False):
-        '''
-        total integral of the histogram. This is the sum
-        multiplied by the bin volumes
+        '''Total integral of the histogram
+
+        This is the sum of each bin multiplied by the volume of the bins. If ``uncert=True`` is given, then the output is the 2-tuple: ``(integral, uncertainty)``.
         '''
         bv = self.binvolumes
         ret = np.sum(self.data * bv)
@@ -467,6 +630,10 @@ class Histogram(object):
         return ret
 
     def min(self,uncert=False):
+        '''Minimum value of the filled data
+
+        This will include the uncertainty if ``uncert=True``. Uncertainty is calculated as the square-root of the data if not already set.
+        '''
         if not uncert:
             return np.nanmin(self.data)
         else:
@@ -475,6 +642,10 @@ class Histogram(object):
             return np.nanmin(self.data - self.uncert)
 
     def max(self,uncert=False):
+        '''Maximum value of the filled data
+
+        This will include the uncertainty if ``uncert=True``. Uncertainty is calculated as the square-root of the data if not already set.
+        '''
         if not uncert:
             return np.nanmax(self.data)
         else:
@@ -482,31 +653,69 @@ class Histogram(object):
                 self.uncert = np.sqrt(self.data)
             return np.nanmax(self.data + self.uncert)
 
-    def mean(self,axis=None):
+    def mean(self):
+        '''Mean position of the data along the axes
+
+        Returns:
+
+            tuple: Mean (float) along each axis: ``(xmean,ymean...)``.
+
+        This will ignore all ``nan`` and ``inf`` values in the histogram. Bin-centers are used as the position and non-equal widths are incorporated into the weighting of the results.
         '''
-        mean of the all values in this histogram
+        mean = []
+        for i,axis in enumerate(self.axes):
+            data = self.data.sum(set(range(self.dim)) - {i})
+            sel = np.isfinite(data)
+            p = axis.bincenters[sel]
+            w = data[sel]
+            if not axis.isuniform():
+                w *= axis.binwidths
+            mean.append(np.average(p, weights=w))
+        return tuple(mean)
+
+    def var(self):
+        '''Variance of the data along the axes
+
+        Returns:
+
+            tuple: Variance (float) along each axis: ``(xvar,yvar...)``.
+
+        This will ignore all ``nan`` and ``inf`` values in the histogram. Bin-centers are used as the position and non-equal widths are incorporated into the weighting of the results.
         '''
-        return self.data[~np.isnan(self.data)].mean(axis)
+        var = []
+        for i,(axis,mean) in enumerate(zip(self.axes,self.mean())):
+            data = self.data.sum(set(range(self.dim)) - {i})
+            sel = np.isfinite(data)
+            p = axis.bincenters[sel]
+            w = data[sel]
+            if not axis.isuniform():
+                w *= axis.binwidths
+            var.append(np.average((p-mean)**2, weights=w))
+        return tuple(var)
 
     def std(self):
+        '''Standard deviation of the data along the axes
+
+        Returns:
+
+            tuple: Standard deviation (float) along each axis: ``(xstd,ystd...)``.
+
+        This is the square-root of the variance and will ignore all ``nan`` and ``inf`` values in the histogram. Bin-centers are used as the position and non-equal widths are incorporated into the weighting of the results.
         '''
-        standard deviation of all values in this histogram
-        '''
-        return self.data[np.isfinite(self.data)].std()
+        return tuple(np.sqrt(v) for v in self.var())
 
     def extent(self, maxdim=2, uncert=True, pad=None):
-        '''
-        extent of axes (up to maxdim) returned as
-        a single tuple. By default, this includes
-        the uncertainty if the last dimension is
-        the histogram's data and not an axis:
+        '''Extent of axes and data
 
-            [xmin, xmax, ymin, ymax, ..., zmin-dz, zmax+dz]
+        Returns:
 
-        padding is given as a percent of the actual
-        extent of the axes or data (plus uncertainty)
-        and can be either a single floating point
-        number or a list of length (2 * maxdim)
+            tuple: extent like ``(xmin, xmax, ymin ...)``.
+
+        By default, this includes the uncertainty if the last dimension is the histogram's data and not an axis::
+
+            [xmin, xmax, ymin, ymax, ..., min(data-uncert), max(data+uncert)]
+
+        padding is given as a percent of the actual extent of the axes or data (plus uncertainty) and can be either a single floating point number or a list of length ``2 * maxdim``.
         '''
         ext = []
         for ax in self.axes[:maxdim]:
@@ -524,7 +733,41 @@ class Histogram(object):
         return tuple(ext)
 
     def errorbars(self, maxdim=2, asratio=False):
-        if maxdim < self.dim:
+        '''Bin half-widths and data uncertainties
+
+        Keyword Args:
+
+            maxdim (int): Number of dimensions to return (default: 2).
+            asratio (bool): Return ratios instead of absolute values (default: False).
+
+        Returns:
+
+            list of arrays: Errors to be used for plotting this histogram.
+
+        Example::
+
+            from numpy import random as rand
+            from matplotlib import pyplot
+            from histogram import Histogram
+
+            rand.seed(1)
+
+            h = Histogram(10,[0,10])
+            h.fill(rand.normal(5,1,500))
+
+            x, = h.grid
+            y = h.data
+            xerr,yerr = h.errorbars()
+
+            fig,ax = pyplot.subplots(figsize=(4,2.5))
+            pt = ax.errorbar(x,y,xerr=xerr,yerr=yerr,ls='none')
+            fig.tight_layout()
+
+            pyplot.show()
+
+        .. image:: images/histogram_errorbars.png
+        '''
+        if maxdim > self.dim:
             if self.uncert is None:
                 self.uncert = np.sqrt(self.data)
 
@@ -542,21 +785,43 @@ class Histogram(object):
         return ret
 
     def asline(self, xlow=None, xhigh=None):
-        '''Return points describing this histogram as a line
+        '''Points describing this histogram as a line
 
         Arguments:
-            xlim (scalar 2-tuple, optional): Range in `x` to be used.
+            xlow (float or None): Lower bound along axis.
+            xhigh (float or None): Upper bound along axis.
 
         Returns:
 
             ..
 
-            **tuple**: (`x`, `y`)
+            **tuple**: ``(x, y, extent)``
 
-            x
-                `(scalar array)` x-position of points
-            y
-                `(scalar array)` y-position of points
+            * **x** (1D float array) - `x`-coordinate array.
+            * **y** (1D float array) - `y`-coordinate array.
+            * **extent** (tuple) - ``(xmin, xmax, ymin, ymax)``.
+
+        Example::
+
+            from numpy import random as rand
+            from matplotlib import pyplot
+            from histogram import Histogram
+
+            rand.seed(1)
+
+            h = Histogram(10,[0,10])
+            h.fill(rand.normal(5,1,500))
+
+            x,y,extent = h.asline()
+
+            fig,ax = pyplot.subplots(figsize=(4,2.5))
+            pt = ax.plot(x,y,lw=2)
+            fig.tight_layout()
+
+            pyplot.show()
+
+        .. image:: images/histogram_asline.png
+
         '''
         assert self.dim == 1, 'only 1D histograms can be translated into a line.'
 
@@ -587,7 +852,7 @@ class Histogram(object):
                 xx = xx[a:b]
                 yy = yy[a:b]
 
-        extent = [min(xx), max(xx), min(yy), max(yy)]
+        extent = (min(xx), max(xx), min(yy), max(yy))
         return xx,yy,extent
 
 
@@ -603,13 +868,10 @@ class Histogram(object):
 
             ..
 
-            **tuple**: (``points``, ``extent``).
+            **tuple**: ``(points, extent)``.
 
-            points
-                `(scalar array)` Points defining the polygon beginning and ending with the point ``(xmin,ymin)``.
-
-            extent
-                `(scalar tuple)` Extent of the resulting polygon in the form: ``[xmin, xmax, ymin, ymax]``.
+            * **points** (scalar array) - Points defining the polygon beginning and ending with the point ``(xmin, ymin)``.
+            * **extent** (scalar tuple) - Extent of the resulting polygon in the form: ``[xmin, xmax, ymin, ymax]``.
         '''
         assert self.dim == 1, 'only 1D histograms can be translated into a polygon.'
 
@@ -625,12 +887,18 @@ class Histogram(object):
 
 ### self modifying methods (set, fill)
     def __getitem__(self,*args):
+        '''Direct access to the filled data'''
         return self.data.__getitem__(*args)
 
     def __setitem__(self,*args):
+        '''Direct access to the filled data'''
         return self.data.__setitem__(*args)
 
     def set(self,val,uncert=None):
+        '''Set filled data to specific value
+
+        This will set the uncertainty to ``None`` by default and will accept a single value or an array the same shape as the data. Data will be cast to the data type already stored in the histogram.
+        '''
         if isinstance(val, np.ndarray):
             self.data.T[...] = val.T
         else:
@@ -649,21 +917,42 @@ class Histogram(object):
                 self.uncert[...] = uncert
 
     def reset(self):
+        '''Set data to zero and uncertainty to ``None``.'''
         self.set(0)
+        self.uncert = None
 
     def fill(self,*args):
-        '''
-        convert \*args to sample, weights
-        where sample is of shape (D,N)
-        where D is the dimension of the
-        histogram and N is the number of
-        points to fill. Note that this
-        will be transposed just before
-        sending to np.histogramdd
+        '''Fill histogram with sample data
 
-        weights may be a single number or
-        an array of length N. The default
-        (None) is equivalent to weights=1
+        Arguments (``\*args``) are the sample of data an optional associated weights. Weights may be a single number or an array of length `N`. The default (``None``) is equivalent to ``weights=1``. Example::
+
+            from histogram import Histogram
+
+            ### 1D Example
+            h = Histogram(10,[0,10])
+
+            h.fill(1)           # single value
+            h.fill(2,2)         # single value with weight
+            h.fill([3,3,3])     # data sample
+            h.fill([4,4],2)     # data sample with constant weight
+            h.fill([5,5],[2,3]) # data sample with variable weights
+
+            print(h)
+            # output:
+            # [0 1 2 3 4 5 0 0 0 0]
+
+            ### 2D Example
+            h = Histogram(3,[0,3],10,[0,10])
+            xdata = [0,0,1,1,2]
+            ydata = [1,2,3,4,5]
+            weights = [1,2,3,4,5]
+            h.fill(xdata,ydata,weights)
+
+            print(h)
+            # output:
+            # [[0 1 2 0 0 0 0 0 0 0]
+            #  [0 0 0 3 4 0 0 0 0 0]
+            #  [0 0 0 0 0 5 0 0 0 0]]
         '''
         if len(args) > self.dim:
             sample = args[:-1]
@@ -675,12 +964,9 @@ class Histogram(object):
         self.fill_from_sample(sample,weights)
 
     def fill_one(self, pt, wt=1):
-        '''
-        increment a single bin by weight wt.
-        This should be used as a last resort
-        because it is roughly 10 times
-        slower than fill_from_sample() when
-        filling many entries.
+        '''Fill a single data point
+
+        This increments a single bin by weight ``wt``. While it is the fastest method for a single entry, it should only be used as a last resort because its roughly 10 times slower than :py:meth:`Histogram.fill_from_sample` when filling many entries.
         '''
         try:
             if pt < self.axes[0].min or self.axes[0].max < pt:
@@ -695,16 +981,32 @@ class Histogram(object):
             self.data[tuple(b)] += wt
 
     def fill_from_sample(self, sample, weights=None):
-        '''
-        fills the histogram from sample
-        which must be (D,N) array where
-        D is the dimension of the histogram
-        and N is the number of points
-        to fill.
+        '''Fill histogram from sample of data
 
-        weights may be a single number or
-        an array of length N. The default
-        (None) is equivalent to weights=1
+        This fills the histogram from sample with shape `(D,N)` array where `D` is the dimension of the histogram and `N` is the number of points to fill. The optional ``weights`` may be a single number or an array of length `N`. The default (``None``) is equivalent to ``weights = 1``.
+
+        This is the primary work-horse of the :py:class:`Histogram` class and should be favored, along with the wrapper method :py:meth:`Histogram.fill` over :py:meth:`Histogram.fill_one`.
+
+        Example::
+
+            from numpy import random as rand
+            from matplotlib import pyplot
+            from histogram import Histogram
+
+            rand.seed(1)
+
+            ### 1D Example
+            h = Histogram(10,[0,10], 30,[0,10])
+
+            h.fill_from_sample(rand.normal(5,1,(2,20000)))
+
+            fig,ax = pyplot.subplots(figsize=(4,2.5))
+            pt = ax.plothist(h)
+            fig.tight_layout()
+
+            pyplot.show()
+
+        .. image:: images/histogram_fill_from_sample.png
         '''
         if not isinstance(sample, np.ndarray):
             sample = np.array(sample)
@@ -718,6 +1020,7 @@ class Histogram(object):
 
 ### operations
     def clone(self,dtype=None,**kwargs):
+        '''Create a complete copy of this histogram'''
         if dtype is None:
             new_data = self.data.copy()
         else:
@@ -736,9 +1039,9 @@ class Histogram(object):
             label = kwargs.get('label',copy(self.label)))
 
     def added_uncert(self, that):
-        '''
-        add the uncertainties directly in quadrature
-        assume uncert = sqrt(data) if uncert is None
+        '''Added uncertainty by absolute values
+
+        Returns the uncertainty added directly in quadrature with another histogram. This assumes Poisson statistics (``uncert = sqrt(data)``) if ``uncert is None``.
         '''
         if not isinstance(that,Histogram):
             return self.uncert
@@ -758,10 +1061,12 @@ class Histogram(object):
         return np.sqrt(self_unc_sq)
 
     def added_uncert_ratio(self, that, nans=0):
+        '''Added uncertainty by ratios of the data
+
+        Returns the uncertainty added by ratio and in quadrature with another histogram. This assumes Poisson statistics (``uncert = sqrt(data)``) if ``uncert is None``.
         '''
-        add the uncertainties by ratio to the data in quadrature
-        assume uncert = sqrt(data) if uncert is None
-        '''
+        if not isinstance(that,Histogram):
+            return self.uncert
 
         data = np.asarray(self.data, dtype=np.float64)
 
@@ -782,6 +1087,7 @@ class Histogram(object):
         return np.sqrt(self_unc_ratio_sq)
 
     def clear_nans(self, val=0):
+        '''Set all non-finite bins to a specific value'''
         isnan = np.isnan(self.data) | np.isinf(self.data)
         self.data[isnan] = val
         if self.uncert is not None:
@@ -789,6 +1095,9 @@ class Histogram(object):
             self.uncert[isnan] = val
 
     def dtype(self,that,div=False):
+        '''Return dtype that should result from a binary operation
+
+        Default is the result for addition, subtraction or multiplication. With ``div = True``, this will always return ``float64``.'''
         if div:
             return np.float64
 
@@ -808,8 +1117,12 @@ class Histogram(object):
                 return np.float64
 
     def __iadd__(self,that):
+        '''In-place addition
+
+        Uncertainty is not modified if both uncertainties are ``None``.'''
         if isinstance(that,Histogram):
-            self.uncert = self.added_uncert(that)
+            if any(u is not None for u in [self.uncert,that.uncert]):
+                self.uncert = self.added_uncert(that)
             self.data[...] += that.data
         elif hasattr(that,'__iter__'):
             self.data.T[...] += np.asarray(that).T
@@ -818,14 +1131,19 @@ class Histogram(object):
         return self
 
     def __radd__(self, that):
+        '''Commuting addition'''
         return self + that
 
     def __add__(self, that):
-        ret = self.clone(self.dtype(that), title=r'', label=r'')
+        '''Addition'''
+        ret = self.clone(self.dtype(that))
         ret += that
         return ret
 
     def __isub__(self, that):
+        '''In-place subtraction
+
+        If the uncertainties are ``None``, then Poisson statistics are assumed.'''
         unc = self.added_uncert(that)
 
         if isinstance(that,Histogram):
@@ -840,21 +1158,19 @@ class Histogram(object):
         return self
 
     def __rsub__(self, that):
-        '''
-            that = 1.
-            hret = that - hself
-        '''
-        ret = self.clone(self.dtype(that), title=r'', label=r'')
+        '''Commuting subtraction'''
+        ret = self.clone(self.dtype(that))
         ret.data = that - ret.data
         return ret
 
     def __sub__(self, that):
-        ret = self.clone(self.dtype(that), title=r'', label=r'')
+        '''Subtraction'''
+        ret = self.clone(self.dtype(that))
         ret -= that
         return ret
 
     def __imul__(self, that):
-
+        '''In-place multiplication'''
         if isinstance(that,Histogram):
             uncrat = self.added_uncert_ratio(that)
             self.data.T[...] *= np.asarray(that.data, dtype=np.float64).T
@@ -875,15 +1191,19 @@ class Histogram(object):
         return self
 
     def __rmul__(self, that):
+        '''Commuting mulitplication'''
         return self * that
 
     def __mul__(self, that):
-        ret = self.clone(self.dtype(that), title=r'', label=r'')
+        '''Multiplication'''
+        ret = self.clone(self.dtype(that))
         ret *= that
         return ret
 
     def __itruediv__(self, that):
+        '''In-place (true) division
 
+        If the uncertainties are ``None``, then Poisson statistics are assumed. After division, ``nan`` and ``inf`` values are set to zero.'''
         if isinstance(that,Histogram):
             uncrat = self.added_uncert_ratio(that)
             self.data.T[...] /= np.asarray(that.data, dtype=np.float64).T
@@ -904,66 +1224,80 @@ class Histogram(object):
         return self
 
     def __rtruediv__(self, that):
-        '''
+        '''Commuting (true) division
+
             that = 1.
             hret = that / hself
+
+        If the uncertainties are ``None``, then Poisson statistics are assumed. After division, ``nan`` and ``inf`` values are set to zero.
         '''
         uncrat = self.added_uncert_ratio(that)
-        ret = self.clone(self.dtype(that,div=True), title=r'', label=r'')
+        ret = self.clone(self.dtype(that,div=True))
         ret.data = that / ret.data
         ret.uncert = uncrat * ret.data
         self.clear_nans()
         return ret
 
     def __truediv__(self, that):
-        ret = self.clone(self.dtype(that,div=True), title=r'', label=r'')
+        '''Division'''
+        ret = self.clone(self.dtype(that,div=True))
         ret /= that
         return ret
 
 ### interpolating and smoothing
-    def interpolate_nans(self, **kwargs):
-        if not 'method' in kwargs:
-            kwargs['method'] = 'cubic'
+    def interpolate_nans(self, method='cubic', **kwargs):
+        '''Replace non-finite (nan or inf) bins with interpolated values
 
-        hnew = self.clone()
-        s = hnew.data.shape
+        Keyword Args:
 
-        hasnan = np.isnan(hnew.data).any()
-        if hnew.uncert is not None:
-            hasnan |= np.isnan(hnew.uncert).any()
+            method (str): passed directly to :py:func:`scipy.interpolate.griddata` and controls the method of interpolation used.
+            **kwargs: Passed directly to :py:func:`scipy.interpolate.griddata`.
 
-        if hasnan:
+        This modifies the histogram, changing the data in-place. Bins are considered non-finite if the filled value or the uncertainty is ``nan`` or ``inf``.
+        '''
+        finite = np.isfinite(self.data).ravel()
+        if self.uncert is not None:
+            finite &= np.isfinite(self.uncert).ravel()
+
+        if not all(finite):
             g = self.grid
             points = np.vstack(g).reshape(self.dim,-1).T
 
             values = self.data.ravel()
-            nans = np.isnan(values)
 
-            hnew.data = interpolate.griddata(
-                points[~nans],
-                values[~nans],
+            self.data[...] = interpolate.griddata(
+                points[finite],
+                values[finite],
                 points,
-                **kwargs).reshape(s)
+                **kwargs).reshape(self.shape)
 
             if self.uncert is not None:
                 values = self.uncert.ravel()
-                nans = ((values/self.data.ravel())<0.001) | np.isnan(values)
-                hnew.uncert = interpolate.griddata(
-                    points[~nans],
-                    values[~nans],
+                self.uncert[...] = interpolate.griddata(
+                    points[finite],
+                    values[finite],
                     points,
-                    **kwargs).reshape(s)
+                    **kwargs).reshape(self.shape)
 
-        return hnew
+        return self
 
-    def smooth(self, weight=0.5):
-        hnew = self.interpolate_nans()
+    def smooth(self, weight=0.5, mode='nearest'):
+        '''Create a new smoothed histogram using a Gaussian filter
 
-        Zf = ndimage.filters.gaussian_filter(hnew.data,1,mode='nearest')
+        Keyword Args:
+
+            weight (float [0,1]): Linear weighting for Gaussian filter. A value of 1 will replace the data with the actual result from :py:func:`scipy.ndimage.filters.gaussian_filter`.
+            mode (str): Passed directly to :py:func:`scipy.ndimage.filters.gaussian_filter`.
+
+        All non-finite bins are filled using :py:meth:`Histogram.interpolate_nans` before the Gaussian filter is applied.
+        '''
+        hnew = self.clone().interpolate_nans()
+
+        Zf = ndimage.filters.gaussian_filter(hnew.data,1,mode=mode)
         hnew.data   = weight*Zf + (1.-weight)*hnew.data
 
         if hnew.uncert is not None:
-            Uf = ndimage.filters.gaussian_filter(hnew.uncert,1,mode='nearest')
+            Uf = ndimage.filters.gaussian_filter(hnew.uncert,1,mode=mode)
             hnew.uncert = weight*Uf + (1.-weight)*hnew.uncert
 
         return hnew
@@ -1165,33 +1499,6 @@ class Histogram(object):
 
         return Histogram(
             self.axes[axis].clone(),
-            data = newdata,
-            uncert = newuncert,
-            title = copy(self.title),
-            label = copy(self.label))
-
-    def sum_over_axes(self, *axes):
-        if len(axes) == self.dim:
-            return self.sum()
-
-        newaxes = []
-        for i in range(self.dim):
-            if i not in axes:
-                newaxes += [self.axes[i].clone()]
-
-        newdata = np.apply_over_axes(np.sum, self.data, axes)
-        newdata.shape = tuple(n for n in newdata.shape if n > 1)
-
-        if self.uncert is None:
-            newuncert = None
-        else:
-            uncratio_sq = np.power(self.uncert / self.data, 2)
-            uncratio_sqsum = np.apply_over_axes(np.sum, uncratio_sq, axes)
-            uncratio_sqsum.shape = tuple(n for n in uncratio_sqsum.shape if n > 1)
-            newuncert = np.sqrt(uncratio_sqsum) * newdata
-
-        return Histogram(
-            *newaxes,
             data = newdata,
             uncert = newuncert,
             title = copy(self.title),

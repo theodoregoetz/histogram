@@ -49,6 +49,8 @@ Histogram
         __sub__
         added_uncert
         added_uncert_ratio
+        asdict
+        asline
         aspolygon
         binwidth
         clear_nans
@@ -61,6 +63,7 @@ Histogram
         fill_from_sample
         fill_one
         fit
+        fromdict
         integral
         interpolate_nans
         isuniform
@@ -76,7 +79,6 @@ Histogram
         smooth
         std
         sum
-        sum_over_axes
 
 Axes, Shape and Labels
 ----------------------
@@ -138,7 +140,6 @@ Access to the filled data, associated uncertainty and various properties of the 
 .. automethod:: Histogram.mean
 .. automethod:: Histogram.min
 .. automethod:: Histogram.std
-.. automethod:: Histogram.sum
 
 Filling Histogram with Data
 ---------------------------
@@ -162,7 +163,7 @@ Methods which generally return a new histogram representing the same data in som
 .. automethod:: Histogram.projection
 .. automethod:: Histogram.rebin
 .. automethod:: Histogram.smooth
-.. automethod:: Histogram.sum_over_axes
+.. automethod:: Histogram.sum
 
 Iterating
 ---------
@@ -195,8 +196,11 @@ Arithmetic
 Misc
 ----
 
+.. automethod:: Histogram.asdict
+.. automethod:: Histogram.fromdict
 .. automethod:: Histogram.added_uncert
 .. automethod:: Histogram.added_uncert_ratio
+.. automethod:: Histogram.asline
 .. automethod:: Histogram.aspolygon
 .. automethod:: Histogram.clone
 .. automethod:: Histogram.__str__
