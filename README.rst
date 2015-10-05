@@ -9,8 +9,8 @@ The primary object of this module is a continuous-domain
 dimensions is supported though only the lower dimensions can be
 visualized. For more information, see the following documentation:
 
--  **`wiki pages <https://github.com/theodoregoetz/histogram/wiki>`__**
--  **`API Reference <http://theodoregoetz.github.io/histogram>`__**
+-  `wiki pages <https://github.com/theodoregoetz/histogram/wiki>`__
+-  `API Reference <http://theodoregoetz.github.io/histogram>`__
 
 This package is dependent on `NumPy and SciPy <http://www.scipy.org>`__,
 provides methods for producing and showing graphics through
