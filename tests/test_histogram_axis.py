@@ -45,6 +45,11 @@ class TestHistogramAxis(unittest.TestCase):
         a3 = HistogramAxis(100,[0,10],'label')
         self.assertEqual(str(a3), str(np.linspace(0,10,101)))
 
+    def test___repr__(self):
+        a1 = HistogramAxis(100,[0,10],'label')
+        a2 = eval(repr(a1))
+        assert a1.isidentical(a2)
+
     def test___eq__(self):
         a1 = HistogramAxis(np.linspace(0,10,100))
         a2 = HistogramAxis(np.linspace(0,10,100))

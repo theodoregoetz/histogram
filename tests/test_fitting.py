@@ -5,7 +5,6 @@ import unittest
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial as poly
 from numpy import random as rand
-from matplotlib import pyplot
 
 from histogram import Histogram
 

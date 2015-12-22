@@ -70,6 +70,11 @@ class HistogramAxis(object):
         '''
         return str(self.edges)
 
+    def __repr__(self):
+        '''Complete string representation of the histogram axis'''
+        fmt = 'HistogramAxis(bins={},label="{}")'
+        return fmt.format(repr(self.edges.tolist()),str(self.label))
+
     def __eq__(self, that):
         r'''Compare edges to within numpy's default tolerance.
         Labels are ignored.'''
@@ -78,7 +83,7 @@ class HistogramAxis(object):
         except ValueError:
             return False
 
-    def isindentical(self, that):
+    def isidentical(self, that):
         r'''Deep comparison of this axis with another.'''
         if not (self == that):
             return False

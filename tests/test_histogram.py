@@ -88,7 +88,7 @@ class TestHistogram(unittest.TestCase):
         h1 = Histogram(3,[0,10],data=[1,2,3])
         h2 = Histogram(3,[0,10],data=[2,1,0])
 
-        h3 = h1.clone()
+        h3 = h1.clone(np.float64)
         h3 /= 2
         self.assertTrue(all(h1.data == np.array([1,2,3],dtype=np.int64)))
         self.assertTrue(np.allclose(h3.data,  [0,1,1]))

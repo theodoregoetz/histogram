@@ -324,6 +324,22 @@ class Histogram(object):
 
         '''
         return str(self.data)
+        
+    def __repr__(self):
+        '''Complete string representation of the histogram'''
+        fmt = 'Histogram({axes},{args})'
+        axesstr = ','.join(repr(a) for a in self.axes)
+        args = {
+            'data':repr(self.data.tolist()),
+            'dtype':'"{}"'.format(str(self.data.dtype)) }
+        if self.label is not None:
+            args['label'] = '"{}"'.format(self.label)
+        if self.title is not None:
+            args['title'] = '"{}"'.format(self.title)
+        if self.uncert is not None:
+            args['uncert'] = str(self.uncert.tolist())
+        argsstr = ','.join('{}={}'.format(k,v) for k,v in args.items())
+        return fmt.format(axes=axesstr,args=argsstr)
 
     def __call__(self,*xx,**kwargs):
         '''Value of histogram at a point
