@@ -680,7 +680,7 @@ class Histogram(object):
         '''
         mean = []
         for i,axis in enumerate(self.axes):
-            data = self.data.sum(set(range(self.dim)) - {i})
+            data = self.data.sum(tuple(set(range(self.dim)) - {i}))
             sel = np.isfinite(data)
             p = axis.bincenters[sel]
             w = data[sel]
@@ -1189,7 +1189,7 @@ class Histogram(object):
         '''In-place multiplication'''
         if isinstance(that,Histogram):
             uncrat = self.added_uncert_ratio(that)
-            self.data.T[...] *= np.asarray(that.data, dtype=np.float64).T
+            self.data.T[...] *= np.asarray(that.data).T
         else:
             if self.uncert is None:
                 uncrat = 1. / np.sqrt(np.abs(self.data))
@@ -1197,7 +1197,7 @@ class Histogram(object):
                 uncrat = self.uncert / np.abs(self.data)
 
             if hasattr(that,'__iter__'):
-                self.data.T[...] *= np.asarray(that, dtype=np.float64).T
+                self.data.T[...] *= np.asarray(that).T
             else:
                 self.data *= that
 

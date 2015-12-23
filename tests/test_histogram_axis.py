@@ -168,16 +168,16 @@ class TestHistogramAxis(unittest.TestCase):
 
     def test_cut(self):
         a = HistogramAxis(10,[0,10])
-        self.assertTrue(np.allclose(a.cut(-1,3)[0].edges, np.linspace(0,3,4))   )
-        self.assertTrue(np.allclose(a.cut(7,11)[0].edges, np.linspace(7,10,4))  )
-        self.assertTrue(np.allclose(a.cut(-0.1,3)[0].edges, np.linspace(0,3,4)) )
-        self.assertTrue(np.allclose(a.cut( 0.0,3)[0].edges, np.linspace(0,3,4)) )
-        self.assertTrue(np.allclose(a.cut( 0.1,3)[0].edges, np.linspace(0,3,4)) )
-        self.assertTrue(np.allclose(a.cut(2.9,6.9)[0].edges, np.linspace(3,7,5)))
-        self.assertTrue(np.allclose(a.cut(3.0,7.0)[0].edges, np.linspace(3,7,5)))
-        self.assertTrue(np.allclose(a.cut(3.1,7.1)[0].edges, np.linspace(3,7,5)))
-        self.assertTrue(np.allclose(a.cut(3.1,7.49999)[0].edges, np.linspace(3,7,5)))
-        self.assertTrue(np.allclose(a.cut(3.1,7.5)[0].edges, np.linspace(3,8,6)))
+        assert np.allclose(a.cut(-1,3)[0].edges, np.linspace(0,3,4))   
+        assert np.allclose(a.cut(7,11)[0].edges, np.linspace(7,10,4))  
+        assert np.allclose(a.cut(-0.1,3)[0].edges, np.linspace(0,3,4)) 
+        assert np.allclose(a.cut( 0.0,3)[0].edges, np.linspace(0,3,4)) 
+        assert np.allclose(a.cut( 0.1,3)[0].edges, np.linspace(0,3,4)) 
+        assert np.allclose(a.cut(2.9,6.9)[0].edges, np.linspace(3,7,5))
+        assert np.allclose(a.cut(3.0,7.0)[0].edges, np.linspace(3,7,5))
+        assert np.allclose(a.cut(3.1,7.1)[0].edges, np.linspace(3,7,5))
+        assert np.allclose(a.cut(3.1,7.49999)[0].edges, np.linspace(3,7,5))
+        assert np.allclose(a.cut(3.1,7.5)[0].edges, np.linspace(3,8,6))
 
     def test_isuniform(self):
         h1 = HistogramAxis(100,[-5,5])
