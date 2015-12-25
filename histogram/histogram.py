@@ -868,7 +868,7 @@ class Histogram(object):
                 xx = xx[a:b]
                 yy = yy[a:b]
 
-        extent = (min(xx), max(xx), min(yy), max(yy))
+        extent = [min(xx), max(xx), min(yy), max(yy)]
         return xx,yy,extent
 
 

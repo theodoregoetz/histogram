@@ -56,7 +56,7 @@ def plothist_polygon(ax, hist, **kwargs):
         linewidth = kwargs.pop('linewidth',kwargs.pop('lw',0)),
         alpha = kwargs.pop('alpha',rc.plot.patch.alpha))
     if not any([x in kwargs for x in ['facecolor','edgecolor']]):
-        kw['color'] = kwargs.pop('color',next(ax._get_lines.color_cycle))
+        kw['color'] = kwargs.pop('color',next(ax._get_lines.prop_cycler)['color'])
     kw.update(kwargs)
 
     x,y,extent = hist.aspolygon(**polygon_kwargs)
@@ -83,7 +83,7 @@ def plothist_line(ax, hist, **kwargs):
     kw = dict(
         linewidth = kwargs.pop('linewidth',kwargs.pop('lw',1)),
         alpha = kwargs.pop('alpha',1),
-        color = kwargs.pop('color',next(ax._get_lines.color_cycle)) )
+        color = kwargs.pop('color',next(ax._get_lines.prop_cycler)['color']) )
     kw.update(kwargs)
 
     x, y, extent = hist.asline(**line_kwargs)

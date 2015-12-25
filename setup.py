@@ -55,14 +55,14 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        #'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2',
         #'Programming Language :: Python :: 2.6',
-        #'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
+        #'Programming Language :: Python :: 3.2',
+        #'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3 :: Only',
+        #'Programming Language :: Python :: 3 :: Only',
     ],
 
     # What does your project relate to?
@@ -85,6 +85,21 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
+    #
+    # for numpy/scipy on Fedora 23:
+    #		sudo dnf install atlas-devel gcc-{c++,gfortran} subversion redhat-rpm-config
+    # for extras on Fedora 23:
+	#		sudo dnf install {freetype,libpng,hdf5}-devel root-{python,python3}
+	#       pip install matplotlib h5py tables pyroot
+	#
+	# at the time of testing, Flask's pypi configuration was broken
+	# which prevented bokeh from being installed through pip
+	#
+	# I installed PySide using pip and used Qt4Agg backend for matplotlib
+	# to work in the virtual environment
+    setup_requires=[
+        'numpy',
+    ],
     install_requires=[
         'numpy',
         'scipy',
@@ -97,6 +112,7 @@ setup(
     extras_require={
         'test': ['coverage'],
         'all' : ['matplotlib',
+				 'bokeh',
                  'h5py',
                  'pyroot'],
     },

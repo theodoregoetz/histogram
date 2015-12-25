@@ -8,6 +8,7 @@ style. This histogram is then smoothed using a Gaussian
 filter and plotted as a line.
 '''
 
+from cycler import cycler
 import numpy as np
 from matplotlib import pyplot
 from histogram import Histogram
@@ -16,8 +17,8 @@ from matplotlib import rc as mplrc
 from histogram import rc as histrc
 
 # interesting colors
-mplrc('axes', color_cycle=['steelblue','olive','darkred',
-                           'darkorchid','goldenrod','black'])
+mplrc('axes', prop_cycle=cycler('color', ['steelblue','olive','darkred',
+                                          'darkorchid','goldenrod','black']))
 
 # default is alpha=0.6, but we want slightly lighter
 # patches for overlaying many histograms

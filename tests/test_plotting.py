@@ -1,4 +1,5 @@
 import numpy as np
+from cycler import cycler
 from numpy import random as rand
 from matplotlib import pyplot, cm
 
@@ -9,7 +10,7 @@ from histogram import rc as histrc
 
 mplrc('patch',facecolor='steelblue')
 mplrc('axes',
-    color_cycle=['steelblue','olive','darkred','goldenrod','salmon','plum','grey'],
+    prop_cycle=cycler('color', ['steelblue','olive','darkred','goldenrod','salmon','plum','grey']),
     grid = True,
     facecolor = 'white', # axes background color
 )
