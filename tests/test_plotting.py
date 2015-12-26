@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from cycler import cycler
 from numpy import random as rand
@@ -19,23 +20,31 @@ mplrc('image',cmap='cubehelix_r')
 
 histrc.plot.baseline = 'left'
 
-npoints = 100000
-h1 = Histogram(100,(0,10),'x','y','title')
-h1.fill(rand.normal(5,2,npoints))
+if not os.path.exists('test_images'):
+    os.mkdir('test_images')
 
-h2 = Histogram((100,(0,10),'x'),(100,(0,10),'y'),'z','title')
-h2.fill(rand.normal(5,2,npoints),
-        rand.uniform(0,10,npoints))
+def test_plot_hist1d():
+    npoints = 100000
+    h1 = Histogram(100,(0,10),'x','y','title')
+    h1.fill(rand.normal(5,2,npoints))
 
-fig,ax = pyplot.subplots(2,2)
-ax[0,0].plothist(h1, style='polygon' , baseline='bottom')
-ax[0,1].plothist(h1, style='errorbar', baseline='bottom')
-ax[1,0].plothist(h1, style='polygon' )#, baseline='left')
-ax[1,1].plothist(h1, style='errorbar')#, baseline='left')
+    fig,ax = pyplot.subplots(2,2)
+    ax[0,0].plothist(h1, style='polygon' , baseline='bottom')
+    ax[0,1].plothist(h1, style='errorbar', baseline='bottom')
+    ax[1,0].plothist(h1, style='polygon' )#, baseline='left')
+    ax[1,1].plothist(h1, style='errorbar')#, baseline='left')
 
-fig,ax = pyplot.subplots(1,2)
-ax[0].plothist(h2)
-ax[1].plothist(h2)
-ax[1].plothist(h2.smooth(1), style='contour', overlay=True)
+    pyplot.savefig('test_images/test_plotting_fig_hist1d.png')
 
-#pyplot.show()
+
+def test_plot_hist2d():
+    npoints = 100000
+    h2 = Histogram((100,(0,10),'x'),(100,(0,10),'y'),'z','title')
+    h2.fill(rand.normal(5,2,npoints),
+            rand.uniform(0,10,npoints))
+    fig,ax = pyplot.subplots(1,2)
+    ax[0].plothist(h2)
+    ax[1].plothist(h2)
+    ax[1].plothist(h2.smooth(1), style='contour', overlay=True)
+
+    pyplot.savefig('test_images/test_plotting_fig_hist2d.png')

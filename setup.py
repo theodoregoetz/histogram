@@ -96,7 +96,7 @@ setup(
 	# which prevented bokeh from being installed through pip
 	#
 	# I installed PySide using pip and used Qt4Agg backend for matplotlib
-	# to work in the virtual environment
+	# to work in the virtual environment.
     setup_requires=[
         'numpy',
     ],
