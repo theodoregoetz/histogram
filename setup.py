@@ -40,8 +40,6 @@ version = '{ver[0]}.{ver[1]}.{ver[2]}'
 revision = '{rev}'
 version_info = {ver[0]},{ver[1]},{ver[2]}
 release = {isrel}
-if not release:
-    version = version+'r'+revision
 """
     opts = dict(
         ver = VERSION,

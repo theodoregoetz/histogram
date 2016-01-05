@@ -42,8 +42,8 @@ class TestSerialization(unittest.TestCase):
 
     def test_hdf5(self):
         try:
-            h = self.h.clone()
             import h5py
+            h = self.h.clone()
             filename = 'h.hdf5'
             h.save(filename)
             hh = Histogram.load(filename)
@@ -56,8 +56,8 @@ class TestSerialization(unittest.TestCase):
         # into float64's so histograms are not typically
         # "identical" but they should be "close"
         try:
-            h = self.h.clone()
             import ROOT
+            h = self.h.clone()
             filename = 'h.root'
             self.h.save(filename)
             hh = Histogram.load(filename)
@@ -77,12 +77,12 @@ class TestSerialization(unittest.TestCase):
         assert isstr(u'a')
         assert isstr(b'a')
 
-        s = 'α'
+        s = u'α'
         es = r'\u03b1'
         assert encoded_str(s) == es
         assert s == decoded_str(es)
 
-        d = {'a':'α'}
+        d = {'a':u'α'}
         ed = {'a':r'\u03b1'}
 
         encoded_d_copy = copy(d)
