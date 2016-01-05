@@ -1,5 +1,4 @@
-from warnings import warn
-
+from .version import version as __version__
 from .run_control import rc
 
 from .histogram_axis import HistogramAxis
