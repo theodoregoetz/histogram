@@ -97,5 +97,7 @@ class TestSerialization(unittest.TestCase):
         assert encoded_str(None) is None
         assert encoded_str(b'a') == 'a'
 
+        assert decoded_str(None) is None
+
 if __name__ == '__main__':
     unittest.main()

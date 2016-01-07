@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import unittest
+from nose.tools import *
 
 import numpy as np
 
 from histogram import HistogramAxis
 
-class TestHistogramAxis(unittest.TestCase):
+class TestHistogramAxis:
 
     def isclose(self,a,b):
         assert np.allclose(a,b)
@@ -22,28 +22,28 @@ class TestHistogramAxis(unittest.TestCase):
         a8 = HistogramAxis(a7)
         a9 = HistogramAxis(a8,label='newlabel')
 
-        self.isclose(a1.edges,np.linspace(0,10,100))
-        self.assertEqual(a1.label,None)
-        self.isclose(a2.edges,np.linspace(0,10,100))
-        self.assertEqual(a2.label,'label')
-        self.isclose(a3.edges,np.linspace(0,10,101))
-        self.assertEqual(a3.label,None)
-        self.isclose(a4.edges,np.linspace(0,10,101))
-        self.assertEqual(a4.label,'label')
-        self.isclose(a5.edges,np.linspace(0,10,101))
-        self.assertEqual(a5.label,'label')
-        self.isclose(a6.edges,np.linspace(0,10,101))
-        self.assertEqual(a6.label,'label')
-        self.isclose(a7.edges,np.linspace(0,10,101))
-        self.assertEqual(a7.label,'label')
-        self.isclose(a8.edges,np.linspace(0,10,101))
-        self.assertEqual(a8.label,'label')
-        self.isclose(a9.edges,np.linspace(0,10,101))
-        self.assertEqual(a9.label,'newlabel')
+        assert np.allclose(a1.edges,np.linspace(0,10,100))
+        assert_equal(a1.label,None)
+        assert np.allclose(a2.edges,np.linspace(0,10,100))
+        assert_equal(a2.label,'label')
+        assert np.allclose(a3.edges,np.linspace(0,10,101))
+        assert_equal(a3.label,None)
+        assert np.allclose(a4.edges,np.linspace(0,10,101))
+        assert_equal(a4.label,'label')
+        assert np.allclose(a5.edges,np.linspace(0,10,101))
+        assert_equal(a5.label,'label')
+        assert np.allclose(a6.edges,np.linspace(0,10,101))
+        assert_equal(a6.label,'label')
+        assert np.allclose(a7.edges,np.linspace(0,10,101))
+        assert_equal(a7.label,'label')
+        assert np.allclose(a8.edges,np.linspace(0,10,101))
+        assert_equal(a8.label,'label')
+        assert np.allclose(a9.edges,np.linspace(0,10,101))
+        assert_equal(a9.label,'newlabel')
 
     def test___str__(self):
         a3 = HistogramAxis(100,[0,10],'label')
-        self.assertEqual(str(a3), str(np.linspace(0,10,101)))
+        assert_equal(str(a3), str(np.linspace(0,10,101)))
 
     def test___repr__(self):
         a1 = HistogramAxis(100,[0,10],'label')
@@ -141,26 +141,26 @@ class TestHistogramAxis(unittest.TestCase):
 
     def test_edge_index(self):
         a = HistogramAxis(10,[0,10])
-        self.isclose(a.edge_index(-1),0)
-        self.isclose(a.edge_index(-1,'nearest'),0)
-        self.isclose(a.edge_index(-1,'high'),0)
-        self.isclose(a.edge_index(-1,'low'),0)
-        self.isclose(a.edge_index(11),10)
-        self.isclose(a.edge_index(11,'nearest'),10)
-        self.isclose(a.edge_index(11,'high'),10)
-        self.isclose(a.edge_index(11,'low'),10)
-        self.isclose(a.edge_index(1.9),2)
-        self.isclose(a.edge_index(1.9,'nearest'),2)
-        self.isclose(a.edge_index(1.9,'high'),2)
-        self.isclose(a.edge_index(1.9,'low'),1)
-        self.isclose(a.edge_index(2),2)
-        self.isclose(a.edge_index(2,'nearest'),2)
-        self.isclose(a.edge_index(2,'high'),3)
-        self.isclose(a.edge_index(2,'low'),2)
-        self.isclose(a.edge_index(2.1),2)
-        self.isclose(a.edge_index(2.1,'nearest'),2)
-        self.isclose(a.edge_index(2.1,'high'),3)
-        self.isclose(a.edge_index(2.1,'low'),2)
+        assert np.allclose(a.edge_index(-1),0)
+        assert np.allclose(a.edge_index(-1,'nearest'),0)
+        assert np.allclose(a.edge_index(-1,'high'),0)
+        assert np.allclose(a.edge_index(-1,'low'),0)
+        assert np.allclose(a.edge_index(11),10)
+        assert np.allclose(a.edge_index(11,'nearest'),10)
+        assert np.allclose(a.edge_index(11,'high'),10)
+        assert np.allclose(a.edge_index(11,'low'),10)
+        assert np.allclose(a.edge_index(1.9),2)
+        assert np.allclose(a.edge_index(1.9,'nearest'),2)
+        assert np.allclose(a.edge_index(1.9,'high'),2)
+        assert np.allclose(a.edge_index(1.9,'low'),1)
+        assert np.allclose(a.edge_index(2),2)
+        assert np.allclose(a.edge_index(2,'nearest'),2)
+        assert np.allclose(a.edge_index(2,'high'),3)
+        assert np.allclose(a.edge_index(2,'low'),2)
+        assert np.allclose(a.edge_index(2.1),2)
+        assert np.allclose(a.edge_index(2.1,'nearest'),2)
+        assert np.allclose(a.edge_index(2.1,'high'),3)
+        assert np.allclose(a.edge_index(2.1,'low'),2)
 
     def test_binwidth(self):
         a = HistogramAxis(10,[0,10])
@@ -168,11 +168,11 @@ class TestHistogramAxis(unittest.TestCase):
 
     def test_cut(self):
         a = HistogramAxis(10,[0,10])
-        assert np.allclose(a.cut(-1,3)[0].edges, np.linspace(0,3,4))   
-        assert np.allclose(a.cut(7,11)[0].edges, np.linspace(7,10,4))  
-        assert np.allclose(a.cut(-0.1,3)[0].edges, np.linspace(0,3,4)) 
-        assert np.allclose(a.cut( 0.0,3)[0].edges, np.linspace(0,3,4)) 
-        assert np.allclose(a.cut( 0.1,3)[0].edges, np.linspace(0,3,4)) 
+        assert np.allclose(a.cut(-1,3)[0].edges, np.linspace(0,3,4))
+        assert np.allclose(a.cut(7,11)[0].edges, np.linspace(7,10,4))
+        assert np.allclose(a.cut(-0.1,3)[0].edges, np.linspace(0,3,4))
+        assert np.allclose(a.cut( 0.0,3)[0].edges, np.linspace(0,3,4))
+        assert np.allclose(a.cut( 0.1,3)[0].edges, np.linspace(0,3,4))
         assert np.allclose(a.cut(2.9,6.9)[0].edges, np.linspace(3,7,5))
         assert np.allclose(a.cut(3.0,7.0)[0].edges, np.linspace(3,7,5))
         assert np.allclose(a.cut(3.1,7.1)[0].edges, np.linspace(3,7,5))

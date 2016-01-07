@@ -61,16 +61,6 @@ def setup_opts():
     # I installed PySide using pip and used Qt4Agg backend for matplotlib
     # to work in the virtual environment.
 
-    # Fedora 23
-    #   base:       dnf install atlas-devel gcc-{c++,gfortran} subversion redhat-rpm-config
-    #   extras:     dnf install {freetype,libpng,hdf5}-devel root-{python,python3}
-    #
-    # Ubuntu 14.04 LTS
-    #   base:       apt-get install build-essential python-dev python3-dev g++ gfortran \
-    #                               libatlas-dev libatlas3-base liblapack-dev libblas-dev
-    #   extras:     apt-get install libpng12-dev libfreetype6-dev libroot-bindings-python5.34 \
-    #                               libhdf5-dev
-
     opts = dict(
         name='histogram',
         version='.'.join(str(x) for x in VERSION),
