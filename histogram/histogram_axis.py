@@ -1,7 +1,7 @@
 from copy import copy, deepcopy
 import numpy as np
 
-from .detail import isstr
+from .detail import isstr, isinteger
 
 class HistogramAxis(object):
     r'''A single axis used internally by :class:`Histogram` to store
@@ -40,19 +40,21 @@ class HistogramAxis(object):
     '''
 
     def __init__(self, bins, limits=None, label=None):
-        if hasattr(bins,'__iter__') and (label is None):
+        if hasattr(bins,'__iter__') and (label is None) and isstr(limits):
             self.label = limits
             limits = None
         else:
             self.label = label
 
         if limits is not None:
-            if not isinstance(bins, int):
+            if not isinteger(bins):
                 raise TypeError('bins must be an integer if range limits are specified (input bins: {})'.format(bins))
             elif len(limits) != 2:
                 raise ValueError('range must be an iterable of length 2 (input range: {})'.format(limits))
             elif not limits[0] < limits[1]:
                 raise ValueError('range must be from low to high (input range: {})'.format(limits))
+            elif bins < 1:
+                raise ValueError('you must specify at least one bin')
             else:
                 self.edges = np.linspace(limits[0], limits[1], bins+1)
         else:

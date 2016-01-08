@@ -41,6 +41,20 @@ class TestHistogramAxis:
         assert np.allclose(a9.edges,np.linspace(0,10,101))
         assert_equal(a9.label,'newlabel')
 
+        assert_raises(TypeError, HistogramAxis)
+        assert_raises(TypeError, HistogramAxis,10,11)
+        assert_raises(TypeError, HistogramAxis,10,11,12)
+        assert_raises(AssertionError, HistogramAxis,'a')
+        assert_raises(AssertionError, HistogramAxis,None)
+        assert_raises(TypeError, HistogramAxis,'a',[0,1,2])
+        assert_raises(TypeError, HistogramAxis,None,[0,1,2])
+        assert_raises(TypeError, HistogramAxis,'a',[0,1,2],'x')
+        assert_raises(TypeError, HistogramAxis,None,[0,1,2],'x')
+        assert_raises(ValueError, HistogramAxis,0,[0,10])
+        assert_raises(ValueError, HistogramAxis,1,[0,1,2])
+        assert_raises(AssertionError, HistogramAxis('a','b'))
+        assert_raises(TypeError, HistogramAxis('a','b','c'))
+
     def test___str__(self):
         a3 = HistogramAxis(100,[0,10],'label')
         assert_equal(str(a3), str(np.linspace(0,10,101)))
