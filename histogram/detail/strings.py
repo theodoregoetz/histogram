@@ -8,7 +8,7 @@ try:
         return isinstance(s, basestring)
 except NameError:
     def isstr(s):
-        return isinstance(s, str) or isinstance(s, bytes)
+        return isinstance(s, (str,bytes))
 
 def encoded_str(s):
     if s is None:
