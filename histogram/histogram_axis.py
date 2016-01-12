@@ -38,63 +38,23 @@ class HistogramAxis(object):
             a3 = HistogramAxis(np.logspace(0,4,11))
 
     '''
-
-    def __init__(self, bins, limits=None, label=None, dtype=None):
-        '''
-            bins            *args
-            ----------------------------------------
-            HistogramAxis
-            HistogramAxis   'x'
-            HistogramAxis   np.float
-            HistogramAxis   'x'             np.float
-
-            [x0,x1,x2...]
-            [x0,x1,x2...]   'x'
-            [x0,x1,x2...]   'x'             np.float
-            int             [xlow,xhigh]
-            int             [xlow,xhigh]    'x'
-        '''
-        if isinstance(bins,HistogramAxis):
-            self.edges = bins.edges.copy()
-            if len(args):
-                if isstr(args[0]):
-                    self.label = args[0]
-                else:
-                    raise TypeError('label must be a string')
-            else:
-                self.label = copy(bins.label)
-
-        if len(args) == 0:
-            self.edges = np.asarray(bins)
-            self.label = None
-        if isinteger(bins):
-            if len(args[0]) != 2:
-                raise ValueError('limits must be an iterable of length 2 (input range: {})'.format(str(limits)))
-            else:
-
-
-        if hasattr(bins,'__iter__') and (label is None) and isstr(limits):
-            self.label = limits
+    def __init__(self, bins, limits=None, label=None):
+        # allow second argument to be the label if it is a string,
+        # bins is iterable and no other argument is used
+        if hasattr(bins,'__iter__') and label is None and isstr(limits):
+            label = limits
             limits = None
-        else:
-            self.label = label
 
-        if limits is not None:
-            if not isinteger(bins):
-                raise TypeError('bins must be an integer if range limits are specified (input bins: {})'.format(bins))
-            elif len(limits) != 2:
-            elif not limits[0] < limits[1]:
-                raise ValueError('range must be from low to high (input range: {})'.format(limits))
-            elif bins < 1:
-                raise ValueError('you must specify at least one bin')
-            else:
-                self.edges = np.linspace(limits[0], limits[1], bins+1)
+        assert (isinteger(bins) and bins>0 and len(limits)==2) or (len(bins) and (limits is None))
+        assert isstr(label) or (label is None)
+
+        if limits is None:
+            self.edges = np.asarray(bins)
         else:
-            if isinstance(bins, HistogramAxis):
-                self.edges = bins.edges.copy()
-                self.label = copy(bins.label) if (label is None) else label
-            else:
-                self.edges = deepcopy(bins)
+            if len(limits) != 2:
+                raise ValueError('limits must be an iterable of length 2')
+            self.edges = np.linspace(limits[0],limits[1],bins+1)
+        self.label = label
 
     def __str__(self):
         '''String representation the edges array.
