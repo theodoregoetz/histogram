@@ -9,7 +9,8 @@ python:
   
 install:
   - pip install --upgrade pip
-  - cd theodoregoetz/histogram
-  - pip install .[all,test]
-  
+  - pip install numpy
+  - pip install scipy matplotlib cycler
+  - pip install .
+
 script: nosetests
