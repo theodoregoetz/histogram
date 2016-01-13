@@ -11,7 +11,7 @@ python:
   
 install:
     # Update system
-  - sudo apt-get update
+  - sudo apt-get update -y
 
     # Install conda
   #- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -27,7 +27,7 @@ install:
   #- conda info -a
 
     # Install System Dependencies (Ubuntu 14.04)
-  - sudo apt-get install build-essential {python,python3}-dev g++ gfortran lib{atlas,atlas3,lapack,blas}-dev lib{png12,freetype6,hdf5}-dev libroot-bindings-python*
+  - sudo apt-get install -y build-essential {python,python3}-dev g++ gfortran lib{atlas,atlas3,lapack,blas}-dev lib{png12,freetype6,hdf5}-dev libroot-bindings-python*
 
     # Install Python Dependencies
   - pip install --upgrade pip
