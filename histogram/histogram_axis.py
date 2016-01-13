@@ -177,10 +177,10 @@ class HistogramAxis(object):
         '''Bin index for the value `x`.
 
         Arguments:
-            x (float): Position along this axis.
+            x (float or array of floats): Position(s) along this axis.
 
         Returns:
-            int: Bin corresponding to the value `x`.
+            int or array of ints: Bin(s) corresponding to the value `x`.
 
         Notes:
             This follows the convention: low <= x < high.

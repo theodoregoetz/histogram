@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from nose.tools import *
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal as assert_close
 
 from histogram import HistogramAxis
 
@@ -18,19 +18,19 @@ class TestHistogramAxis:
         a6 = HistogramAxis(100,limits=[0,10],label='label')
         a7 = HistogramAxis(100,label='label',limits=[0,10])
 
-        assert_close(a1.edges,np.linspace(0,10,100))
+        assert_array_almost_equal(a1.edges,np.linspace(0,10,100))
         assert_equal(a1.label,None)
-        assert_close(a2.edges,np.linspace(0,10,100))
+        assert_array_almost_equal(a2.edges,np.linspace(0,10,100))
         assert_equal(a2.label,'label')
-        assert_close(a3.edges,np.linspace(0,10,101))
+        assert_array_almost_equal(a3.edges,np.linspace(0,10,101))
         assert_equal(a3.label,None)
-        assert_close(a4.edges,np.linspace(0,10,101))
+        assert_array_almost_equal(a4.edges,np.linspace(0,10,101))
         assert_equal(a4.label,'label')
-        assert_close(a5.edges,np.linspace(0,10,101))
+        assert_array_almost_equal(a5.edges,np.linspace(0,10,101))
         assert_equal(a5.label,'label')
-        assert_close(a6.edges,np.linspace(0,10,101))
+        assert_array_almost_equal(a6.edges,np.linspace(0,10,101))
         assert_equal(a6.label,'label')
-        assert_close(a7.edges,np.linspace(0,10,101))
+        assert_array_almost_equal(a7.edges,np.linspace(0,10,101))
         assert_equal(a7.label,'label')
 
         assert_raises(TypeError, HistogramAxis)
@@ -95,16 +95,16 @@ class TestHistogramAxis:
     def test_binwidths(self):
         a1 = HistogramAxis(100,[0,10],'x')
         a = np.linspace(0,10,101)
-        assert_close(a1.binwidths, a[1:] - a[:-1])
+        assert_array_almost_equal(a1.binwidths, a[1:] - a[:-1])
 
         a2 = HistogramAxis(np.logspace(1,5,100),'x')
         a = np.logspace(1,5,100)
-        assert_close(a2.binwidths, a[1:] - a[:-1])
+        assert_array_almost_equal(a2.binwidths, a[1:] - a[:-1])
 
     def test_bincenters(self):
         a1 = HistogramAxis(100,[0,10],'x')
         a = np.linspace(0,10,101)
-        assert_close(a1.bincenters, 0.5*(a[:-1] + a[1:]))
+        assert_array_almost_equal(a1.bincenters, 0.5*(a[:-1] + a[1:]))
 
     def test_overflow(self):
         a1 = HistogramAxis(100,[0,10],'x')
@@ -134,46 +134,47 @@ class TestHistogramAxis:
         assert_equal(a1.bin(0.5),0)
         assert_equal(a1.bin(1),1)
         assert_equal(a1.bin(9.9999999),9)
+        assert_array_equal(a1.bin(np.linspace(0.5,9.5,10)), range(10))
 
     def test_edge_index(self):
         a = HistogramAxis(10,[0,10])
-        assert_close(a.edge_index(-1),0)
-        assert_close(a.edge_index(-1,'nearest'),0)
-        assert_close(a.edge_index(-1,'high'),0)
-        assert_close(a.edge_index(-1,'low'),0)
-        assert_close(a.edge_index(11),10)
-        assert_close(a.edge_index(11,'nearest'),10)
-        assert_close(a.edge_index(11,'high'),10)
-        assert_close(a.edge_index(11,'low'),10)
-        assert_close(a.edge_index(1.9),2)
-        assert_close(a.edge_index(1.9,'nearest'),2)
-        assert_close(a.edge_index(1.9,'high'),2)
-        assert_close(a.edge_index(1.9,'low'),1)
-        assert_close(a.edge_index(2),2)
-        assert_close(a.edge_index(2,'nearest'),2)
-        assert_close(a.edge_index(2,'high'),3)
-        assert_close(a.edge_index(2,'low'),2)
-        assert_close(a.edge_index(2.1),2)
-        assert_close(a.edge_index(2.1,'nearest'),2)
-        assert_close(a.edge_index(2.1,'high'),3)
-        assert_close(a.edge_index(2.1,'low'),2)
+        assert_array_almost_equal(a.edge_index(-1),0)
+        assert_array_almost_equal(a.edge_index(-1,'nearest'),0)
+        assert_array_almost_equal(a.edge_index(-1,'high'),0)
+        assert_array_almost_equal(a.edge_index(-1,'low'),0)
+        assert_array_almost_equal(a.edge_index(11),10)
+        assert_array_almost_equal(a.edge_index(11,'nearest'),10)
+        assert_array_almost_equal(a.edge_index(11,'high'),10)
+        assert_array_almost_equal(a.edge_index(11,'low'),10)
+        assert_array_almost_equal(a.edge_index(1.9),2)
+        assert_array_almost_equal(a.edge_index(1.9,'nearest'),2)
+        assert_array_almost_equal(a.edge_index(1.9,'high'),2)
+        assert_array_almost_equal(a.edge_index(1.9,'low'),1)
+        assert_array_almost_equal(a.edge_index(2),2)
+        assert_array_almost_equal(a.edge_index(2,'nearest'),2)
+        assert_array_almost_equal(a.edge_index(2,'high'),3)
+        assert_array_almost_equal(a.edge_index(2,'low'),2)
+        assert_array_almost_equal(a.edge_index(2.1),2)
+        assert_array_almost_equal(a.edge_index(2.1,'nearest'),2)
+        assert_array_almost_equal(a.edge_index(2.1,'high'),3)
+        assert_array_almost_equal(a.edge_index(2.1,'low'),2)
 
     def test_binwidth(self):
         a = HistogramAxis(10,[0,10])
-        assert_close(a.binwidth(), 1)
+        assert_array_almost_equal(a.binwidth(), 1)
 
     def test_cut(self):
         a = HistogramAxis(10,[0,10])
-        assert_close(a.cut(-1,3)[0].edges, np.linspace(0,3,4))
-        assert_close(a.cut(7,11)[0].edges, np.linspace(7,10,4))
-        assert_close(a.cut(-0.1,3)[0].edges, np.linspace(0,3,4))
-        assert_close(a.cut( 0.0,3)[0].edges, np.linspace(0,3,4))
-        assert_close(a.cut( 0.1,3)[0].edges, np.linspace(0,3,4))
-        assert_close(a.cut(2.9,6.9)[0].edges, np.linspace(3,7,5))
-        assert_close(a.cut(3.0,7.0)[0].edges, np.linspace(3,7,5))
-        assert_close(a.cut(3.1,7.1)[0].edges, np.linspace(3,7,5))
-        assert_close(a.cut(3.1,7.49999)[0].edges, np.linspace(3,7,5))
-        assert_close(a.cut(3.1,7.5)[0].edges, np.linspace(3,8,6))
+        assert_array_almost_equal(a.cut(-1,3)[0].edges, np.linspace(0,3,4))
+        assert_array_almost_equal(a.cut(7,11)[0].edges, np.linspace(7,10,4))
+        assert_array_almost_equal(a.cut(-0.1,3)[0].edges, np.linspace(0,3,4))
+        assert_array_almost_equal(a.cut( 0.0,3)[0].edges, np.linspace(0,3,4))
+        assert_array_almost_equal(a.cut( 0.1,3)[0].edges, np.linspace(0,3,4))
+        assert_array_almost_equal(a.cut(2.9,6.9)[0].edges, np.linspace(3,7,5))
+        assert_array_almost_equal(a.cut(3.0,7.0)[0].edges, np.linspace(3,7,5))
+        assert_array_almost_equal(a.cut(3.1,7.1)[0].edges, np.linspace(3,7,5))
+        assert_array_almost_equal(a.cut(3.1,7.49999)[0].edges, np.linspace(3,7,5))
+        assert_array_almost_equal(a.cut(3.1,7.5)[0].edges, np.linspace(3,8,6))
 
     def test_isuniform(self):
         h1 = HistogramAxis(100,[-5,5])
@@ -183,8 +184,5 @@ class TestHistogramAxis:
 
     def test_mergebins(self):
         a = HistogramAxis(10,[0,10])
-        assert_close(a.mergebins(2).edges,np.linspace(0,10,6))
-        assert_close(a.mergebins(3).edges,np.linspace(0,9,4))
-
-if __name__ == '__main__':
-    unittest.main()
+        assert_array_almost_equal(a.mergebins(2).edges,np.linspace(0,10,6))
+        assert_array_almost_equal(a.mergebins(3).edges,np.linspace(0,9,4))
