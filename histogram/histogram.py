@@ -58,7 +58,7 @@ class Histogram(object):
     def __init__(self, *axes, **kwargs):
 
         if not axes:
-            raise Exception('you must specify at least one axis.')
+            raise TypeError('you must specify at least one axis.')
 
         self.axes = []
         labels = []
@@ -324,7 +324,7 @@ class Histogram(object):
 
         '''
         return str(self.data)
-        
+
     def __repr__(self):
         '''Complete string representation of the histogram'''
         fmt = 'Histogram({axes},{args})'

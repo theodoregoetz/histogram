@@ -112,8 +112,7 @@ class TestHistogram:
         assert True # TODO: implement your test here
 
     def test___init__(self):
-        # histogram = Histogram(*axes, **kwargs)
-        assert True # TODO: implement your test here
+        assert_raises(TypeError,Histogram)
 
     def test___isub__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
