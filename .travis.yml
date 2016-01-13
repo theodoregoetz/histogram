@@ -1,4 +1,6 @@
 language: python
+sudo: required
+dist: trusty
 
 python:
   - "2.6"
@@ -8,9 +10,31 @@ python:
   - "3.5"
   
 install:
+    # Update system
+  - sudo apt-get update
+
+    # Install conda
+  #- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+  #    wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+  #  else
+  #    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  #  fi
+  #- bash miniconda.sh -b -p $HOME/miniconda
+  #- export PATH="$HOME/miniconda/bin:$PATH"
+  #- hash -r
+  #- conda config --set always_yes yes --set changeps1 no
+  #- conda update -q conda
+  #- conda info -a
+
+    # Install System Dependencies (Ubuntu 14.04)
+  - sudo apt-get install build-essential {python,python3}-dev g++ gfortran lib{atlas,atlas3,lapack,blas}-dev lib{png12,freetype6,hdf5}-dev libroot-bindings-python*
+
+    # Install Python Dependencies
   - pip install --upgrade pip
   - pip install numpy
   - pip install scipy matplotlib cycler
+
+    # Install the package under test
   - pip install .
 
 script: nosetests
