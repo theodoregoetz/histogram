@@ -114,6 +114,31 @@ class TestHistogram:
     def test___init__(self):
         assert_raises(TypeError,Histogram)
 
+        h1a = Histogram(100,[0,10])
+        h1b = Histogram(100,[0,10],'x')
+        h1c = Histogram(100,[0,10],'x','label')
+        h1d = Histogram(100,[0,10],'x','label','title')
+
+        h2a = Histogram(np.linspace(0,10,101))
+        h2b = Histogram(np.linspace(0,10,101),'x')
+        h2c = Histogram(np.linspace(0,10,101),'x','label')
+        h2d = Histogram(np.linspace(0,10,101),'x','label','title')
+
+        h3a = Histogram((np.linspace(0,10,101),))
+        h3b = Histogram((np.linspace(0,10,101),'x'))
+        h3c = Histogram((np.linspace(0,10,101),'x'),'label')
+        h3d = Histogram((np.linspace(0,10,101),'x'),'label','title')
+
+        assert_true(h1a.isidentical(h2a))
+        assert_true(h1b.isidentical(h2b))
+        assert_true(h1c.isidentical(h2c))
+        assert_true(h1d.isidentical(h2d))
+
+        assert_true(h1a.isidentical(h3a))
+        assert_true(h1b.isidentical(h3b))
+        assert_true(h1c.isidentical(h3c))
+        assert_true(h1d.isidentical(h3d))
+
     def test___isub__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
 
