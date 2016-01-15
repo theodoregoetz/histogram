@@ -8,7 +8,7 @@ from scipy import stats, ndimage, interpolate
 from warnings import warn
 
 from .histogram_axis import HistogramAxis
-from .detail import isstr
+from .detail import isstr, isinteger, skippable, window
 
 # ignore divide by zero (silently create nan's)
 np.seterr(divide='ignore', invalid='ignore')
@@ -55,10 +55,31 @@ class Histogram(object):
         .. image:: images/histogram_1dnorm.png
     '''
 
-    def __init__(self, *axes, **kwargs):
+    def __init__(self, *axes, label=None, title=None, data=None, dtype=None, uncert=None):
 
         if not axes:
             raise TypeError('you must specify at least one axis.')
+
+        self.axes = []
+        for skip,(arg0,arg1,arg2) in skippable(window(axes,size=3)):
+            if hasattr(arg0,'__iter__'):
+                if isstr(arg1):
+                    self.axes.append(HistogramAxis(arg0,arg1))
+                    skip(1)
+                else:
+                    self.axes.append(HistogramAxis(arg0))
+            elif isinteger(arg0):
+                if isstr(arg2):
+                    self.axes.append(HistogramAxis(arg0,arg1,arg2))
+                    skip(2)
+                else:
+                    self.axes.append(HistogramAxis(arg0,arg1))
+                    skip(1)
+            elif isinstance(arg0, tuple):
+                self.axes.append(HistogramAxis(*arg0))
+
+
+
 
         self.axes = []
         labels = []
