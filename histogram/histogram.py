@@ -63,11 +63,14 @@ class Histogram(object):
         self.axes = []
         for skip,(arg0,arg1,arg2) in skippable(window(axes,size=3)):
             if hasattr(arg0,'__iter__'):
-                if isstr(arg1):
-                    self.axes.append(HistogramAxis(arg0,arg1))
-                    skip(1)
-                else:
-                    self.axes.append(HistogramAxis(arg0))
+				if np.isreal(arg0[:3]).all():
+					if isstr(arg1):
+						self.axes.append(HistogramAxis(arg0,arg1))
+						skip(1)
+					else:
+						self.axes.append(HistogramAxis(arg0))
+				else:
+					self.axes.append(HistogramAxis(*arg0))
             elif isinteger(arg0):
                 if isstr(arg2):
                     self.axes.append(HistogramAxis(arg0,arg1,arg2))
@@ -75,8 +78,10 @@ class Histogram(object):
                 else:
                     self.axes.append(HistogramAxis(arg0,arg1))
                     skip(1)
-            elif isinstance(arg0, tuple):
-                self.axes.append(HistogramAxis(*arg0))
+            elif isinstance(arg0, HistogramAxis):
+                self.axes.append(arg0)
+            else:
+				
 
 
 
