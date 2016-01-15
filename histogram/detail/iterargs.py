@@ -6,11 +6,17 @@ class skippable:
     def __next__(self): return self,next(self.it)
     def __call__(self,n):
         for _ in range(n):
-            next(self.it)
+            next(self.it,None)
 
 def window(seq,size=2,wintype=tuple):
-    i = iter(seq)
-    items = deque((next(i,None) for _ in range(size)), maxlen=size)
-    while items[0] is not None:
-        yield wintype(items)
-        items.append(next(i,None))
+    assert size > 1
+    it = iter(seq)
+    items = deque((next(it,None) for _ in range(size)), maxlen=size)
+    yield wintype(items)
+    for item in it:
+        items.append(item)
+        yield wintype(items) if wintype else items
+    for _ in range(size-1):
+        items.append(None)
+        yield wintype(items) if wintype else items
+
