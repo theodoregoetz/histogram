@@ -1,8 +1,8 @@
-import unittest
+from nose.tools import *
 
 from histogram.detail import RunControl
 
-class TestRunControl(unittest.TestCase):
+class TestRunControl:
 
     def test_lock(self):
         rc = RunControl()
@@ -28,6 +28,7 @@ class TestRunControl(unittest.TestCase):
         rc.unlock()
         rc.clear()
 
+        rc.fill_type = 'int'
         rc.histdir = None
         rc.overwrite.overwrite = 'ask'
         rc.overwrite.timestamp = None
@@ -38,6 +39,7 @@ class TestRunControl(unittest.TestCase):
         rc.lock()
 
         rc_str = '''\
+fill_type = 'int'
 histdir = None
 overwrite.overwrite = 'ask'
 overwrite.timeout = 1800
@@ -45,9 +47,5 @@ overwrite.timestamp = None
 plot.baseline = 'bottom'
 plot.patch.alpha = 0.6'''
 
-        assert rc_str == str(rc)
+        assert_equal(rc_str, str(rc))
 
-
-if __name__ == '__main__':
-    test = TestRunControl()
-    test.test()

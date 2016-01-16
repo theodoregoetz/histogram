@@ -9,6 +9,7 @@ from warnings import warn
 
 from .histogram_axis import HistogramAxis
 from .detail import isstr, isinteger, skippable, window
+from . import rc
 
 # ignore divide by zero (silently create nan's)
 np.seterr(divide='ignore', invalid='ignore')
@@ -55,22 +56,32 @@ class Histogram(object):
         .. image:: images/histogram_1dnorm.png
     '''
 
-    def __init__(self, *axes, label=None, title=None, data=None, dtype=None, uncert=None):
+    # This is valid in python version 3 but not 2 and it is not covered in __future__
+    #def __init__(self, *axes, label=None, title=None, data=None, dtype=None, uncert=None):
+    def __init__(self,*axes,**kwargs):
+        label  = kwargs.pop('label' , None)
+        title  = kwargs.pop('title' , None)
+        data   = kwargs.pop('data'  , None)
+        dtype  = kwargs.pop('dtype' , None)
+        uncert = kwargs.pop('uncert', None)
 
         if not axes:
             raise TypeError('you must specify at least one axis.')
 
         self.axes = []
         for skip,(arg0,arg1,arg2) in skippable(window(axes,size=3)):
-            if hasattr(arg0,'__iter__'):
-				if np.isreal(arg0[:3]).all():
-					if isstr(arg1):
-						self.axes.append(HistogramAxis(arg0,arg1))
-						skip(1)
-					else:
-						self.axes.append(HistogramAxis(arg0))
-				else:
-					self.axes.append(HistogramAxis(*arg0))
+            if hasattr(arg0,'__iter__') and not isstr(arg0):
+                try:
+                    arg0_array = np.asarray(arg0)
+                    if (arg0_array.dtype == object) or (len(arg0_array.shape) != 1):
+                        self.axes.append(HistogramAxis(*arg0))
+                    elif isstr(arg1):
+                        self.axes.append(HistogramAxis(arg0_array,arg1))
+                        skip(1)
+                    else:
+                        self.axes.append(HistogramAxis(arg0_array))
+                except ValueError:
+                    self.axes.append(HistogramAxis(*arg0))
             elif isinteger(arg0):
                 if isstr(arg2):
                     self.axes.append(HistogramAxis(arg0,arg1,arg2))
@@ -81,63 +92,35 @@ class Histogram(object):
             elif isinstance(arg0, HistogramAxis):
                 self.axes.append(arg0)
             else:
-				
+                assert isstr(arg0) or arg0 is None
+                assert isstr(arg1) or arg1 is None
+                assert arg2 is None
+                for a in (arg0,arg1):
+                    if isstr(a):
+                        if label is None:
+                            label = a
+                        elif title is None:
+                            title = a
+                        else:
+                            raise TypeError('bad argument list')
+                skip(1)
 
-
-
-
-        self.axes = []
-        labels = []
-        i = 0
-        while i < len(axes):
-            if isinstance(axes[i], int):
-                if len(axes) > (i+2) and isstr(axes[i+2]):
-                    self.axes.append(HistogramAxis(*axes[i:i+3]))
-                    i = i + 3
-                else:
-                    self.axes.append(HistogramAxis(*axes[i:i+2]))
-                    i = i + 2
-            elif isstr(axes[i]):
-                labels.append(axes[i])
-                i = i + 1
-            elif isinstance(axes[i], HistogramAxis):
-                self.axes.append(axes[i])
-                i = i + 1
-            else:
-                self.axes.append(HistogramAxis(*axes[i]))
-                i = i + 1
-
-        self.label = kwargs.pop('label',None)
-        self.title = kwargs.pop('title',None)
-        if len(labels) > 0:
-            if self.label is None:
-                self.label = labels[0]
-            else:
-                raise Error('two labels given for this Histogram')
-            if len(labels) > 1:
-                if self.title is None:
-                    self.title = labels[1]
-                else:
-                    raise Error('two titles given for this Histogram')
+        self.label = label
+        self.title = title
 
         shape = tuple(ax.nbins for ax in self.axes)
 
-        data = kwargs.pop('data',None)
-        dtype = kwargs.pop('dtype',None)
-
         if data is None:
-            if dtype is None:
-                dtype = np.int64
-            self._data = np.zeros(shape=shape,dtype=dtype)
+            self._data = np.zeros(shape=shape,dtype=(dtype or rc.fill_type))
         else:
-            data = np.asarray(data)
-            assert data.shape == shape, 'Data shape must match axes.'
-            if dtype is None:
-                self._data = data
-            else:
-                self._data = data.astype(dtype)
+            self._data = np.asarray(data)
+            if dtype is not None:
+                self._data = self._data.astype(dtype)
+            assert self._data.shape == shape, 'Data shape must match axes.'
 
-        self.uncert = kwargs.pop('uncert',None)
+        if uncert is not None:
+            self._uncert = np.asarray(uncert, dtype=np.float)
+            assert self._uncert.shape == self._data.shape, 'Uncertainty shape must match data'
 
 ### properties
     @property
@@ -1162,14 +1145,10 @@ class Histogram(object):
         '''In-place addition
 
         Uncertainty is not modified if both uncertainties are ``None``.'''
-        if isinstance(that,Histogram):
-            if any(u is not None for u in [self.uncert,that.uncert]):
-                self.uncert = self.added_uncert(that)
-            self.data[...] += that.data
-        elif hasattr(that,'__iter__'):
-            self.data.T[...] += np.asarray(that).T
-        else:
-            self.data += that
+        data = that.data if isinstance(that,Histogram) else that
+        self.uncert = self.added_uncert(that)
+        self.data.T[...] += np.asarray(data).T
+        self.clear_nans()
         return self
 
     def __radd__(self, that):
@@ -1186,16 +1165,9 @@ class Histogram(object):
         '''In-place subtraction
 
         If the uncertainties are ``None``, then Poisson statistics are assumed.'''
-        unc = self.added_uncert(that)
-
-        if isinstance(that,Histogram):
-            self.data.T[...] -= that.data.T
-        elif isinstance(that,np.ndarray):
-            self.data.T[...] -= that.T
-        else:
-            self.data -= that
-
-        self.uncert = unc
+        data = that.data if isinstance(that,Histogram) else that
+        self.uncert = self.added_uncert(that)
+        self.data.T[...] -= np.asarray(data).T
         self.clear_nans()
         return self
 
@@ -1214,22 +1186,17 @@ class Histogram(object):
     def __imul__(self, that):
         '''In-place multiplication'''
         if isinstance(that,Histogram):
+            data = that.data
             uncrat = self.added_uncert_ratio(that)
-            self.data.T[...] *= np.asarray(that.data).T
         else:
+            data = that
             if self.uncert is None:
                 uncrat = 1. / np.sqrt(np.abs(self.data))
             else:
                 uncrat = self.uncert / np.abs(self.data)
-
-            if hasattr(that,'__iter__'):
-                self.data.T[...] *= np.asarray(that).T
-            else:
-                self.data *= that
-
+        self.data.T[...] *= np.asarray(data).T
         self.uncert = uncrat * self.data
         self.clear_nans()
-
         return self
 
     def __rmul__(self, that):
@@ -1247,22 +1214,17 @@ class Histogram(object):
 
         If the uncertainties are ``None``, then Poisson statistics are assumed. After division, ``nan`` and ``inf`` values are set to zero.'''
         if isinstance(that,Histogram):
+            data = that.data
             uncrat = self.added_uncert_ratio(that)
-            self.data.T[...] /= np.asarray(that.data, dtype=np.float64).T
         else:
+            data = that
             if self.uncert is None:
                 uncrat = 1. / np.sqrt(np.abs(self.data))
             else:
                 uncrat = self.uncert / np.abs(self.data)
-
-            if hasattr(that,'__iter__'):
-                self.data.T[...] /= np.asarray(that, dtype=np.float64).T
-            else:
-                self.data /= that
-
+        self.data.T[...] /= np.asarray(data).T
         self.uncert = uncrat * self.data
         self.clear_nans()
-
         return self
 
     def __rtruediv__(self, that):
@@ -1273,16 +1235,15 @@ class Histogram(object):
 
         If the uncertainties are ``None``, then Poisson statistics are assumed. After division, ``nan`` and ``inf`` values are set to zero.
         '''
-        uncrat = self.added_uncert_ratio(that)
-        ret = self.clone(self.dtype(that,div=True))
-        ret.data = that / ret.data
-        ret.uncert = uncrat * ret.data
+        ret = self.clone(np.float)
+        ret.data[...] = that / self.data
+        ret.uncert = self.added_uncert_ratio(that) * ret.data
         self.clear_nans()
         return ret
 
     def __truediv__(self, that):
         '''Division'''
-        ret = self.clone(self.dtype(that,div=True))
+        ret = self.clone(np.float)
         ret /= that
         return ret
 

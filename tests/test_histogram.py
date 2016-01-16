@@ -35,7 +35,7 @@ class TestHistogram:
         h2 = Histogram(10,[0,10],9,[-10,-1])
         h2.data[3,3] = 5
         assert_almost_equal(h1(5),15)
-
+        
     def test___truediv__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
         h2 = Histogram(3,[0,10],data=[2,1,0])

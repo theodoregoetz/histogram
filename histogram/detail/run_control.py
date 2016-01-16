@@ -68,7 +68,7 @@ class RunControl(RunControlBunch):
         '''
         def locked_setattr(self,k,v):
             if k not in self.__dict__:
-                raise KeyError('Run control parameters have been locked.')
+                raise KeyError('Unknown key. Run control parameters have been locked.')
             else:
                 self.__dict__[k] = v
         RunControlBunch.__setattr__ = lambda self,k,v: locked_setattr(self,k,v)
@@ -78,3 +78,4 @@ class RunControl(RunControlBunch):
         Allows creation of new parameters.
         '''
         RunControlBunch.__setattr__ = dict.__setattr__
+
