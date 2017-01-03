@@ -991,7 +991,11 @@ class Histogram(object):
     def fill_one(self, pt, wt=1):
         '''Fill a single data point
 
-        This increments a single bin by weight ``wt``. While it is the fastest method for a single entry, it should only be used as a last resort because its roughly 10 times slower than :py:meth:`Histogram.fill_from_sample` when filling many entries.
+        This increments a single bin by weight ``wt``. While it is the fastest
+        method for a single entry, it should only be used as a last resort
+        because its at least an order of magnitude slower than
+        :py:meth:`Histogram.fill_from_sample` when filling many entries.
+
         '''
         try:
             if pt < self.axes[0].min or self.axes[0].max < pt:
@@ -1008,9 +1012,14 @@ class Histogram(object):
     def fill_from_sample(self, sample, weights=None):
         '''Fill histogram from sample of data
 
-        This fills the histogram from sample with shape `(D,N)` array where `D` is the dimension of the histogram and `N` is the number of points to fill. The optional ``weights`` may be a single number or an array of length `N`. The default (``None``) is equivalent to ``weights = 1``.
+        This fills the histogram from sample with shape `(D,N)` array where `D`
+        is the dimension of the histogram and `N` is the number of points to
+        fill. The optional ``weights`` may be a single number or an array of
+        length `N`. The default (``None``) is equivalent to ``weights = 1``.
 
-        This is the primary work-horse of the :py:class:`Histogram` class and should be favored, along with the wrapper method :py:meth:`Histogram.fill` over :py:meth:`Histogram.fill_one`.
+        This is the primary work-horse of the :py:class:`Histogram` class and
+        should be favored, along with the wrapper method
+        :py:meth:`Histogram.fill` over :py:meth:`Histogram.fill_one`.
 
         Example::
 

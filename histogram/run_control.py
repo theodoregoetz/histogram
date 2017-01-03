@@ -14,4 +14,3 @@ rc.plot.patch.alpha = 0.6
 # prevent new parameters from being created
 # (the values can still be changed)
 rc.lock()
-

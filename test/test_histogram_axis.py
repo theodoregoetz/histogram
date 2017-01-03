@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from nose.tools import *
-from numpy.testing import assert_array_almost_equal, assert_array_equal
-
 import numpy as np
+import unittest
+
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from histogram import HistogramAxis
 
-class TestHistogramAxis:
+
+class TestHistogramAxis(unittest.TestCase):
 
     def test___init__(self):
         a1 = HistogramAxis(np.linspace(0,10,100))
@@ -19,78 +20,78 @@ class TestHistogramAxis:
         a7 = HistogramAxis(100,label='label',limits=[0,10])
 
         assert_array_almost_equal(a1.edges,np.linspace(0,10,100))
-        assert_equal(a1.label,None)
+        self.assertIsNone(a1.label)
         assert_array_almost_equal(a2.edges,np.linspace(0,10,100))
-        assert_equal(a2.label,'label')
+        self.assertEqual(a2.label,'label')
         assert_array_almost_equal(a3.edges,np.linspace(0,10,101))
-        assert_equal(a3.label,None)
+        self.assertIsNone(a3.label)
         assert_array_almost_equal(a4.edges,np.linspace(0,10,101))
-        assert_equal(a4.label,'label')
+        self.assertEqual(a4.label,'label')
         assert_array_almost_equal(a5.edges,np.linspace(0,10,101))
-        assert_equal(a5.label,'label')
+        self.assertEqual(a5.label,'label')
         assert_array_almost_equal(a6.edges,np.linspace(0,10,101))
-        assert_equal(a6.label,'label')
+        self.assertEqual(a6.label,'label')
         assert_array_almost_equal(a7.edges,np.linspace(0,10,101))
-        assert_equal(a7.label,'label')
+        self.assertEqual(a7.label,'label')
 
-        assert_raises(TypeError, HistogramAxis)
-        assert_raises(TypeError, HistogramAxis,10,11)
-        assert_raises(TypeError, HistogramAxis,10,11,12)
-        assert_raises(TypeError, HistogramAxis,None)
-        assert_raises(TypeError, HistogramAxis,None,[0,1,2])
-        assert_raises(TypeError, HistogramAxis,None,[0,1,2],'x')
-        assert_raises(TypeError, HistogramAxis,0,[0,10])
-        assert_raises(TypeError, HistogramAxis,1,[0,1,2])
-        assert_raises(AssertionError, HistogramAxis,'a')
-        assert_raises(AssertionError, HistogramAxis,'a',[0,1,2])
-        assert_raises(AssertionError, HistogramAxis,'a',[0,1,2],'x')
-        assert_raises(AssertionError, HistogramAxis,'a','b')
-        assert_raises(AssertionError, HistogramAxis,'a','b','c')
+        self.assertRaises(TypeError, HistogramAxis)
+        self.assertRaises(TypeError, HistogramAxis,10,11)
+        self.assertRaises(TypeError, HistogramAxis,10,11,12)
+        self.assertRaises(TypeError, HistogramAxis,None)
+        self.assertRaises(TypeError, HistogramAxis,None,[0,1,2])
+        self.assertRaises(TypeError, HistogramAxis,None,[0,1,2],'x')
+        self.assertRaises(TypeError, HistogramAxis,0,[0,10])
+        self.assertRaises(TypeError, HistogramAxis,1,[0,1,2])
+        self.assertRaises(AssertionError, HistogramAxis,'a')
+        self.assertRaises(AssertionError, HistogramAxis,'a',[0,1,2])
+        self.assertRaises(AssertionError, HistogramAxis,'a',[0,1,2],'x')
+        self.assertRaises(AssertionError, HistogramAxis,'a','b')
+        self.assertRaises(AssertionError, HistogramAxis,'a','b','c')
 
     def test___str__(self):
         a3 = HistogramAxis(100,[0,10],'label')
-        assert_equal(str(a3), str(np.linspace(0,10,101)))
+        self.assertEqual(str(a3), str(np.linspace(0,10,101)))
 
     def test___repr__(self):
         a1 = HistogramAxis(100,[0,10],'label')
         a2 = eval(repr(a1))
-        assert_true(a1.isidentical(a2))
+        self.assertTrue(a1.isidentical(a2))
 
     def test___eq__(self):
         a1 = HistogramAxis(np.linspace(0,10,100))
         a2 = HistogramAxis(np.linspace(0,10,100))
         a3 = HistogramAxis(np.logspace(1,4,100))
-        assert_equal(a1,a2)
-        assert_not_equal(a1,a3)
+        self.assertEqual(a1,a2)
+        self.assertNotEqual(a1,a3)
 
     def test_edges(self):
         a1 = HistogramAxis(100,[0,10],'x')
         a1.edges = np.linspace(0,10,100)
         a1.edges = np.logspace(1,5,100)
-        assert_raises(ValueError,setattr,a1,'edges',[2,1])
-        assert_raises(AssertionError,setattr,a1,'edges',[[1,2],[1,2]])
+        self.assertRaises(ValueError,setattr,a1,'edges',[2,1])
+        self.assertRaises(AssertionError,setattr,a1,'edges',[[1,2],[1,2]])
 
     def test_label(self):
         a1 = HistogramAxis(100,[0,10],'label ω')
-        assert_equal(a1.label,'label ω')
+        self.assertEqual(a1.label,'label ω')
         a1.label = 1
-        assert_equal(a1.label,'1')
+        self.assertEqual(a1.label,'1')
 
     def test_nbins(self):
         a1 = HistogramAxis(100,[0,10],'label ω')
-        assert_equal(a1.nbins,100)
+        self.assertEqual(a1.nbins,100)
 
     def test_min(self):
         a1 = HistogramAxis(100,[0,10],'x')
-        assert_equal(a1.min,0)
+        self.assertEqual(a1.min,0)
 
     def test_max(self):
         a1 = HistogramAxis(100,[0,10],'x')
-        assert_equal(a1.max,10)
+        self.assertEqual(a1.max,10)
 
     def test_limits(self):
         a1 = HistogramAxis(100,[0,10],'x')
-        assert_equal(a1.limits,tuple((0,10)))
+        self.assertEqual(a1.limits,tuple((0,10)))
 
     def test_binwidths(self):
         a1 = HistogramAxis(100,[0,10],'x')
@@ -108,32 +109,32 @@ class TestHistogramAxis:
 
     def test_overflow(self):
         a1 = HistogramAxis(100,[0,10],'x')
-        assert_false(a1.inaxis(a1.overflow))
+        self.assertFalse(a1.inaxis(a1.overflow))
 
     def test_clone(self):
         a1 = HistogramAxis(100,[0,10],'x')
         a2 = a1.clone()
-        assert_equal(a1,a2)
-        assert_equal(a1.label,a2.label)
+        self.assertEqual(a1,a2)
+        self.assertEqual(a1.label,a2.label)
         a2.edges = [0,1,2]
-        assert_not_equal(a1,a2)
+        self.assertNotEqual(a1,a2)
         a2.label = 'y'
-        assert_not_equal(a1.label,a2.label)
+        self.assertNotEqual(a1.label,a2.label)
 
     def test_inaxis(self):
         a1 = HistogramAxis(100,[0,10],'x')
-        assert_true(a1.inaxis(0))
-        assert_false(a1.inaxis(10))
-        assert_true(a1.inaxis(5))
-        assert_false(a1.inaxis(-1))
-        assert_false(a1.inaxis(11))
+        self.assertTrue(a1.inaxis(0))
+        self.assertFalse(a1.inaxis(10))
+        self.assertTrue(a1.inaxis(5))
+        self.assertFalse(a1.inaxis(-1))
+        self.assertFalse(a1.inaxis(11))
 
     def test_bin(self):
         a1 = HistogramAxis(10,[0,10],'x')
-        assert_equal(a1.bin(0),0)
-        assert_equal(a1.bin(0.5),0)
-        assert_equal(a1.bin(1),1)
-        assert_equal(a1.bin(9.9999999),9)
+        self.assertEqual(a1.bin(0),0)
+        self.assertEqual(a1.bin(0.5),0)
+        self.assertEqual(a1.bin(1),1)
+        self.assertEqual(a1.bin(9.9999999),9)
         assert_array_equal(a1.bin(np.linspace(0.5,9.5,10)), range(10))
 
     def test_edge_index(self):
@@ -179,10 +180,15 @@ class TestHistogramAxis:
     def test_isuniform(self):
         h1 = HistogramAxis(100,[-5,5])
         h2 = HistogramAxis(np.logspace(0,4,100))
-        assert_true(h1.isuniform())
-        assert_false(h2.isuniform())
+        self.assertTrue(h1.isuniform())
+        self.assertFalse(h2.isuniform())
 
     def test_mergebins(self):
         a = HistogramAxis(10,[0,10])
         assert_array_almost_equal(a.mergebins(2).edges,np.linspace(0,10,6))
         assert_array_almost_equal(a.mergebins(3).edges,np.linspace(0,9,4))
+
+
+if __name__ == '__main__':
+    from . import main
+    main()

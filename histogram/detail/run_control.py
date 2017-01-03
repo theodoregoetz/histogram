@@ -1,15 +1,3 @@
-class Singleton:
-    '''
-    Singleton decorator for classes
-    '''
-    def __init__(self,cls):
-        self.cls = cls
-        self.instance = None
-    def __call__(self,*args,**kwargs):
-        if self.instance is None:
-            self.instance = self.cls(*args,**kwargs)
-        return self.instance
-
 class RunControlBunch(dict):
     '''
     This is the classic Python "Bunch" class to be used
@@ -47,10 +35,10 @@ class RunControlBunch(dict):
                     ret.append(parent_key+' = '+str(value))
         return '\n'.join(ret)
 
-@Singleton
+
 class RunControl(RunControlBunch):
     '''
-    A generic singleton bunch class to hold global
+    A lockable bunch class to hold
     run control parameters.
     '''
 

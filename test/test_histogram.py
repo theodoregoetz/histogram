@@ -1,13 +1,15 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 
-from nose.tools import *
-from numpy.testing import assert_array_almost_equal, assert_array_equal
-
 import numpy as np
+import unittest
+
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from histogram import Histogram
 
-class TestHistogram:
+
+class TestHistogram(unittest.TestCase):
 
     def test___add__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
@@ -34,8 +36,8 @@ class TestHistogram:
         h1 = Histogram(10,[0,10],data=[x+10 for x in range(10)])
         h2 = Histogram(10,[0,10],9,[-10,-1])
         h2.data[3,3] = 5
-        assert_almost_equal(h1(5),15)
-        
+        self.assertAlmostEqual(h1(5),15)
+
     def test___truediv__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
         h2 = Histogram(3,[0,10],data=[2,1,0])
@@ -112,7 +114,7 @@ class TestHistogram:
         assert True # TODO: implement your test here
 
     def test___init__(self):
-        assert_raises(TypeError,Histogram)
+        self.assertRaises(TypeError,Histogram)
 
         h1a = Histogram(100,[0,10])
         h1b = Histogram(100,[0,10],'x')
@@ -129,15 +131,15 @@ class TestHistogram:
         h3c = Histogram((np.linspace(0,10,101),'x'),'label')
         h3d = Histogram((np.linspace(0,10,101),'x'),'label','title')
 
-        assert_true(h1a.isidentical(h2a))
-        assert_true(h1b.isidentical(h2b))
-        assert_true(h1c.isidentical(h2c))
-        assert_true(h1d.isidentical(h2d))
+        self.assertTrue(h1a.isidentical(h2a))
+        self.assertTrue(h1b.isidentical(h2b))
+        self.assertTrue(h1c.isidentical(h2c))
+        self.assertTrue(h1d.isidentical(h2d))
 
-        assert_true(h1a.isidentical(h3a))
-        assert_true(h1b.isidentical(h3b))
-        assert_true(h1c.isidentical(h3c))
-        assert_true(h1d.isidentical(h3d))
+        self.assertTrue(h1a.isidentical(h3a))
+        self.assertTrue(h1b.isidentical(h3b))
+        self.assertTrue(h1c.isidentical(h3c))
+        self.assertTrue(h1d.isidentical(h3d))
 
     def test___isub__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
@@ -157,7 +159,7 @@ class TestHistogram:
         h1 = Histogram(3,[0,10],data=[1,2,3])
 
         h2 = h1 * 2.
-        assert_equal(h2.data.dtype,np.float)
+        self.assertEqual(h2.data.dtype,np.float)
 
     def test___radd__(self):
         # histogram = Histogram(*axes, **kwargs)
@@ -173,7 +175,7 @@ class TestHistogram:
         h1 = Histogram(3,[0,10],data=[1,2,3])
 
         h2 = 2. * h1
-        assert_equal(h2.data.dtype,np.float)
+        self.assertEqual(h2.data.dtype,np.float)
 
     def test___rsub__(self):
         # histogram = Histogram(*axes, **kwargs)
@@ -419,10 +421,10 @@ class TestHistogram:
     def test_mean(self):
         h = Histogram(10,[0,10])
         h.fill([3,3,3])
-        assert_almost_equal(h.mean()[0],3.5)
+        self.assertAlmostEqual(h.mean()[0],3.5)
 
         h.fill([1,5])
-        assert_almost_equal(h.mean()[0],3.5)
+        self.assertAlmostEqual(h.mean()[0],3.5)
 
     def test_min(self):
         # histogram = Histogram(*axes, **kwargs)
@@ -518,3 +520,8 @@ class TestHistogram:
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.sum_over_axes(*axes))
         assert True # TODO: implement your test here
+
+
+if __name__ == '__main__':
+    from . import main
+    main()
