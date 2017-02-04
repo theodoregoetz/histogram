@@ -1,6 +1,12 @@
 histogram
 =========
 
+.. image:: https://travis-ci.org/theodoregoetz/histogram.svg?branch=master
+    :target: https://travis-ci.org/theodoregoetz/histogram
+
+.. image:: https://coveralls.io/repos/github/theodoregoetz/histogram/badge.svg?branch=master
+    :target: https://coveralls.io/github/theodoregoetz/histogram?branch=master
+
 A histogram object written in Python for scientific data-reduction and
 statistical analysis
 
