@@ -1,28 +1,32 @@
-histogram
-=========
-
 .. image:: https://travis-ci.org/theodoregoetz/histogram.svg?branch=master
     :target: https://travis-ci.org/theodoregoetz/histogram
 
 .. image:: https://coveralls.io/repos/github/theodoregoetz/histogram/badge.svg?branch=master
     :target: https://coveralls.io/github/theodoregoetz/histogram?branch=master
 
+histogram
+=========
+
 A histogram object written in Python for scientific data-reduction and
 statistical analysis
 
-The primary object of this module is a continuous-domain
-`histogram <https://en.wikipedia.org/wiki/Histogram>`__. Any number of
-dimensions is supported though only the lower dimensions can be
-visualized. For more information, see the following documentation:
+The primary object of this module is a continuous-domain `histogram
+<https://en.wikipedia.org/wiki/Histogram>`__. Any number of dimensions is
+supported though only the lower dimensions can be visualized. For more
+information, see the following documentation:
 
 -  `wiki pages <https://github.com/theodoregoetz/histogram/wiki>`__
 -  `API Reference <http://theodoregoetz.github.io/histogram>`__
 
 This package is dependent on `NumPy and SciPy <http://www.scipy.org>`__,
-provides methods for producing and showing graphics through
-`Matplotlib <http://matplotlib.org>`__ and can be serialized via
-python's pickling, NumPy's binary format or
-`HDF5 <https://www.hdfgroup.org>`__.
+provides methods for producing and showing graphics through `Matplotlib
+<http://matplotlib.org>`__ and can be serialized via python's pickling, NumPy's
+binary format or `HDF5 <https://www.hdfgroup.org>`__.
+
+For collecting statistics on discrete keys or catagories you may want to look
+into the `collections.Counter
+<https://docs.python.org/3/library/collections.html#collections.Counter>`__
+class.
 
 Quick Start
 -----------
@@ -47,21 +51,23 @@ histogram should be as simple as this example:
     pyplot.show()
 
 .. figure:: https://raw.githubusercontent.com/wiki/theodoregoetz/histogram/images/home_ex01.png
-   :alt: Example Histogram
+    :alt: Example Histogram
+    :width: 300px
+    :figwidth: 300px
 
-   Example Histogram
+    Example Histogram
+
 Similar Packages and Software
 -----------------------------
 
-While there is no lack of other histogramming libraries out there, most
-have a narrow focus or seem to be quickly put together, lacking
-documentation, or are part of a much larger analysis framework. This
-goal of this project is to be a solution for all python developers who
-want more functionality than that provided by NumPy's ``histogramdd()``
-method.
+While there is no lack of other histogramming libraries out there, most have a
+narrow focus or seem to be quickly put together, lacking documentation, or are
+part of a much larger analysis framework. The goal of this project is to be a
+solution for all python developers who want just a bit more functionality than
+that provided by NumPy's ``histogramdd()`` method.
 
-This project took many cues from the following python packages, trying
-to merge the features of each one into a single object:
+This project took many cues from the following python packages, trying to merge
+the features of each one into a single object:
 
 -  `histogram <https://pypi.python.org/pypi/histogram>`__
 -  `pyhistogram <https://pypi.python.org/pypi/pyhistogram>`__
@@ -79,5 +85,5 @@ to merge the features of each one into a single object:
 -  `hdrhistogram <https://pypi.python.org/pypi/hdrhistogram>`__
 -  `dashi <http://www.ifh.de/~middell/dashi/index.html>`__
 
-Furthermore, the author was greatly influenced by the histogram classes
-found in `CERN's ROOT data analysis framework <https://root.cern.ch>`__.
+Furthermore, the author was greatly influenced by the histogram classes found
+in `CERN's ROOT data analysis framework <https://root.cern.ch>`__.
