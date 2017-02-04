@@ -34,3 +34,14 @@ ignored_dirs_patterns=.*;CVS;
 ignored_file_patterns=*.o;*.obj;*.a;*.lib;*.so;*.dll;*.lo;*.la;*.class;*.jar;*.pyc;*.mo;*.gmo;*.po;
 generate_tag_prefs=0
 external_dirs=
+
+[build-menu]
+NF_01_LB=test module
+NF_01_CM=/home/goetz/local/scripts/myscripts/cnose 
+NF_01_WD=%p
+NF_02_LB=Make _Object
+NF_02_CM=make %e.o
+NF_02_WD=
+EX_00_LB=_Execute
+EX_00_CM=python "%f"
+EX_00_WD=
