@@ -113,6 +113,10 @@ class TestHistogramAxis(unittest.TestCase):
         a1 = HistogramAxis(100, [0, 10], 'x')
         self.assertEqual(a1.min, 0)
 
+    def test_mid(self):
+        a1 = HistogramAxis(100, [0, 10], 'x')
+        self.assertAlmostEqual(a1.mid, 5.0)
+
     def test_max(self):
         a1 = HistogramAxis(100, [0, 10], 'x')
         self.assertEqual(a1.max, 10)
