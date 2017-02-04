@@ -4,6 +4,7 @@ class skippable:
     def __init__(self,it): self.it = iter(it)
     def __iter__(self): return self
     def __next__(self): return self,next(self.it)
+    def next(self): return self.__next__()
     def __call__(self,n):
         for _ in range(n):
             next(self.it,None)

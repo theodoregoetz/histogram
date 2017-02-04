@@ -45,15 +45,22 @@ class HistogramAxis(object):
             label = limits
             limits = None
 
-        assert (isinteger(bins) and bins>0 and len(limits)==2) or (len(bins) and (limits is None))
-        assert isstr(label) or (label is None)
+        if __debug__:
+            if limits is None:
+                if not hasattr(bins, '__iter__'):
+                    raise ValueError('bins must be iterable length >= 2')
+            else:
+                if len(limits) != 2:
+                    raise ValueError('limits must be iterable length 2')
+                if bins < 1:
+                    raise ValueError('must have at least one bin')
+            if not (isstr(label) or (label is None)):
+                raise ValueError('label must be string or None')
 
         if limits is None:
             self.edges = np.asarray(bins)
         else:
-            if len(limits) != 2:
-                raise ValueError('limits must be an iterable of length 2')
-            self.edges = np.linspace(limits[0],limits[1],bins+1)
+            self.edges = np.linspace(limits[0], limits[1], bins + 1)
         self.label = label
 
     def __str__(self):
@@ -94,21 +101,25 @@ class HistogramAxis(object):
     def edges(self,e):
         if not isinstance(e,np.ndarray):
             e = np.asarray(e)
-        assert e.ndim == 1, 'bin edges must be a one-dimensional array'
-        if not all(x<y for x, y in zip(e, e[1:])):
-            raise ValueError('bin edges must be strictly increasing')
+        if __debug__:
+            if len(e) < 2:
+                raise ValueError('edges must have two or more values')
+            if e.ndim != 1:
+                raise ValueError('edges must be a one-dimensional array')
+            if not all(x < y for x, y in zip(e, e[1:])):
+                raise ValueError('edges must be strictly increasing')
         self._edges = e
 
     @property
     def label(self):
         '''The label of this axis including units if applicable.
         Example: "distance (meters)".'''
-        return getattr(self,'_label',None)
+        return getattr(self, '_label', None)
 
     @label.setter
-    def label(self,l):
+    def label(self, l):
         if (l is None) or (l == ''):
-            if hasattr(self,'_label'):
+            if hasattr(self, '_label'):
                 del self._label
         elif not isstr(l):
             self._label = str(l)
@@ -118,7 +129,7 @@ class HistogramAxis(object):
     @property
     def nbins(self):
         '''Number of bins in this axis.'''
-        return len(self.edges)-1
+        return len(self.edges) - 1
 
     @property
     def min(self):
@@ -157,7 +168,7 @@ class HistogramAxis(object):
 
     def clone(self):
         '''Deep copy of this instance.'''
-        return HistogramAxis(self.edges.copy(),label=copy(self.label))
+        return HistogramAxis(self.edges.copy(), label=copy(self.label))
 
     def inaxis(self, x):
         '''Check if `x` is within this axis.
@@ -203,7 +214,10 @@ class HistogramAxis(object):
         '''
 
         snap_options = ['nearest','low','high','both']
-        assert snap in snap_options, 'Unknown snap keyword: '+snap
+
+        if __debug__:
+            if snap not in snap_options:
+                raise ValueError('Unknown snap keyword: ' + snap)
 
         minbin = 0
         maxbin = len(self.edges)-1
@@ -239,7 +253,7 @@ class HistogramAxis(object):
         Bin indexing starts with zero and by default, the width of the
         second bin (index: 1) is returned.
         '''
-        return (self.edges[b+1] - self.edges[b])
+        return (self.edges[b + 1] - self.edges[b])
 
     def isuniform(self, rtol=1e-05, atol=1e-08):
         '''Check if all bins are of equal width.
@@ -259,7 +273,7 @@ class HistogramAxis(object):
         '''
         widths = self.binwidths
         median = np.median(widths)
-        return np.allclose(widths,median,rtol=rtol,atol=atol)
+        return np.allclose(widths, median, rtol=rtol, atol=atol)
 
     def cut(self, low, high=None, snap='nearest'):
         '''Return a truncated :py:class:`HistogramAxis`
@@ -284,32 +298,35 @@ class HistogramAxis(object):
             be clipped. Clipping will likely make a uniform axis no
             longer uniform.
         '''
-        if isstr(snap):
-            snap = (snap,snap)
-
         snap_options = ['nearest','expand','low','high','clip']
-        for s in snap:
-            assert s in snap_options, 'Unknown snap keyword: '+s
+
+        if isstr(snap):
+            snap = (snap, snap)
+
+        if __debug__:
+            for s in snap:
+                if s not in snap_options:
+                    raise ValueError('Unknown snap keyword: ' + s)
 
         if low is None:
             lowi = 0
         else:
-            if snap[0] in ['clip','expand']:
+            if snap[0] in ['clip', 'expand']:
                 eisnap = 'low'
             else:
                 eisnap = snap[0]
-            lowi = self.edge_index(low,eisnap)
+            lowi = self.edge_index(low, eisnap)
 
         if high is None:
-            highi = len(self.edges)-1
+            highi = len(self.edges) - 1
         else:
-            if snap[1] in ['clip','expand']:
+            if snap[1] in ['clip', 'expand']:
                 eisnap = 'high'
             else:
                 eisnap = snap[1]
-            highi = self.edge_index(high,eisnap)
+            highi = self.edge_index(high, eisnap)
 
-        newedges = self.edges[lowi:highi+1]
+        newedges = self.edges[lowi:highi + 1]
         mask = np.zeros((self.nbins,), dtype=np.bool)
         mask[lowi:highi] = True
 
@@ -338,11 +355,13 @@ class HistogramAxis(object):
         Returns:
             :py:class:`HistogramAxis`: A new instance.
         '''
-
         snap_options = ['low','high']
-        assert snap in snap_options, 'Unknown snap keyword: '+snap
 
-        d,m = divmod(self.nbins, nbins)
+        if __debug__:
+            if snap not in snap_options:
+                raise ValueError('Unknown snap keyword: ' + snap)
+
+        d, m = divmod(self.nbins, nbins)
 
         if m == 0:
             newedges = self.edges[::nbins]
@@ -353,8 +372,10 @@ class HistogramAxis(object):
                 newedges = self.edges[m::nbins]
         else:
             if snap == 'low':
-                newedges = np.concatenate((self.edges[::nbins],[self.edges[-1]]))
+                newedges = np.concatenate((self.edges[::nbins],
+                                           [self.edges[-1]]))
             else:
-                newedges = np.concatenate(([self.edges[0]],self.edges[m::nbins]))
+                newedges = np.concatenate(([self.edges[0]],
+                                           self.edges[m::nbins]))
 
-        return HistogramAxis(newedges,label=copy(self.label))
+        return HistogramAxis(newedges, label=copy(self.label))

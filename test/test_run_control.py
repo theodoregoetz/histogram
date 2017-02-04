@@ -1,8 +1,8 @@
-from nose.tools import *
+import unittest
 
 from histogram.detail import RunControl
 
-class TestRunControl:
+class TestRunControl(unittest.TestCase):
 
     def test_lock(self):
         rc = RunControl()
@@ -49,3 +49,7 @@ plot.patch.alpha = 0.6'''
 
         assert_equal(rc_str, str(rc))
 
+
+if __name__ == '__main__':
+    from . import main
+    main()

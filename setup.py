@@ -50,17 +50,6 @@ release = {isrel}
         fout.write(fmt.format(**opts))
 
 def setup_opts():
-    # List run-time dependencies with setup_requires and install_requires.
-    # These will be installed by pip when your project is installed. For an
-    # analysis of "install_requires" vs pip's requirements files see:
-    # https://packaging.python.org/en/latest/requirements.html
-    #
-    # at the time of testing, Flask's pypi configuration was broken
-    # which prevented bokeh from being installed through pip
-    #
-    # I installed PySide using pip and used Qt4Agg backend for matplotlib
-    # to work in the virtual environment.
-
     opts = dict(
         name='histogram',
         version='.'.join(str(x) for x in VERSION),
@@ -91,15 +80,11 @@ def setup_opts():
             'Topic :: Scientific/Engineering :: Visualization',
             'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
             'Programming Language :: Python :: 2',
-            #'Programming Language :: Python :: 2.6',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            #'Programming Language :: Python :: 3.2',
-            #'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
-            #'Programming Language :: Python :: 3 :: Only',
         ],
         keywords= [
             'histogram',
@@ -115,7 +100,6 @@ def setup_opts():
         setup_requires=['numpy'],
         install_requires=['numpy','scipy'],
         extras_require={
-            'test': ['coverage','nose'],
             'all' : ['matplotlib','cycler','bokeh','h5py'],
         },
     )

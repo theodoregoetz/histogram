@@ -42,6 +42,9 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+.tags
+*.hist
+*.hdf5
 
 # Translations
 *.mo

@@ -3,7 +3,6 @@ from .test_histogram_axis import *
 
 
 def main():
-    import argparse
     import logging
     import os
     import random
