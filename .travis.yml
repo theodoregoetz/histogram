@@ -35,7 +35,8 @@ install:
   - sudo apt-get install -qq -y python3-dev
 
     # Install Python Dependencies
-  - pip install --upgrade pip tox
+  - pip install --upgrade pip tox coveralls
 
 script:
   - tox -epy34
+  - coveralls
