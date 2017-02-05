@@ -55,9 +55,6 @@ class Histogram(object):
 
         .. image:: images/histogram_1dnorm.png
     '''
-
-    # This is valid in python version 3 but not 2 and it is not covered in __future__
-    #def __init__(self, *axes, label=None, title=None, data=None, dtype=None, uncert=None):
     def __init__(self, *axes, **kwargs):
         label  = kwargs.pop('label' , None)
         title  = kwargs.pop('title' , None)

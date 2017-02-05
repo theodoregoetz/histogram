@@ -2,29 +2,35 @@ import unittest
 
 from histogram.detail import RunControl
 
+
 class TestRunControl(unittest.TestCase):
 
     def test_lock(self):
         rc = RunControl()
+        rc_saved = dict(rc)
+        rc.unlock()
+        rc.clear()
 
-        try:
+        rc.lock()
+
+        with self.assertRaises(KeyError):
             rc.a.b = 1
-            assert False, 'run control not locked!'
-        except KeyError:
-            assert True
 
         rc.unlock()
         rc.a.b = 1
-        assert rc.a.b == 1
+        self.assertEqual(rc.a.b, 1)
         rc.lock()
-        assert rc.a.b == 1
+        self.assertEqual(rc.a.b, 1)
 
         rc.a.b = 2
-        assert rc.a.b == 2
+        self.assertEqual(rc.a.b, 2)
+
+        rc.clear()
+        rc.update(**rc_saved)
 
     def test_str(self):
         rc = RunControl()
-
+        rc_saved = dict(rc)
         rc.unlock()
         rc.clear()
 
@@ -47,7 +53,9 @@ overwrite.timestamp = None
 plot.baseline = 'bottom'
 plot.patch.alpha = 0.6'''
 
-        assert_equal(rc_str, str(rc))
+        self.assertEqual(rc_str, str(rc))
+        rc.clear()
+        rc.update(**rc_saved)
 
 
 if __name__ == '__main__':
