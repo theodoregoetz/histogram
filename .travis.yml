@@ -6,28 +6,10 @@ git:
   depth: 3
 
 python:
-  #- "2.6"
-  #- "2.7"
-  #- "3.3"
-  - "3.4"
-  #- "3.5"
+  - "3.6"
 
 install:
-    # Update system
   - sudo apt-get -qq update
-
-    # Install conda
-  #- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-  #    wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
-  #  else
-  #    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  #  fi
-  #- bash miniconda.sh -b -p $HOME/miniconda
-  #- export PATH="$HOME/miniconda/bin:$PATH"
-  #- hash -r
-  #- conda config --set always_yes yes --set changeps1 no
-  #- conda update -q conda
-  #- conda info -a
 
     # Install System Dependencies (Ubuntu 14.04)
   - sudo apt-get install -qq -y build-essential g++ gfortran lib{atlas,lapack,blas}-dev lib{png12,freetype6,hdf5}-dev
@@ -38,5 +20,5 @@ install:
   - pip install --upgrade pip tox coveralls
 
 script:
-  - tox -epy34
+  - tox -epy36
   - coveralls

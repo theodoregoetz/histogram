@@ -3,8 +3,7 @@ from codecs import open
 from os import path
 from subprocess import Popen, PIPE
 
-VERSION = 2,0,0
-ISRELEASE = False
+VERSION = 2,1,0
 
 def long_description():
     here = path.abspath(path.dirname(__file__))
@@ -39,11 +38,9 @@ def write_version_py(filename):
 version = '{ver[0]}.{ver[1]}.{ver[2]}'
 revision = '{rev}'
 version_info = {ver[0]},{ver[1]},{ver[2]}
-release = {isrel}
 """
     opts = dict(
         ver = VERSION,
-        isrel = ISRELEASE,
         rev = revision())
 
     with open(filename,'w') as fout:
