@@ -17,10 +17,8 @@ np.seterr(divide='ignore', invalid='ignore')
 class Histogram(object):
     '''N-dimensional histogram over a continuous range
 
-    This is a histogram where each axis is
-    a continuous (non-discrete) range with a set
-    number of bins. The binning does not have to be
-    evenly spaced.
+    This is a histogram where each axis is a continuous (non-discrete) range
+    with a set number of bins. The binning does not have to be evenly spaced.
 
     Args:
         axes (list): List of :py:class:`HistogramAxis` or constructor
@@ -31,16 +29,15 @@ class Histogram(object):
         title (str): Title of this histogram.
         data (scalar array): N-dimensional array for the filled data.
         uncert (scalar array): N-dimensional array for the uncertainty.
-        dtype (scalar type): Type of the data array (data will be
-        converted).
+        dtype (scalar type): Type of the data array. Input data will be
+            converted if different.
 
     Example:
 
-        Typical usage would be to fill the histogram from a
-        sample of data. In this example, we create a 1D
-        histogram with 100 bins from 0 to 10, and fill it
-        with 10k samples distributed normally around 5 with
-        a width (sigma) of 1::
+        Typical usage would be to fill the histogram from a sample of data. In
+        this example, we create a 1D histogram with 100 bins from 0 to 10, and
+        fill it with 10k samples distributed normally around 5 with a width
+        (sigma) of 1::
 
             import numpy as np
             from matplotlib import pyplot

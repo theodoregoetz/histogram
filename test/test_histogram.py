@@ -113,23 +113,39 @@ class TestHistogram(unittest.TestCase):
         # self.assertEqual(expected, histogram.__imul__(that))
         assert True # TODO: implement your test here
 
-    def test___init__(self):
+    def test_init_failures(self):
         self.assertRaises(TypeError,Histogram)
+        with self.assertRaises(TypeError):
+            Histogram(2,2)
+        if __debug__:
+            with self.assertRaises(AssertionError):
+                h = Histogram(3,[0,10],data=[0])
+            with self.assertRaises(AssertionError):
+                h = Histogram(3,[0,10],data=np.array([0], dtype=np.int8))
 
-        h1a = Histogram(100,[0,10])
-        h1b = Histogram(100,[0,10],'x')
-        h1c = Histogram(100,[0,10],'x','label')
-        h1d = Histogram(100,[0,10],'x','label','title')
+            with self.assertRaises(AssertionError):
+                h = Histogram(3,[0,1])
+                h.data = np.array([0], dtype=np.int8)
 
-        h2a = Histogram(np.linspace(0,10,101))
-        h2b = Histogram(np.linspace(0,10,101),'x')
-        h2c = Histogram(np.linspace(0,10,101),'x','label')
-        h2d = Histogram(np.linspace(0,10,101),'x','label','title')
 
-        h3a = Histogram((np.linspace(0,10,101),))
-        h3b = Histogram((np.linspace(0,10,101),'x'))
-        h3c = Histogram((np.linspace(0,10,101),'x'),'label')
-        h3d = Histogram((np.linspace(0,10,101),'x'),'label','title')
+        with self.assertRaises(TypeError):
+            h = Histogram(2,[0,1],'x','oops',label='label',title='title')
+
+    def test_init1d(self):
+        h1a = Histogram(10,[0,10])
+        h1b = Histogram(10,[0,10],'x')
+        h1c = Histogram(10,[0,10],'x','label')
+        h1d = Histogram(10,[0,10],'x','label','title')
+
+        h2a = Histogram(np.linspace(0,10,11))
+        h2b = Histogram(np.linspace(0,10,11),'x')
+        h2c = Histogram(np.linspace(0,10,11),'x','label')
+        h2d = Histogram(np.linspace(0,10,11),'x','label','title')
+
+        h3a = Histogram((np.linspace(0,10,11),))
+        h3b = Histogram((np.linspace(0,10,11),'x'))
+        h3c = Histogram((np.linspace(0,10,11),'x'),'label')
+        h3d = Histogram((np.linspace(0,10,11),'x'),'label','title')
 
         self.assertTrue(h1a.isidentical(h2a))
         self.assertTrue(h1b.isidentical(h2b))
@@ -140,6 +156,43 @@ class TestHistogram(unittest.TestCase):
         self.assertTrue(h1b.isidentical(h3b))
         self.assertTrue(h1c.isidentical(h3c))
         self.assertTrue(h1d.isidentical(h3d))
+
+    def test_init2d(self):
+        h1a = Histogram(10,[0,10],9,[1,10])
+        h1b = Histogram(10,[0,10],'x',9,[1,10],'y')
+        h1c = Histogram(10,[0,10],'x',9,[1,10],'y','label')
+        h1d = Histogram(10,[0,10],'x',9,[1,10],'y','label','title')
+
+        xx = np.linspace(0,10,11)
+        yy = np.linspace(1,10,10)
+        h2a = Histogram(xx,yy)
+        h2b = Histogram(xx,'x',yy,'y')
+        h2c = Histogram(xx,'x',yy,'y','label')
+        h2d = Histogram(xx,'x',yy,'y','label','title')
+
+        h3a = Histogram((xx,),(yy,))
+        h3b = Histogram((xx,'x'),(yy,'y'))
+        h3c = Histogram((xx,'x'),(yy,'y'),'label')
+        h3d = Histogram((xx,'x'),(yy,'y'),'label','title')
+
+        self.assertTrue(h1a.isidentical(h2a))
+        self.assertTrue(h1b.isidentical(h2b))
+        self.assertTrue(h1c.isidentical(h2c))
+        self.assertTrue(h1d.isidentical(h2d))
+
+        self.assertTrue(h1a.isidentical(h3a))
+        self.assertTrue(h1b.isidentical(h3b))
+        self.assertTrue(h1c.isidentical(h3c))
+        self.assertTrue(h1d.isidentical(h3d))
+
+    def test_init_dtype(self):
+        data = np.array([0,1,2], dtype=np.int32)
+        h = Histogram(3,[0,3],data=data, dtype=np.int8)
+        self.assertEqual(h.data.dtype, np.int8)
+
+        h = Histogram(3,[0,1])
+        h.data = np.array([0,1,2], dtype=np.int8)
+        assert_array_almost_equal(h.data, np.array([0,1,2]))
 
     def test___isub__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
