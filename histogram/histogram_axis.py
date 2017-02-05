@@ -1,4 +1,5 @@
 from copy import copy, deepcopy
+from collections import namedtuple
 import numpy as np
 
 from .detail import isstr, isinteger
@@ -275,6 +276,8 @@ class HistogramAxis(object):
         median = np.median(widths)
         return np.allclose(widths, median, rtol=rtol, atol=atol)
 
+    _CutResult = namedtuple('CutResult', ['axis', 'mask'])
+
     def cut(self, low, high=None, snap='nearest'):
         '''Return a truncated :py:class:`HistogramAxis`
 
@@ -317,6 +320,10 @@ class HistogramAxis(object):
                 eisnap = snap[0]
             lowi = self.edge_index(low, eisnap)
 
+            if eisnap in ['high']:
+                if lowi > 0 and np.isclose(self.edges[lowi - 1], low):
+                    lowi -= 1
+
         if high is None:
             highi = len(self.edges) - 1
         else:
@@ -326,18 +333,23 @@ class HistogramAxis(object):
                 eisnap = snap[1]
             highi = self.edge_index(high, eisnap)
 
-        newedges = self.edges[lowi:highi + 1]
+            if eisnap == 'high':
+                if highi > 0 and np.isclose(self.edges[highi - 1], high):
+                    highi -= 1
+
+        newedges = np.copy(self.edges[lowi:highi + 1])
         mask = np.zeros((self.nbins,), dtype=np.bool)
         mask[lowi:highi] = True
 
         if low is not None:
             if snap[0] == 'clip':
-                newedges[0] = low
+                newedges[0] = max(low, self.edges[lowi])
         if high is not None:
             if snap[1] == 'clip':
-                newedges[-1] = high
+                newedges[-1] = min(high, self.edges[highi])
 
-        return HistogramAxis(newedges, label=copy(self.label)), mask
+        newaxis = HistogramAxis(newedges, label=copy(self.label))
+        return HistogramAxis._CutResult(newaxis, mask)
 
     def mergebins(self, nbins=2, snap='low', clip=True):
         '''Merge neighboring bins.

@@ -191,6 +191,11 @@ class TestHistogramAxis(unittest.TestCase):
         assert_array_almost_equal(a.edge_index(2, 'high'), 3)
         assert_array_almost_equal(a.edge_index(2, 'low'), 2)
         assert_array_almost_equal(a.edge_index(2, 'both'), (2,3))
+        assert_array_almost_equal(a.edge_index(2.0), 2)
+        assert_array_almost_equal(a.edge_index(2.0, 'nearest'), 2)
+        assert_array_almost_equal(a.edge_index(2.0, 'high'), 3)
+        assert_array_almost_equal(a.edge_index(2.0, 'low'), 2)
+        assert_array_almost_equal(a.edge_index(2.0, 'both'), (2,3))
         assert_array_almost_equal(a.edge_index(2.1), 2)
         assert_array_almost_equal(a.edge_index(2.1, 'nearest'), 2)
         assert_array_almost_equal(a.edge_index(2.1, 'high'), 3)
@@ -205,7 +210,7 @@ class TestHistogramAxis(unittest.TestCase):
         a = HistogramAxis(10, [0, 10])
         assert_array_almost_equal(a.binwidth(), 1)
 
-    def test_cut(self):
+    def test_cut_nearest(self):
         a = HistogramAxis(10, [0, 10])
 
         assertaaeq = assert_array_almost_equal
@@ -220,6 +225,92 @@ class TestHistogramAxis(unittest.TestCase):
         assertaaeq(a.cut(3.1, 7.1)[0].edges, np.linspace(3, 7, 5))
         assertaaeq(a.cut(3.1, 7.49999)[0].edges, np.linspace(3, 7, 5))
         assertaaeq(a.cut(3.1, 7.5)[0].edges, np.linspace(3, 8, 6))
+
+        if __debug__:
+            with self.assertRaises(ValueError):
+                a.cut(0,1,'x')
+
+        # 'nearest','expand','low','high','clip'
+
+        snap = 'nearest'
+        assertaaeq(a.cut(-1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(7, 11, snap)[0].edges, np.linspace(7, 10, 4))
+        assertaaeq(a.cut(-0.1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.0, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(2.9, 6.9, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.0, 7.0, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.1, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.49999, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.5, snap)[0].edges, np.linspace(3, 8, 6))
+
+    def test_cut_expand(self):
+        a = HistogramAxis(10, [0, 10])
+
+        assertaaeq = assert_array_almost_equal
+
+        snap = 'expand'
+        assertaaeq(a.cut(-1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(7, 11, snap)[0].edges, np.linspace(7, 10, 4))
+        assertaaeq(a.cut(-0.1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.0, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(2.9, 6.9, snap)[0].edges, np.linspace(2, 7, 6))
+        assertaaeq(a.cut(3.0, 7.0, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.1, snap)[0].edges, np.linspace(3, 8, 6))
+        assertaaeq(a.cut(3.1, 7.49999, snap)[0].edges, np.linspace(3, 8, 6))
+        assertaaeq(a.cut(3.1, 7.5, snap)[0].edges, np.linspace(3, 8, 6))
+
+    def test_cut_low(self):
+        a = HistogramAxis(10, [0, 10])
+
+        assertaaeq = assert_array_almost_equal
+
+        snap = 'low'
+        assertaaeq(a.cut(-1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(7, 11, snap)[0].edges, np.linspace(7, 10, 4))
+        assertaaeq(a.cut(-0.1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.0, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(2.9, 6.9, snap)[0].edges, np.linspace(2, 6, 5))
+        assertaaeq(a.cut(3.0, 7.0, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.1, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.49999, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.5, snap)[0].edges, np.linspace(3, 7, 5))
+
+    def test_cut_high(self):
+        a = HistogramAxis(10, [0, 10])
+
+        assertaaeq = assert_array_almost_equal
+
+        snap = 'high'
+        assertaaeq(a.cut(-1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(7, 11, snap)[0].edges, np.linspace(7, 10, 4))
+        assertaaeq(a.cut(-0.1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.0, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.1, 3, snap)[0].edges, np.linspace(1, 3, 3))
+        assertaaeq(a.cut(2.9, 6.9, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.0, 7.0, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.1, snap)[0].edges, np.linspace(4, 8, 5))
+        assertaaeq(a.cut(3.1, 7.49999, snap)[0].edges, np.linspace(4, 8, 5))
+        assertaaeq(a.cut(3.1, 7.5, snap)[0].edges, np.linspace(4, 8, 5))
+
+    def test_cut_clip(self):
+        a = HistogramAxis(10, [0, 10])
+
+        assertaaeq = assert_array_almost_equal
+
+        snap = 'clip'
+        assertaaeq(a.cut(-1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(7, 11, snap)[0].edges, np.linspace(7, 10, 4))
+        assertaaeq(a.cut(-0.1, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.0, 3, snap)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(0.1, 3, snap)[0].edges, [0.1, 1, 2, 3])
+        assertaaeq(a.cut(2.9, 6.9, snap)[0].edges, [2.9, 3, 4, 5, 6, 6.9])
+        assertaaeq(a.cut(3.0, 7.0, snap)[0].edges, np.linspace(3, 7, 5))
+        assertaaeq(a.cut(3.1, 7.1, snap)[0].edges, [3.1, 4, 5, 6, 7, 7.1])
+        assertaaeq(a.cut(3.1, 5.49999, snap)[0].edges, [3.1, 4, 5, 5.49999])
+        assertaaeq(a.cut(3.1, 5.5, snap)[0].edges, [3.1, 4, 5, 5.5])
 
     def test_isuniform(self):
         h1 = HistogramAxis(100, [-5, 5])
