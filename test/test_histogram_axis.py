@@ -210,6 +210,17 @@ class TestHistogramAxis(unittest.TestCase):
         a = HistogramAxis(10, [0, 10])
         assert_array_almost_equal(a.binwidth(), 1)
 
+    def test_cut_none(self):
+        a = HistogramAxis(10, [0, 10])
+
+        assertaaeq = assert_array_almost_equal
+
+        assertaaeq(a.cut(None, 3)[0].edges, np.linspace(0, 3, 4))
+        assertaaeq(a.cut(7, None)[0].edges, np.linspace(7, 10, 4))
+
+        with self.assertRaises(TypeError):
+            a.cut(0,3,0.)
+
     def test_cut_nearest(self):
         a = HistogramAxis(10, [0, 10])
 
@@ -320,8 +331,31 @@ class TestHistogramAxis(unittest.TestCase):
 
     def test_mergebins(self):
         a = HistogramAxis(10, [0, 10])
+        assert_array_almost_equal(a.mergebins().edges, np.linspace(0, 10, 6))
         assert_array_almost_equal(a.mergebins(2).edges, np.linspace(0, 10, 6))
         assert_array_almost_equal(a.mergebins(3).edges, np.linspace(0, 9, 4))
+
+        assertaaeq = assert_array_almost_equal
+
+        a = HistogramAxis([0, 1, 2, 3, 4, 5])
+        assertaaeq(a.mergebins(2,'low',True).edges, [0, 2, 4])
+        assertaaeq(a.mergebins(2,'low',False).edges, [0, 2, 4, 5])
+        assertaaeq(a.mergebins(2,'high',True).edges, [1, 3, 5])
+        assertaaeq(a.mergebins(2,'high',False).edges, [0, 1, 3, 5])
+
+        a = HistogramAxis([0, 1, 2, 3, 4])
+        assertaaeq(a.mergebins(2,'low',True).edges, [0, 2, 4])
+        assertaaeq(a.mergebins(2,'low',False).edges, [0, 2, 4])
+        assertaaeq(a.mergebins(2,'high',True).edges, [0, 2, 4])
+        assertaaeq(a.mergebins(2,'high',False).edges, [0, 2, 4])
+
+        if __debug__:
+            a = HistogramAxis([0, 1])
+            with self.assertRaises(ValueError):
+                a.mergebins()
+
+            with self.assertRaises(ValueError):
+                a.mergebins(2,'x')
 
 
 if __name__ == '__main__':
