@@ -226,7 +226,13 @@ class HistogramAxis(object):
         lowbin = max(bin,minbin)
         highbin = min(bin+1,maxbin)
 
-        if snap == 'nearest':
+        if snap == 'both':
+            return (lowbin,highbin)
+        elif snap == 'high':
+            return highbin
+        elif snap == 'low':
+            return lowbin
+        else:  # snap == 'nearest'
             low,high = self.edges[[lowbin,highbin]]
             dlow = abs(x-low)
             dhigh = abs(high-x)
@@ -234,12 +240,6 @@ class HistogramAxis(object):
                 return lowbin
             else:
                 return highbin
-        elif snap == 'both':
-            return (lowbin,highbin)
-        elif snap == 'low':
-            return lowbin
-        else:
-            return highbin
 
     def binwidth(self, b=1):
         '''Width of a specific bin.

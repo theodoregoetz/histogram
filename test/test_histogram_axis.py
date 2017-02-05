@@ -175,22 +175,31 @@ class TestHistogramAxis(unittest.TestCase):
         assert_array_almost_equal(a.edge_index(-1, 'nearest'), 0)
         assert_array_almost_equal(a.edge_index(-1, 'high'), 0)
         assert_array_almost_equal(a.edge_index(-1, 'low'), 0)
+        assert_array_almost_equal(a.edge_index(-1, 'both'), (0,0))
         assert_array_almost_equal(a.edge_index(11), 10)
         assert_array_almost_equal(a.edge_index(11, 'nearest'), 10)
         assert_array_almost_equal(a.edge_index(11, 'high'), 10)
         assert_array_almost_equal(a.edge_index(11, 'low'), 10)
+        assert_array_almost_equal(a.edge_index(11, 'both'), (10,10))
         assert_array_almost_equal(a.edge_index(1.9), 2)
         assert_array_almost_equal(a.edge_index(1.9, 'nearest'), 2)
         assert_array_almost_equal(a.edge_index(1.9, 'high'), 2)
         assert_array_almost_equal(a.edge_index(1.9, 'low'), 1)
+        assert_array_almost_equal(a.edge_index(1.9, 'both'), (1,2))
         assert_array_almost_equal(a.edge_index(2), 2)
         assert_array_almost_equal(a.edge_index(2, 'nearest'), 2)
         assert_array_almost_equal(a.edge_index(2, 'high'), 3)
         assert_array_almost_equal(a.edge_index(2, 'low'), 2)
+        assert_array_almost_equal(a.edge_index(2, 'both'), (2,3))
         assert_array_almost_equal(a.edge_index(2.1), 2)
         assert_array_almost_equal(a.edge_index(2.1, 'nearest'), 2)
         assert_array_almost_equal(a.edge_index(2.1, 'high'), 3)
         assert_array_almost_equal(a.edge_index(2.1, 'low'), 2)
+        assert_array_almost_equal(a.edge_index(2.1, 'both'), (2,3))
+
+        if __debug__:
+            with self.assertRaises(ValueError):
+                a.edge_index(2.1, 'x')
 
     def test_binwidth(self):
         a = HistogramAxis(10, [0, 10])
