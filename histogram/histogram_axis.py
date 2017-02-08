@@ -62,7 +62,9 @@ class HistogramAxis(object):
             self.edges = np.asarray(bins)
         else:
             self.edges = np.linspace(limits[0], limits[1], bins + 1)
-        self.label = label
+
+        if label is not None:
+            self.label = label
 
     def __str__(self):
         '''String representation the edges array.
@@ -119,13 +121,21 @@ class HistogramAxis(object):
 
     @label.setter
     def label(self, l):
-        if (l is None) or (l == ''):
-            if hasattr(self, '_label'):
-                del self._label
-        elif not isstr(l):
-            self._label = str(l)
-        else:
-            self._label = l
+        self._label = str(l)
+
+    @label.deleter
+    def label(self):
+        del self._label
+
+    def asdict(self):
+        ret = {'edges':self.edges}
+        if self.label is not None:
+            ret.update(label=self.label)
+        return ret
+
+    @staticmethod
+    def fromdict(d):
+        return HistogramAxis(bins=d['edges'], label=d.get('label',None))
 
     @property
     def nbins(self):
@@ -163,7 +173,7 @@ class HistogramAxis(object):
         return 0.5 * (self.edges[:-1] + self.edges[1:])
 
     @property
-    def overflow(self):
+    def overflow_value(self):
         '''Value guaranteed to be outside the range of this axis.'''
         return self.max + 1.
 

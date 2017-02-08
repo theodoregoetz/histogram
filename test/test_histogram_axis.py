@@ -101,7 +101,7 @@ class TestHistogramAxis(unittest.TestCase):
         a1.label = 1
         self.assertEqual(a1.label, '1')
         self.assertTrue(hasattr(a1, '_label'))
-        a1.label = None
+        del a1.label
         self.assertEqual(a1.label, None)
         self.assertFalse(hasattr(a1, '_label'))
 
@@ -139,9 +139,9 @@ class TestHistogramAxis(unittest.TestCase):
         a = np.linspace(0, 10, 101)
         assert_array_almost_equal(a1.bincenters, 0.5*(a[:-1] + a[1:]))
 
-    def test_overflow(self):
+    def test_overflow_value(self):
         a1 = HistogramAxis(100, [0, 10], 'x')
-        self.assertFalse(a1.inaxis(a1.overflow))
+        self.assertFalse(a1.inaxis(a1.overflow_value))
 
     def test_clone(self):
         a1 = HistogramAxis(100, [0, 10], 'x')
@@ -356,6 +356,16 @@ class TestHistogramAxis(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 a.mergebins(2,'x')
+
+    def test_asdict(self):
+        a = HistogramAxis(3, [0, 1])
+        d = a.asdict()
+        b = HistogramAxis.fromdict(d)
+        self.assertEqual(a, b)
+
+        a.label = 'test'
+        b = HistogramAxis.fromdict(a.asdict())
+        self.assertEqual(a, b)
 
 
 if __name__ == '__main__':

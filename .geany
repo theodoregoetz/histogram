@@ -45,3 +45,7 @@ NF_02_WD=
 EX_00_LB=_Execute
 EX_00_CM=python "%f"
 EX_00_WD=
+PythonFT_00_LB=_Test
+PythonFT_00_CM=/home/goetz/local/scripts/myscripts/cnose histogram test
+PythonFT_00_WD=%p
+filetypes=Python;

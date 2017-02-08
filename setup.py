@@ -95,7 +95,7 @@ def setup_opts():
         ],
         packages=['histogram'],
         setup_requires=['numpy'],
-        install_requires=['numpy','scipy'],
+        install_requires=['numpy','scipy','uncertainties'],
         extras_require={
             'all' : ['matplotlib','cycler','bokeh','h5py'],
         },

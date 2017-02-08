@@ -11,6 +11,225 @@ from histogram import Histogram
 
 class TestHistogram(unittest.TestCase):
 
+    def test_init1d(self):
+        h1a = Histogram(10,[0,10])
+        h1b = Histogram(10,[0,10],'x')
+        h1c = Histogram(10,[0,10],'x','label')
+        h1d = Histogram(10,[0,10],'x','label','title')
+
+        h2a = Histogram(np.linspace(0,10,11))
+        h2b = Histogram(np.linspace(0,10,11),'x')
+        h2c = Histogram(np.linspace(0,10,11),'x','label')
+        h2d = Histogram(np.linspace(0,10,11),'x','label','title')
+
+        h3a = Histogram((np.linspace(0,10,11),))
+        h3b = Histogram((np.linspace(0,10,11),'x'))
+        h3c = Histogram((np.linspace(0,10,11),'x'),'label')
+        h3d = Histogram((np.linspace(0,10,11),'x'),'label','title')
+
+        self.assertTrue(h1a.isidentical(h2a))
+        self.assertTrue(h1b.isidentical(h2b))
+        self.assertTrue(h1c.isidentical(h2c))
+        self.assertTrue(h1d.isidentical(h2d))
+
+        self.assertTrue(h1a.isidentical(h3a))
+        self.assertTrue(h1b.isidentical(h3b))
+        self.assertTrue(h1c.isidentical(h3c))
+        self.assertTrue(h1d.isidentical(h3d))
+
+    def test_init2d(self):
+        h1a = Histogram(10,[0,10],9,[1,10])
+        h1b = Histogram(10,[0,10],'x',9,[1,10],'y')
+        h1c = Histogram(10,[0,10],'x',9,[1,10],'y','label')
+        h1d = Histogram(10,[0,10],'x',9,[1,10],'y','label','title')
+
+        xx = np.linspace(0,10,11)
+        yy = np.linspace(1,10,10)
+        h2a = Histogram(xx,yy)
+        h2b = Histogram(xx,'x',yy,'y')
+        h2c = Histogram(xx,'x',yy,'y','label')
+        h2d = Histogram(xx,'x',yy,'y','label','title')
+
+        h3a = Histogram((xx,),(yy,))
+        h3b = Histogram((xx,'x'),(yy,'y'))
+        h3c = Histogram((xx,'x'),(yy,'y'),'label')
+        h3d = Histogram((xx,'x'),(yy,'y'),'label','title')
+
+        self.assertTrue(h1a.isidentical(h2a))
+        self.assertTrue(h1b.isidentical(h2b))
+        self.assertTrue(h1c.isidentical(h2c))
+        self.assertTrue(h1d.isidentical(h2d))
+
+        self.assertTrue(h1a.isidentical(h3a))
+        self.assertTrue(h1b.isidentical(h3b))
+        self.assertTrue(h1c.isidentical(h3c))
+        self.assertTrue(h1d.isidentical(h3d))
+
+    def test_init_dtype(self):
+        data = np.array([0,1,2], dtype=np.int32)
+        h = Histogram(3,[0,3],data=data, dtype=np.int8)
+        self.assertEqual(h.data.dtype, np.int8)
+
+    def test_init_failures(self):
+        self.assertRaises(TypeError,Histogram)
+        with self.assertRaises(TypeError):
+            Histogram(2,2)
+        if __debug__:
+            with self.assertRaises(AssertionError):
+                h = Histogram(3,[0,10],data=[0])
+            with self.assertRaises(AssertionError):
+                h = Histogram(3,[0,10],data=np.array([0], dtype=np.int8))
+
+            with self.assertRaises(ValueError):
+                h = Histogram(3,[0,1])
+                h.data = np.array([0,1], dtype=np.int8)
+
+        with self.assertRaises(TypeError):
+            h = Histogram(2,[0,1],'x','oops',label='label',title='title')
+
+    def test_data(self):
+        h = Histogram(3,[0,1])
+        h.data = np.array([0,1,2], dtype=np.int8)
+        assert_array_almost_equal(h.data, np.array([0,1,2]))
+
+    def test_uncert(self):
+        h = Histogram(3, [0,1])
+        h.data = [0, 1, 2]
+        assert_array_almost_equal(h.uncert, np.sqrt([0, 1, 2]))
+
+        h.uncert = [5,5,5]
+        assert_array_almost_equal(h.uncert, [5,5,5])
+
+        h.uncert = None
+        assert_array_almost_equal(h.uncert, np.sqrt([0, 1, 2]))
+
+        h.data = [-1, 0, 0]
+        del h.uncert
+        assert_array_almost_equal(h.uncert, [np.nan, 0, 0])
+
+    def test_uncert_ratio(self):
+        h = Histogram(4, [0,1])
+        h.data = [-1, 0, 1, 2]
+        assert_array_almost_equal(h.uncert_ratio,
+                                  [np.nan, np.nan, 1, np.sqrt(2)/2])
+
+        h.data = [-1, 0, 0, 0]
+        del h.uncert
+        assert_array_almost_equal(h.uncert, [np.nan, 0, 0, 0])
+
+        h.data = [-1, 0, 1, 2]
+        h.uncert_ratio = [0.1, 0.1, 0.2, 0.3]
+        assert_array_almost_equal(h.uncert, [-0.1, 0, 0.2, 2.*0.3])
+
+    def test_title(self):
+        h = Histogram(1,[0,1],title='title')
+        self.assertEqual(h.title, 'title')
+        h.title = 'test'
+        self.assertEqual(h.title, 'test')
+        h.title = 'a'
+        self.assertEqual(h.title, 'a')
+        del h.title
+        self.assertIsNone(h.title)
+
+    def test_label(self):
+        h = Histogram(1,[0,1],label='label')
+        self.assertEqual(h.label, 'label')
+        h.label = 'test'
+        self.assertEqual(h.label, 'test')
+        h.label = 'a'
+        self.assertEqual(h.label, 'a')
+        del h.label
+        self.assertIsNone(h.label)
+
+    def test_eq(self):
+        h1 = Histogram(4, (0, 10))
+        h2 = Histogram(4, (0, 10))
+        h3 = Histogram(4, (-10, 10))
+        h4 = Histogram(4, (0, 10))
+
+        h1.data[2] = 1
+        h2.data[2] = 1
+        h3.data[2] = 1
+        h4.data[3] = 1
+
+        self.assertTrue(h1 == h2)
+        self.assertFalse(h1 != h2)
+        self.assertFalse(h1 == h3)
+        self.assertTrue(h1 != h3)
+        self.assertFalse(h1 == h4)
+        self.assertTrue(h1 != h4)
+
+        h5 = Histogram(5, (0,10))
+        self.assertFalse(h1 == h5)
+
+        h6 = Histogram(4, (0, 10))
+        h6[2] = 1
+        h6.uncert = [0.2]*4
+        self.assertTrue(h1 == h6)
+
+        h7 = Histogram(4, (0, 10), label='l')
+        h8 = Histogram(4, (0, 10), title='t')
+        h7[2] = 1
+        h8[2] = 1
+        self.assertTrue(h1 == h7)
+        self.assertTrue(h1 == h8)
+
+    def test_isidentical(self):
+        h1 = Histogram(4, (0, 10))
+        h2 = Histogram(4, (0, 10))
+        h3 = Histogram(4, (-10, 10))
+        h4 = Histogram(4, (0, 10))
+        h5 = Histogram(4, (0, 10))
+        h6 = Histogram(4, (0, 10), label='l')
+        h7 = Histogram(4, (0, 10), title='t')
+        h8 = Histogram(4, (0, 10), label='a')
+        h9 = Histogram(4, (0, 10), title='b')
+
+        h1.data[2] = 1
+        h2.data[2] = 1
+        h3.data[2] = 1
+        h4.data[3] = 1
+        h5.data[2] = 1
+        h5.uncert = [0.2]*4
+        h6.data[2] = 1
+        h7.data[2] = 1
+        h8.data[2] = 1
+        h9.data[2] = 1
+
+        self.assertTrue(h1.isidentical(h2))
+        self.assertFalse(h1.isidentical(h3))
+        self.assertFalse(h1.isidentical(h4))
+        self.assertFalse(h1.isidentical(h5))
+        self.assertFalse(h1.isidentical(h6))
+        self.assertFalse(h1.isidentical(h7))
+        self.assertFalse(h6.isidentical(h8))
+        self.assertFalse(h7.isidentical(h9))
+
+        h1 = Histogram(4, (0,1), 'x', 'h', 't')
+        h2 = Histogram(4, (0,1), 'y', 'h', 't')
+        self.assertFalse(h1.isidentical(h2))
+
+    def test_str(self):
+        h = Histogram(3, (0,1))
+        h.data = [1,2,3]
+        self.assertEqual(str(h), str(np.array([1,2,3])))
+
+    def test_repr(self):
+        h = Histogram(3, (0,3), 'x', 'l', 't')
+        h.data = [1,2,3]
+        h.uncert = [0,1,2]
+        self.assertEqual(repr(h), 'Histogram(HistogramAxis(bins=[0.0, 1.0, 2.0,'
+            ' 3.0],label="x"), data=[1, 2, 3], dtype="int64", label="l",'
+            ' title="t", uncert=[0.0, 1.0, 2.0])')
+
+    def test_call(self):
+        h1 = Histogram(10,[0,10],data=[x+10 for x in range(10)])
+        h2 = Histogram(10,[0,10],9,[-10,-1])
+        h2.data[3,3] = 5
+        self.assertAlmostEqual(h1(5),15)
+        self.assertAlmostEqual(h1(20, overflow_value=50), 50)
+
+
     def test___add__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
 
@@ -31,12 +250,6 @@ class TestHistogram(unittest.TestCase):
         h = h1 + h2
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [5,7,9])
-
-    def test___call__(self):
-        h1 = Histogram(10,[0,10],data=[x+10 for x in range(10)])
-        h2 = Histogram(10,[0,10],9,[-10,-1])
-        h2.data[3,3] = 5
-        self.assertAlmostEqual(h1(5),15)
 
     def test___truediv__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
@@ -113,87 +326,6 @@ class TestHistogram(unittest.TestCase):
         # self.assertEqual(expected, histogram.__imul__(that))
         assert True # TODO: implement your test here
 
-    def test_init_failures(self):
-        self.assertRaises(TypeError,Histogram)
-        with self.assertRaises(TypeError):
-            Histogram(2,2)
-        if __debug__:
-            with self.assertRaises(AssertionError):
-                h = Histogram(3,[0,10],data=[0])
-            with self.assertRaises(AssertionError):
-                h = Histogram(3,[0,10],data=np.array([0], dtype=np.int8))
-
-            with self.assertRaises(AssertionError):
-                h = Histogram(3,[0,1])
-                h.data = np.array([0], dtype=np.int8)
-
-
-        with self.assertRaises(TypeError):
-            h = Histogram(2,[0,1],'x','oops',label='label',title='title')
-
-    def test_init1d(self):
-        h1a = Histogram(10,[0,10])
-        h1b = Histogram(10,[0,10],'x')
-        h1c = Histogram(10,[0,10],'x','label')
-        h1d = Histogram(10,[0,10],'x','label','title')
-
-        h2a = Histogram(np.linspace(0,10,11))
-        h2b = Histogram(np.linspace(0,10,11),'x')
-        h2c = Histogram(np.linspace(0,10,11),'x','label')
-        h2d = Histogram(np.linspace(0,10,11),'x','label','title')
-
-        h3a = Histogram((np.linspace(0,10,11),))
-        h3b = Histogram((np.linspace(0,10,11),'x'))
-        h3c = Histogram((np.linspace(0,10,11),'x'),'label')
-        h3d = Histogram((np.linspace(0,10,11),'x'),'label','title')
-
-        self.assertTrue(h1a.isidentical(h2a))
-        self.assertTrue(h1b.isidentical(h2b))
-        self.assertTrue(h1c.isidentical(h2c))
-        self.assertTrue(h1d.isidentical(h2d))
-
-        self.assertTrue(h1a.isidentical(h3a))
-        self.assertTrue(h1b.isidentical(h3b))
-        self.assertTrue(h1c.isidentical(h3c))
-        self.assertTrue(h1d.isidentical(h3d))
-
-    def test_init2d(self):
-        h1a = Histogram(10,[0,10],9,[1,10])
-        h1b = Histogram(10,[0,10],'x',9,[1,10],'y')
-        h1c = Histogram(10,[0,10],'x',9,[1,10],'y','label')
-        h1d = Histogram(10,[0,10],'x',9,[1,10],'y','label','title')
-
-        xx = np.linspace(0,10,11)
-        yy = np.linspace(1,10,10)
-        h2a = Histogram(xx,yy)
-        h2b = Histogram(xx,'x',yy,'y')
-        h2c = Histogram(xx,'x',yy,'y','label')
-        h2d = Histogram(xx,'x',yy,'y','label','title')
-
-        h3a = Histogram((xx,),(yy,))
-        h3b = Histogram((xx,'x'),(yy,'y'))
-        h3c = Histogram((xx,'x'),(yy,'y'),'label')
-        h3d = Histogram((xx,'x'),(yy,'y'),'label','title')
-
-        self.assertTrue(h1a.isidentical(h2a))
-        self.assertTrue(h1b.isidentical(h2b))
-        self.assertTrue(h1c.isidentical(h2c))
-        self.assertTrue(h1d.isidentical(h2d))
-
-        self.assertTrue(h1a.isidentical(h3a))
-        self.assertTrue(h1b.isidentical(h3b))
-        self.assertTrue(h1c.isidentical(h3c))
-        self.assertTrue(h1d.isidentical(h3d))
-
-    def test_init_dtype(self):
-        data = np.array([0,1,2], dtype=np.int32)
-        h = Histogram(3,[0,3],data=data, dtype=np.int8)
-        self.assertEqual(h.data.dtype, np.int8)
-
-        h = Histogram(3,[0,1])
-        h.data = np.array([0,1,2], dtype=np.int8)
-        assert_array_almost_equal(h.data, np.array([0,1,2]))
-
     def test___isub__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
 
@@ -233,11 +365,6 @@ class TestHistogram(unittest.TestCase):
     def test___rsub__(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.__rsub__(that))
-        assert True # TODO: implement your test here
-
-    def test___str__(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.__str__())
         assert True # TODO: implement your test here
 
     def test___sub__(self):
@@ -302,7 +429,6 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(y,[4,4,5,5,0,0])
         assert_array_almost_equal(ext,[3,6,0,5])
 
-
     def test_aspolygon(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.aspolygon(ymin, range))
@@ -366,7 +492,6 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(h1e.axes[0].edges,[3,4,5,6,7,8,9,10]))
         assert_array_almost_equal(h1e.data,[3,4,5,6,7,8,9]))
         '''
-
 
     def test_cut_2d(self):
         h2 = Histogram((100,[0,10]),(90,[-3,3]))
