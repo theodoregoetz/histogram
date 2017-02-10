@@ -6,7 +6,7 @@ import unittest
 
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from histogram import Histogram
+from histogram import Histogram, HistogramAxis
 
 
 class TestHistogram(unittest.TestCase):
@@ -229,6 +229,131 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(h1(5),15)
         self.assertAlmostEqual(h1(20, overflow_value=50), 50)
 
+    def test_asdict(self):
+        h = Histogram(3,[0,3],'xx','ll','tt',data=[5,6,7])
+        d = h.asdict()
+        assert_array_almost_equal(d['data'], [5,6,7])
+        for a,aa in zip(h.axes, d['axes']):
+            self.assertEqual(a, HistogramAxis.fromdict(aa))
+        self.assertEqual(d['label'], 'll')
+        self.assertEqual(d['title'], 'tt')
+        self.assertNotIn('uncert', d)
+        self.assertTrue(h.isidentical(Histogram.fromdict(d)))
+        h.uncert = [3,4,5]
+        d = h.asdict()
+        assert_array_almost_equal(d['uncert'], [3,4,5])
+        self.assertTrue(h.isidentical(Histogram.fromdict(d)))
+
+    def test_dim(self):
+        h1 = Histogram(3,[0,1])
+        h2 = Histogram(3,[0,1],4,[0,1])
+        h3 = Histogram(3,[0,1],4,[0,1],5,[0,1])
+        self.assertEqual(h1.dim, 1)
+        self.assertEqual(h2.dim, 2)
+        self.assertEqual(h3.dim, 3)
+
+    def test_shape(self):
+        h1 = Histogram(3,[0,1])
+        h2 = Histogram(3,[0,1],4,[0,1])
+        h3 = Histogram(3,[0,1],4,[0,1],5,[0,1])
+        self.assertEqual(h1.shape, (3,))
+        self.assertEqual(h2.shape, (3,4))
+        self.assertEqual(h3.shape, (3,4,5))
+
+    def test_size(self):
+        h1 = Histogram(3,[0,1])
+        h2 = Histogram(3,[0,1],4,[0,1])
+        h3 = Histogram(3,[0,1],4,[0,1],5,[0,1])
+        self.assertEqual(h1.size, 3)
+        self.assertEqual(h2.size, 3*4)
+        self.assertEqual(h3.size, 3*4*5)
+
+    def test_isuniform(self):
+        h = Histogram([0,1,2])
+        self.assertTrue(h.isuniform())
+        h = Histogram([0,1,2], [-1,0,1])
+        self.assertTrue(h.isuniform())
+        h = Histogram([0,1,3])
+        self.assertFalse(h.isuniform())
+        h = Histogram([0,1,2], [-1,0,2])
+        self.assertFalse(h.isuniform())
+
+    def test_edges(self):
+        h = Histogram([0,1,2])
+        self.assertEqual(len(h.edges), 1)
+        assert_array_almost_equal(h.edges[0], [0,1,2])
+        h = Histogram([0,1,2], [-1,0,1])
+        self.assertEqual(len(h.edges), 2)
+        assert_array_almost_equal(h.edges[0], [0,1,2])
+        assert_array_almost_equal(h.edges[1], [-1,0,1])
+
+    def test_grid(self):
+        h = Histogram([0,1,2])
+        self.assertEqual(len(h.grid), 1)
+        assert_array_almost_equal(h.grid[0], [0.5,1.5])
+        h = Histogram([0,1,2], [-1,0,1])
+        self.assertEqual(len(h.grid), 2)
+        assert_array_almost_equal(len(h.grid[0]), 2)
+        assert_array_almost_equal(len(h.grid[1]), 2)
+        assert_array_almost_equal(h.grid[0].ravel(), [0.5,0.5,1.5,1.5])
+        assert_array_almost_equal(h.grid[1].ravel(), [-0.5,0.5,-0.5,0.5])
+
+    def test_edge_grid(self):
+        h = Histogram([0,1,2])
+        self.assertEqual(len(h.edge_grid), 1)
+        assert_array_almost_equal(h.edge_grid[0], [0,1,2])
+        h = Histogram([0,1,2], [-1,0,1])
+        self.assertEqual(len(h.edge_grid), 2)
+        assert_array_almost_equal(len(h.edge_grid[0]), 3)
+        assert_array_almost_equal(len(h.edge_grid[1]), 3)
+        assert_array_almost_equal(h.edge_grid[0].ravel(), [0,0,0,1,1,1,2,2,2])
+        assert_array_almost_equal(h.edge_grid[1].ravel(), [-1,0,1]*3)
+
+    def test_binwidths(self):
+        h = Histogram([0,1,2])
+        self.assertEqual(len(h.binwidths), 1)
+        assert_array_almost_equal(h.binwidths[0], [1,1])
+        h = Histogram([0,2,4], [-1,0,2])
+        self.assertEqual(len(h.binwidths), 2)
+        assert_array_almost_equal(h.binwidths[0], [2,2])
+        assert_array_almost_equal(h.binwidths[1], [1,2])
+
+    def test_binwidth(self):
+        h = Histogram([0,1,2])
+        self.assertEqual(h.binwidth(0), 1)
+        self.assertEqual(h.binwidth(1), 1)
+
+        h = Histogram([0,2,4], [-1,0,2])
+        self.assertEqual(h.binwidth(0), 2)
+        self.assertEqual(h.binwidth(1), 2)
+        self.assertEqual(h.binwidth(0,1), 1)
+        self.assertEqual(h.binwidth(1,1), 2)
+
+    def test_binvolumes(self):
+        h = Histogram([0,1,3])
+        self.assertEqual(tuple(len(x) for x in h.binvolumes), (2,))
+        self.assertEqual(h.binvolumes[0][0], 1)
+        self.assertEqual(h.binvolumes[0][1], 2)
+
+        h = Histogram([0,2,4], [-1,0,2,6])
+        self.assertEqual(len(h.binvolumes), 2)
+        self.assertEqual(len(h.binvolumes[0]), 3)
+        self.assertEqual(len(h.binvolumes[1]), 3)
+        self.assertEqual(h.binvolumes[0,0], 2)
+        self.assertEqual(h.binvolumes[0,1], 4)
+        self.assertEqual(h.binvolumes[0,2], 8)
+        self.assertEqual(h.binvolumes[1,0], 2)
+        self.assertEqual(h.binvolumes[1,1], 4)
+        self.assertEqual(h.binvolumes[1,2], 8)
+
+    def test_overflow_value(self):
+        h = Histogram([0,1,2])
+        self.assertEqual(h.overflow_value, (3,))
+
+        h = Histogram([0,2,4], [-1,0,2])
+        self.assertEqual(h.overflow_value, (5,3))
+
+
 
     def test___add__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
@@ -434,21 +559,6 @@ class TestHistogram(unittest.TestCase):
         # self.assertEqual(expected, histogram.aspolygon(ymin, range))
         assert True # TODO: implement your test here
 
-    def test_binvolumes(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.binvolumes())
-        assert True # TODO: implement your test here
-
-    def test_binwidth(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.binwidth(b, axis))
-        assert True # TODO: implement your test here
-
-    def test_binwidths(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.binwidths())
-        assert True # TODO: implement your test here
-
     def test_clear_nans(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.clear_nans(val))
@@ -506,24 +616,9 @@ class TestHistogram(unittest.TestCase):
         # self.assertEqual(expected, histogram.cut_data(*range, **kwargs))
         assert True # TODO: implement your test here
 
-    def test_dim(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.dim())
-        assert True # TODO: implement your test here
-
     def test_dtype(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.dtype(that, div))
-        assert True # TODO: implement your test here
-
-    def test_edge_grid(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.edge_grid())
-        assert True # TODO: implement your test here
-
-    def test_edges(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.edges())
         assert True # TODO: implement your test here
 
     def test_errorbars(self):
@@ -571,11 +666,6 @@ class TestHistogram(unittest.TestCase):
         # self.assertEqual(expected, histogram.fit_slices_signal(axis, *args, **kwargs))
         assert True # TODO: implement your test here
 
-    def test_grid(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.grid())
-        assert True # TODO: implement your test here
-
     def test_integral(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.integral(uncert))
@@ -584,11 +674,6 @@ class TestHistogram(unittest.TestCase):
     def test_interpolate_nans(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.interpolate_nans(**kwargs))
-        assert True # TODO: implement your test here
-
-    def test_isuniform(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.isuniform(tol))
         assert True # TODO: implement your test here
 
     def test_max(self):
@@ -614,11 +699,6 @@ class TestHistogram(unittest.TestCase):
         h.fill([1,1,1,2,2,2,3])
         hocc = h.occupancy(4,[-0.5,3.5])
         assert_array_almost_equal(hocc.data, [7,1,0,2])
-
-    def test_overflow(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.overflow())
-        assert True # TODO: implement your test here
 
     def test_profile(self):
         # histogram = Histogram(*axes, **kwargs)
@@ -652,16 +732,6 @@ class TestHistogram(unittest.TestCase):
     def test_set(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.set(val, uncert))
-        assert True # TODO: implement your test here
-
-    def test_shape(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.shape())
-        assert True # TODO: implement your test here
-
-    def test_size(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.size())
         assert True # TODO: implement your test here
 
     def test_slices(self):

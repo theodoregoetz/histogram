@@ -401,18 +401,18 @@ class Histogram(object):
         '''
         ret = {'data' : self.data, 'axes': [a.asdict() for a in self.axes]}
         if hasattr(self, '_uncert'):
-            ret.update(uncert=self.uncert)
+            ret['uncert'] = self.uncert
         if self.label is not None:
-            ret.update(label=self.label)
+            ret['label'] = self.label
         if self.title is not None:
-            ret.update(title=self.title)
+            ret['title'] = self.title
         return ret
 
     @staticmethod
     def fromdict(d):
         '''Create new :py:class:`Histogram` from a dictionary.
         '''
-        axes = [HistogramAxis.fromdict(d) for d in kwargs.pop('axes')]
+        axes = [HistogramAxis.fromdict(a) for a in d.pop('axes')]
         return Histogram(*axes, **d)
 
 ###    dimension and shape
@@ -439,7 +439,7 @@ class Histogram(object):
         same as :py:meth:`Histogram.data.size`.
 
         '''
-        return self.data.size()
+        return self.data.size
 
 ###    axes information (bin edges and centers)
     def isuniform(self, rtol=1e-05, atol=1e-08):
@@ -540,7 +540,6 @@ class Histogram(object):
             return widths
         else:
             return np.multiply.reduce(np.ix_(*widths))
-
 
     @property
     def overflow_value(self):
