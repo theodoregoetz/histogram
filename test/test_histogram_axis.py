@@ -65,6 +65,10 @@ class TestHistogramAxis(unittest.TestCase):
         a2 = eval(repr(a1))
         self.assertTrue(a1.isidentical(a2))
 
+        a1 = HistogramAxis(100, [0, 10])
+        a2 = eval(repr(a1))
+        self.assertTrue(a1.isidentical(a2))
+
     def test___eq__(self):
         a1 = HistogramAxis(np.linspace(0, 10, 100))
         a2 = HistogramAxis(np.linspace(0, 10, 100))

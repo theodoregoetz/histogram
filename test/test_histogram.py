@@ -219,7 +219,7 @@ class TestHistogram(unittest.TestCase):
         h.data = [1,2,3]
         h.uncert = [0,1,2]
         self.assertEqual(repr(h), 'Histogram(HistogramAxis(bins=[0.0, 1.0, 2.0,'
-            ' 3.0],label="x"), data=[1, 2, 3], dtype="int64", label="l",'
+            ' 3.0], label="x"), data=[1, 2, 3], dtype="int64", label="l",'
             ' title="t", uncert=[0.0, 1.0, 2.0])')
 
     def test_call(self):
@@ -353,7 +353,74 @@ class TestHistogram(unittest.TestCase):
         h = Histogram([0,2,4], [-1,0,2])
         self.assertEqual(h.overflow_value, (5,3))
 
+    def test_sum1d(self):
+        h = Histogram(10, [0, 10])
+        h.fill([1, 2, 2, 3, 3, 3, 4, 4, 4, 4])
+        self.assertEqual(h.sum(), 10)
+        h.fill(11)
+        self.assertEqual(h.sum(), 10)
+        self.assertEqual(h.sum(0), 10)
 
+    def test_sum2d(self):
+        h2 = Histogram(10, [0, 10], 10, [0, 10])
+        h2.fill([1, 2, 2, 3, 3, 3, 4, 4, 4, 4],
+                [1, 1, 1, 1, 1, 1, 2, 2, 2, 2])
+
+        h2x_exp = Histogram(10, [0,10])
+        h2x_exp.fill([1, 2, 2, 3, 3, 3, 4, 4, 4, 4])
+        h2y_exp = Histogram(10, [0,10])
+        h2y_exp.fill([1, 1, 1, 1, 1, 1, 2, 2, 2, 2])
+
+        self.assertEqual(h2.sum(), 10)
+        h2y = h2.sum(0)
+        h2x = h2.sum(1)
+        self.assertTrue(h2y.isidentical(h2y_exp))
+        self.assertTrue(h2x.isidentical(h2x_exp))
+
+    def test_sum3d(self):
+        xx = [1,1,5,5,5,9,9,9,9]
+        yy = [1,1,1,1,9,9,9,9,9]
+        zz = [5,5,5,5,5,9,9,9,9]
+        h2 = Histogram(3, [0, 10], 4, [0, 10], 5, [0, 10])
+        h2.fill(xx, yy, zz)
+
+        self.assertEqual(h2.sum(), 9)
+
+        h2x_exp = Histogram(3, [0,10])
+        h2x_exp.fill(xx)
+        h2y_exp = Histogram(4, [0,10])
+        h2y_exp.fill(yy)
+        h2z_exp = Histogram(5, [0,10])
+        h2z_exp.fill(zz)
+
+        h2xy_exp = Histogram(3, [0,10], 4, [0,10])
+        h2xy_exp.fill(xx,yy)
+        h2xz_exp = Histogram(3, [0,10], 5, [0,10])
+        h2xz_exp.fill(xx,zz)
+        h2yz_exp = Histogram(4, [0,10], 5, [0,10])
+        h2yz_exp.fill(yy,zz)
+
+        self.assertTrue(h2.sum(1,2).isidentical(h2x_exp))
+        self.assertTrue(h2.sum(0,2).isidentical(h2y_exp))
+        self.assertTrue(h2.sum(0,1).isidentical(h2z_exp))
+
+        self.assertTrue(h2.sum(2).isidentical(h2xy_exp))
+        self.assertTrue(h2.sum(1).isidentical(h2xz_exp))
+        self.assertTrue(h2.sum(0).isidentical(h2yz_exp))
+
+    def test_sum_nonfinite(self):
+        h = Histogram(3,[0,3], dtype=np.float)
+        h.data = [np.nan, -1, 2]
+        self.assertTrue(np.isnan(h.sum()))
+
+        h.data = [np.inf, -1, 2]
+        self.assertEqual(h.sum(), np.inf)
+
+        h.data = [-np.inf, -1, 2]
+        self.assertEqual(h.sum(), -np.inf)
+
+        h.data = [np.inf, np.nan, 2]
+        self.assertTrue(np.isnan(h.sum()))
 
     def test___add__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
@@ -759,15 +826,6 @@ class TestHistogram(unittest.TestCase):
         # self.assertEqual(expected, histogram.std())
         assert True # TODO: implement your test here
 
-    def test_sum(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.sum(*axes, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_sum_over_axes(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.sum_over_axes(*axes))
-        assert True # TODO: implement your test here
 
 
 if __name__ == '__main__':

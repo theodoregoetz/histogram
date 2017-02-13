@@ -91,9 +91,15 @@ def plothist_line(ax, hist, **kwargs):
     if baseline == 'left':
         x,y = y,x
 
+    # what about drawstyle steps-post here?
+
     return ax.plot(x,y,**kw)
 
 def plothist_fill_between(ax, *hists, **kwargs):
+
+    # Axes.fill_between now has step='post' option which should be used here
+    #ax.fill_between(xx, list(yy)+[0], step='post', linestyle='None')
+
     points = []
     for h in hists:
         points.append(h.asline())

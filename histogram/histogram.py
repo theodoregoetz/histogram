@@ -1,12 +1,14 @@
 from __future__ import division, print_function
 
 from copy import copy, deepcopy
-import numpy as np
 import itertools as it
+from warnings import warn
+
+import numpy as np
 from scipy import optimize as opt
 from scipy import stats, ndimage, interpolate
-from warnings import warn
-from uncertainties.unumpy import uarray
+from uncertainties import ufloat
+from uncertainties.unumpy import nominal_values, std_devs, uarray
 
 from .histogram_axis import HistogramAxis
 from .detail import isstr, isinteger, skippable, window
@@ -568,13 +570,14 @@ class Histogram(object):
 
 ###    data information (limits, sum, extent)
     def sum(self, *axes):
-        '''Sum of bin values or sum along one or more axes
+        '''Sum of bin values or sum along one or more axes.
 
-        Optional Args:
+        Args:
 
-            axes (tuple of integers): Axes to sum over.
+            axes (tuple of integers, optional): Axes to sum over.
 
-        Returns the sum over all values or sums only over specific axes and returns a new :py:class:`Histogram` with reduced dimension.
+        Returns the sum over all values or sums only over specific axes and
+        returns a new :py:class:`Histogram` with reduced dimension.
 
         Example::
 
@@ -596,44 +599,35 @@ class Histogram(object):
             sum of h: 10
             h2 sum along axis 0: [0 6 4 0 0 0 0 0 0 0]
         '''
-        if (len(axes)==0) or all(d in axes for d in range(self.dim)):
-            return self.data.sum()
-
-        ii = sorted(set(range(self.dim)) - set(axes))
-        newaxes = [self.axes[i] for i in ii]
-
-        newdata = np.apply_over_axes(np.sum, self.data, axes)
-        newdata = np.squeeze(newdata)
-
-        if not hasattr(self, '_uncert'):
-            newuncert = None
+        if len(axes) == 0 or axes == tuple(range(self.dim)):
+            if not hasattr(self, '_uncert'):
+                return self.data.sum()
+            else:
+                return np.sum(uarray(self.data, self.uncert))
         else:
-            uncratio_sq = np.power(self.uncert / self.data, 2)
-            uncratio_sqsum = np.apply_over_axes(np.sum, uncratio_sq, axes)
-            newuncert = np.sqrt(uncratio_sqsum) * newdata
-            newuncert = np.squeeze(newuncert)
+            ii = sorted(set(range(self.dim)) - set(axes))
+            newaxes = [self.axes[i] for i in ii]
+            if not hasattr(self, '_uncert'):
+                newdata = np.sum(self.data, axis=axes)
+                newuncert = None
+            else:
+                data = np.sum(uarray(self.data, self.uncert), axis=axes)
+                newdata, newuncert = nominal_values(data), std_devs(data)
+            return Histogram(*newaxes, data=newdata, uncert=newuncert,
+                             title=copy(self.title), label=copy(self.label))
 
-        return Histogram(
-            *newaxes,
-            data = newdata,
-            uncert = newuncert,
-            title = copy(self.title),
-            label = copy(self.label))
-
-    def integral(self, uncert=False):
+    def integral(self):
         '''Total integral of the histogram
 
         This is the sum of each bin multiplied by the volume of the bins. If ``uncert=True`` is given, then the output is the 2-tuple: ``(integral, uncertainty)``.
         '''
         bv = self.binvolumes
-        ret = np.sum(self.data * bv)
-        if uncert:
-            if self.uncert is None:
-                e = np.sqrt(np.sum(self.data*bv*bv))
-            else:
-                e = np.sqrt(np.sum(self.uncert*self.uncert*bv*bv))
-            ret = ret, e
-        return ret
+        res = np.sum(self.data * bv)
+        if self.uncert is None:
+            e = np.sqrt(np.sum(self.data * bv * bv))
+        else:
+            e = np.sqrt(np.sum(self.uncert * self.uncert * bv * bv))
+        return ufloat(res, e)
 
     def min(self, uncert=False):
         '''Minimum value of the filled data
@@ -643,8 +637,6 @@ class Histogram(object):
         if not uncert:
             return np.nanmin(self.data)
         else:
-            if self.uncert is None:
-                self.uncert = np.sqrt(self.data)
             return np.nanmin(self.data - self.uncert)
 
     def max(self, uncert=False):
@@ -655,8 +647,6 @@ class Histogram(object):
         if not uncert:
             return np.nanmax(self.data)
         else:
-            if self.uncert is None:
-                self.uncert = np.sqrt(self.data)
             return np.nanmax(self.data + self.uncert)
 
     def mean(self):
@@ -921,6 +911,24 @@ class Histogram(object):
                 self.uncert.T[...] = uncert.T
             else:
                 self.uncert[...] = uncert
+
+    def set_nans(self, val=0):
+        """Set all NaNs to a specific value."""
+        self.data[np.isnan(self.data)] = val
+        if hasattr(self, '_uncert'):
+            self.uncert[np.isnan(self.uncert)] = val
+
+    def set_infs(self, val=0):
+        """Set all infinity values to a specific value."""
+        self.data[np.isinf(self.data)] = val
+        if hasattr(self, '_uncert'):
+            self.uncert[np.isinf(self.uncert)] = val
+
+    def set_nonfinite(self, val=0):
+        """Set all non-finite values to a specific value."""
+        self.data[~np.isfinite(self.data)] = val
+        if hasattr(self, '_uncert'):
+            self.uncert[~np.isfinite(self.uncert)] = val
 
     def reset(self):
         '''Set data to zero and uncertainty to `None`.'''

@@ -76,8 +76,12 @@ class HistogramAxis(object):
 
     def __repr__(self):
         '''Complete string representation of the histogram axis'''
-        fmt = 'HistogramAxis(bins={},label="{}")'
-        return fmt.format(repr(self.edges.tolist()),str(self.label))
+        fmt = 'HistogramAxis(bins={}{})'
+        if self.label is None:
+            lbl = ''
+        else:
+            lbl = ', label="{}"'.format(self.label)
+        return fmt.format(repr(self.edges.tolist()), lbl)
 
     def __eq__(self, that):
         r'''Compare edges to within numpy's default tolerance.
