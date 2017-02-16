@@ -1,5 +1,6 @@
 from __future__ import division, print_function
 
+from collections import Iterable
 from copy import copy, deepcopy
 import itertools as it
 from warnings import warn
@@ -569,6 +570,25 @@ class Histogram(object):
         return tuple(ax.overflow_value for ax in self.axes)
 
 ###    data information (limits, sum, extent)
+    def sum_data(self, *axes):
+        """Sum of bin balues or sum along one or more axes.
+
+        Returns: ``(data, uncertanty)``
+        """
+        if len(axes) == 0 or axes == tuple(range(self.dim)):
+            if not hasattr(self, '_uncert'):
+                result, uncert = self.data.sum(), None
+            else:
+                data = np.sum(uarray(self.data, self.uncert))
+                result, uncert = nominal_values(data), std_devs(data)
+        else:
+            if not hasattr(self, '_uncert'):
+                result, uncert = np.sum(self.data, axis=axes), None
+            else:
+                data = np.sum(uarray(self.data, self.uncert), axis=axes)
+                result, uncert = nominal_values(data), std_devs(data)
+        return result, uncert
+
     def sum(self, *axes):
         '''Sum of bin values or sum along one or more axes.
 
@@ -599,27 +619,30 @@ class Histogram(object):
             sum of h: 10
             h2 sum along axis 0: [0 6 4 0 0 0 0 0 0 0]
         '''
-        if len(axes) == 0 or axes == tuple(range(self.dim)):
-            if not hasattr(self, '_uncert'):
-                return self.data.sum()
+        result, uncert = self.sum_data(*axes)
+        if not isinstance(result, Iterable):
+            if uncert is None:
+                return result
             else:
-                return np.sum(uarray(self.data, self.uncert))
+                return result, uncert
         else:
             ii = sorted(set(range(self.dim)) - set(axes))
             newaxes = [self.axes[i] for i in ii]
-            if not hasattr(self, '_uncert'):
-                newdata = np.sum(self.data, axis=axes)
-                newuncert = None
-            else:
-                data = np.sum(uarray(self.data, self.uncert), axis=axes)
-                newdata, newuncert = nominal_values(data), std_devs(data)
-            return Histogram(*newaxes, data=newdata, uncert=newuncert,
+            return Histogram(*newaxes, data=result, uncert=uncert,
                              title=copy(self.title), label=copy(self.label))
+
+    def projection(self, axis):
+        '''Projection onto a single axis.'''
+        sumaxes = set(range(self.dim)) - {axis}
+        return self.sum(*sumaxes)
 
     def integral(self):
         '''Total integral of the histogram
 
-        This is the sum of each bin multiplied by the volume of the bins. If ``uncert=True`` is given, then the output is the 2-tuple: ``(integral, uncertainty)``.
+        This is the sum of each bin multiplied by the volume of the bins. If
+        ``uncert=True`` is given, then the output is the 2-tuple: ``(integral,
+        uncertainty)``.
+
         '''
         bv = self.binvolumes
         res = np.sum(self.data * bv)
@@ -632,7 +655,9 @@ class Histogram(object):
     def min(self, uncert=False):
         '''Minimum value of the filled data
 
-        This will include the uncertainty if ``uncert=True``. Uncertainty is calculated as the square-root of the data if not already set.
+        This will include the uncertainty if ``uncert=True``. Uncertainty is
+        calculated as the square-root of the data if not already set.
+
         '''
         if not uncert:
             return np.nanmin(self.data)
@@ -642,7 +667,9 @@ class Histogram(object):
     def max(self, uncert=False):
         '''Maximum value of the filled data
 
-        This will include the uncertainty if ``uncert=True``. Uncertainty is calculated as the square-root of the data if not already set.
+        This will include the uncertainty if ``uncert=True``. Uncertainty is
+        calculated as the square-root of the data if not already set.
+
         '''
         if not uncert:
             return np.nanmax(self.data)
@@ -656,11 +683,15 @@ class Histogram(object):
 
             tuple: Mean (float) along each axis: ``(xmean, ymean...)``.
 
-        This will ignore all ``nan`` and ``inf`` values in the histogram. Bin-centers are used as the position and non-equal widths are incorporated into the weighting of the results.
+        This will ignore all ``nan`` and ``inf`` values in the histogram.
+        Bin-centers are used as the position and non-equal widths are
+        incorporated into the weighting of the results.
+
         '''
         mean = []
         for i, axis in enumerate(self.axes):
-            data = self.data.sum(tuple(set(range(self.dim)) - {i}))
+            sumaxes = tuple(set(range(self.dim)) - {i})
+            data = self.data.sum(sumaxes)
             sel = np.isfinite(data)
             p = axis.bincenters[sel]
             w = data[sel]
@@ -676,7 +707,10 @@ class Histogram(object):
 
             tuple: Variance (float) along each axis: ``(xvar, yvar...)``.
 
-        This will ignore all ``nan`` and ``inf`` values in the histogram. Bin-centers are used as the position and non-equal widths are incorporated into the weighting of the results.
+        This will ignore all ``nan`` and ``inf`` values in the histogram.
+        Bin-centers are used as the position and non-equal widths are
+        incorporated into the weighting of the results.
+
         '''
         var = []
         for i, (axis, mean) in enumerate(zip(self.axes, self.mean())):
@@ -694,9 +728,14 @@ class Histogram(object):
 
         Returns:
 
-            tuple: Standard deviation (float) along each axis: ``(xstd, ystd...)``.
+            tuple: Standard deviation (float) along each axis: ``(xstd,
+            ystd...)``.
 
-        This is the square-root of the variance and will ignore all ``nan`` and ``inf`` values in the histogram. Bin-centers are used as the position and non-equal widths are incorporated into the weighting of the results.
+        This is the square-root of the variance and will ignore all ``nan`` and
+        ``inf`` values in the histogram. Bin-centers are used as the position
+        and non-equal widths are incorporated into the weighting of the
+        results.
+
         '''
         return tuple(np.sqrt(v) for v in self.var())
 
@@ -707,11 +746,15 @@ class Histogram(object):
 
             tuple: extent like ``(xmin, xmax, ymin ...)``.
 
-        By default, this includes the uncertainty if the last dimension is the histogram's data and not an axis::
+        By default, this includes the uncertainty if the last dimension is the
+        histogram's data and not an axis::
 
             [xmin, xmax, ymin, ymax, ..., min(data-uncert), max(data+uncert)]
 
-        padding is given as a percent of the actual extent of the axes or data (plus uncertainty) and can be either a single floating point number or a list of length ``2 * maxdim``.
+        padding is given as a percent of the actual extent of the axes or data
+        (plus uncertainty) and can be either a single floating point number or
+        a list of length ``2 * maxdim``.
+
         '''
         ext = []
         for ax in self.axes[:maxdim]:
@@ -734,7 +777,8 @@ class Histogram(object):
         Keyword Args:
 
             maxdim (int): Number of dimensions to return (default: 2).
-            asratio (bool): Return ratios instead of absolute values (default: False).
+            asratio (bool): Return ratios instead of absolute values (default:
+                False).
 
         Returns:
 
@@ -850,8 +894,6 @@ class Histogram(object):
 
         extent = [min(xx), max(xx), min(yy), max(yy)]
         return xx, yy, extent
-
-
 
     def aspolygon(self, xlow=None, xhigh=None, ymin=0):
         '''Return a polygon of the histogram
@@ -1488,27 +1530,6 @@ class Histogram(object):
             uncert = newuncert,
             title = kwargs.get('title', copy(self.title)),
             label = kwargs.get('label', copy(self.label)))
-
-    def projection(self, axis=0):
-        '''Projection onto a single axis'''
-        sumaxes = list(range(self.dim))
-        sumaxes.remove(axis)
-
-        newdata = np.apply_over_axes(np.sum, self.data, sumaxes).ravel()
-
-        if self.uncert is None:
-            newuncert = None
-        else:
-            uncratio_sq = np.power(self.uncert / self.data, 2)
-            uncratio_sqsum = np.apply_over_axes(np.sum, uncratio_sq, sumaxes).ravel()
-            newuncert = np.sqrt(uncratio_sqsum) * newdata
-
-        return Histogram(
-            self.axes[axis].clone(),
-            data = newdata,
-            uncert = newuncert,
-            title = copy(self.title),
-            label = copy(self.label))
 
     def occupancy(self, bins=100, limits=None, **kwargs):
         '''Histogram the filled data of this histogram
