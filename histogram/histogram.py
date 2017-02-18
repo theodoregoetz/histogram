@@ -8,7 +8,7 @@ from warnings import warn
 import numpy as np
 from scipy import optimize as opt
 from scipy import stats, ndimage, interpolate
-from uncertainties import ufloat
+from uncertainties import nominal_value, std_dev, ufloat
 from uncertainties.unumpy import nominal_values, std_devs, uarray
 
 from .histogram_axis import HistogramAxis
@@ -571,7 +571,7 @@ class Histogram(object):
 
 ###    data information (limits, sum, extent)
     def sum_data(self, *axes):
-        """Sum of bin balues or sum along one or more axes.
+        """Sum of bin values or sum along one or more axes.
 
         Returns: ``(data, uncertanty)``
         """
@@ -580,7 +580,7 @@ class Histogram(object):
                 result, uncert = self.data.sum(), None
             else:
                 data = np.sum(uarray(self.data, self.uncert))
-                result, uncert = nominal_values(data), std_devs(data)
+                result, uncert = nominal_value(data), std_dev(data)
         else:
             if not hasattr(self, '_uncert'):
                 result, uncert = np.sum(self.data, axis=axes), None

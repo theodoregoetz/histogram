@@ -361,6 +361,11 @@ class TestHistogram(unittest.TestCase):
         self.assertEqual(h.sum(), 10)
         self.assertEqual(h.sum(0), 10)
 
+        h.uncert = h.uncert
+        s,u = h.sum()
+        self.assertAlmostEqual(s, 10)
+        self.assertAlmostEqual(u, 3.16227766)
+
     def test_sum2d(self):
         h2 = Histogram(10, [0, 10], 10, [0, 10])
         h2.fill([1, 2, 2, 3, 3, 3, 4, 4, 4, 4],
@@ -376,6 +381,13 @@ class TestHistogram(unittest.TestCase):
         h2x = h2.sum(1)
         self.assertTrue(h2y.isidentical(h2y_exp))
         self.assertTrue(h2x.isidentical(h2x_exp))
+
+        h2.uncert = h2.uncert
+        hx = h2.sum(1)
+        hy = h2.sum(0)
+        self.assertAlmostEqual(hx.sum(), hy.sum())
+        self.assertEqual(hx.shape, (10,))
+        self.assertEqual(hy.shape, (10,))
 
     def test_sum3d(self):
         xx = [1,1,5,5,5,9,9,9,9]
