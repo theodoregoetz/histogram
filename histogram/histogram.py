@@ -205,6 +205,10 @@ class Histogram(object):
             del self._uncert
 
     @property
+    def has_uncert(self):
+        return hasattr(self, '_uncert')
+
+    @property
     def uncert_ratio(self):
         '''The untertainty as ratios of the data'''
         return self.uncert / self.data
@@ -576,17 +580,17 @@ class Histogram(object):
         Returns: ``(data, uncertanty)``
         """
         if len(axes) == 0 or axes == tuple(range(self.dim)):
-            if not hasattr(self, '_uncert'):
-                result, uncert = self.data.sum(), None
-            else:
+            if self.has_uncert:
                 data = np.sum(uarray(self.data, self.uncert))
                 result, uncert = nominal_value(data), std_dev(data)
-        else:
-            if not hasattr(self, '_uncert'):
-                result, uncert = np.sum(self.data, axis=axes), None
             else:
+                result, uncert = self.data.sum(), None
+        else:
+            if self.has_uncert:
                 data = np.sum(uarray(self.data, self.uncert), axis=axes)
                 result, uncert = nominal_values(data), std_devs(data)
+            else:
+                result, uncert = np.sum(self.data, axis=axes), None
         return result, uncert
 
     def sum(self, *axes):
@@ -637,44 +641,20 @@ class Histogram(object):
         return self.sum(*sumaxes)
 
     def integral(self):
-        '''Total integral of the histogram
+        '''Total volume-weighted sum of the histogram.
 
-        This is the sum of each bin multiplied by the volume of the bins. If
-        ``uncert=True`` is given, then the output is the 2-tuple: ``(integral,
-        uncertainty)``.
-
+        Returns: ``(integral, uncertainty)``
         '''
-        bv = self.binvolumes
-        res = np.sum(self.data * bv)
-        if self.uncert is None:
-            e = np.sqrt(np.sum(self.data * bv * bv))
-        else:
-            e = np.sqrt(np.sum(self.uncert * self.uncert * bv * bv))
-        return ufloat(res, e)
+        res = np.sum(uarray(self.data, self.uncert) * self.binvolumes)
+        return nominal_value(res), std_dev(res)
 
-    def min(self, uncert=False):
-        '''Minimum value of the filled data
+    def min(self):
+        '''Minimum value of the filled data including uncertainty.'''
+        return np.nanmin(self.data - self.uncert)
 
-        This will include the uncertainty if ``uncert=True``. Uncertainty is
-        calculated as the square-root of the data if not already set.
-
-        '''
-        if not uncert:
-            return np.nanmin(self.data)
-        else:
-            return np.nanmin(self.data - self.uncert)
-
-    def max(self, uncert=False):
-        '''Maximum value of the filled data
-
-        This will include the uncertainty if ``uncert=True``. Uncertainty is
-        calculated as the square-root of the data if not already set.
-
-        '''
-        if not uncert:
-            return np.nanmax(self.data)
-        else:
-            return np.nanmax(self.data + self.uncert)
+    def max(self):
+        '''Maximum value of the filled data including uncertainty.'''
+        return np.nanmax(self.data + self.uncert)
 
     def mean(self):
         '''Mean position of the data along the axes
@@ -1093,10 +1073,10 @@ class Histogram(object):
         else:
             new_data = self.data.astype(dtype)
 
-        if self.uncert is None:
-            new_uncert = None
-        else:
+        if self.has_uncert:
             new_uncert = self.uncert.copy()
+        else:
+            new_uncert = None
 
         return Histogram(
             *[ax.clone() for ax in self.axes],
@@ -1187,10 +1167,20 @@ class Histogram(object):
         '''In-place addition
 
         Uncertainty is not modified if both uncertainties are ``None``.'''
-        data = that.data if isinstance(that, Histogram) else that
-        self.uncert = self.added_uncert(that)
-        self.data.T[...] += np.asarray(data).T
-        self.clear_nans()
+        if isinstance(that, Histogram):
+            if self.has_uncert or that.has_uncert:
+                self_data = uarray(self.data, self.uncert)
+                that_data = uarray(that.data, that.uncert)
+                self_data += that_data
+                self.data = nominal_values(self_data)
+                self.uncert = std_devs(self_data)
+            else:
+                self.data.T[...] += that.data.T
+        else:
+            self_data = uarray(self.data, self.uncert)
+            self_data.T[...] += np.asarray(that).T
+            self.data = nominal_values(self_data)
+            self.uncert = std_devs(self_data)
         return self
 
     def __radd__(self, that):
@@ -1199,9 +1189,12 @@ class Histogram(object):
 
     def __add__(self, that):
         '''Addition'''
-        ret = self.clone(self.dtype(that))
-        ret += that
-        return ret
+        if isinstance(that, Histogram) and self.dim < that.dim:
+            return that + self
+        else:
+            ret = self.clone(self.dtype(that))
+            ret += that
+            return ret
 
     def __isub__(self, that):
         '''In-place subtraction

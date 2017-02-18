@@ -389,6 +389,11 @@ class TestHistogram(unittest.TestCase):
         self.assertEqual(hx.shape, (10,))
         self.assertEqual(hy.shape, (10,))
 
+        assert_array_almost_equal(hx.data,   [0,1,2,3,4,0,0,0,0,0])
+        assert_array_almost_equal(hx.uncert, np.sqrt([0,1,2,3,4,0,0,0,0,0]))
+        assert_array_almost_equal(hy.data,   [0,6,4,0,0,0,0,0,0,0])
+        assert_array_almost_equal(hy.uncert, np.sqrt([0,6,4,0,0,0,0,0,0,0]))
+
     def test_sum3d(self):
         xx = [1,1,5,5,5,9,9,9,9]
         yy = [1,1,1,1,9,9,9,9,9]
@@ -434,26 +439,129 @@ class TestHistogram(unittest.TestCase):
         h.data = [np.inf, np.nan, 2]
         self.assertTrue(np.isnan(h.sum()))
 
-    def test___add__(self):
+    def test_projection(self):
+        h2 = Histogram(2, [0,1], 3, [0,9], data=[[-1,2,3],[4,2,-4]])
+
+        hx = h2.projection(0)
+        hy = h2.projection(1)
+
+        assert_array_almost_equal(hx.data, [4,2])
+        assert_array_almost_equal(hy.data, [3,4,-1])
+        self.assertFalse(hx.has_uncert)
+        self.assertFalse(hy.has_uncert)
+
+    def test_projection_uncert(self):
+        h2 = Histogram(2, [0,1], 3, [0,9], data=[[-1,2,3],[4,2,-4]])
+        h2.uncert = [[.1,.2,.3],[.4,.5,.6]]
+
+        hx = h2.projection(0)
+        hy = h2.projection(1)
+
+        assert_array_almost_equal(hx.data, [4,2])
+        assert_array_almost_equal(hy.data, [3,4,-1])
+
+        xuncert = [
+            np.sqrt(np.sum(np.array([.1,.2,.3])**2)),
+            np.sqrt(np.sum(np.array([.4,.5,.6])**2))]
+        yuncert = [
+            np.sqrt(np.sum(np.array([.1,.4])**2)),
+            np.sqrt(np.sum(np.array([.2,.5])**2)),
+            np.sqrt(np.sum(np.array([.3,.6])**2))]
+
+        assert_array_almost_equal(hx.uncert, xuncert)
+        assert_array_almost_equal(hy.uncert, yuncert)
+
+    def test_integral(self):
+        h1 = Histogram(4, [0,8], data=[2,3,4,5])
+        h2 = Histogram(2, [0,1], 3, [0,9], data=[[-1,2,3],[4,2,-4]])
+        h2.uncert = np.sqrt(np.abs(h2.data))
+
+        def calc_integral(h, use_uncert=True):
+            bv = h.binvolumes
+            res = np.sum(h.data * bv)
+            if use_uncert:
+                e = np.sqrt(np.sum(h.uncert * h.uncert * bv * bv))
+            else:
+                e = np.sqrt(np.sum(h.data * bv * bv))
+            return res, e
+
+        assert_array_almost_equal(h1.integral(), calc_integral(h1))
+        assert_array_almost_equal(h1.integral(), calc_integral(h1, False))
+        assert_array_almost_equal(h2.integral(), calc_integral(h2))
+
+    def test_minmax(self):
+        h1 = Histogram(4, [0,8], data=[2,3,4,5])
+        h2 = Histogram(2, [0,1], 3, [0,9], data=[[-1,2,3],[5,2,-4]])
+
+        self.assertAlmostEqual(h1.min(), 2 - np.sqrt(2))
+        self.assertAlmostEqual(h1.max(), 5 + np.sqrt(5))
+
+        self.assertAlmostEqual(h2.min(), 2 - np.sqrt(2))
+        self.assertAlmostEqual(h2.max(), 5 + np.sqrt(5))
+
+        h2.uncert = .2
+        self.assertAlmostEqual(h2.min(), -4 - .2)
+        self.assertAlmostEqual(h2.max(), 5 + .2)
+
+    def test_mean(self):
+        h = Histogram(10,[0,10])
+        h.fill([3,3,3])
+        self.assertAlmostEqual(h.mean()[0],3.5)
+
+        h.fill([1,5])
+        self.assertAlmostEqual(h.mean()[0],3.5)
+
+
+
+    def test_add(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
 
         h = h1 + 1
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [2,3,4])
+        assert_array_almost_equal(h.uncert,  np.sqrt([1,2,3]))
 
         h = h1 + [2,3,4]
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [3,5,7])
+        assert_array_almost_equal(h.uncert,  np.sqrt([1,2,3]))
 
         h = h1 + np.array([2,3,4])
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [3,5,7])
+        assert_array_almost_equal(h.uncert,  np.sqrt([1,2,3]))
 
         h2 = Histogram(3,[0,10],data=[4,5,6])
 
         h = h1 + h2
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [5,7,9])
+        assert_array_almost_equal(h.uncert,  np.sqrt([5,7,9]))
+
+    def test_add_uncert(self):
+        h1 = Histogram(5,[0,10],data=[-2,-1,0,1,2])
+        h2 = Histogram(5,[0,10],data=[2,3,4,5,6])
+
+        h3 = h1 + h2
+        assert_array_almost_equal(h3.data,  [0,2,4,6,8])
+        assert_array_almost_equal(h3.uncert,  np.sqrt([0,2,4,6,8]))
+
+        h1.uncert = h1.uncert
+        h3 = h1 + h2
+        assert_array_almost_equal(h3.data,  [0,2,4,6,8])
+        assert_array_almost_equal(h3.uncert,
+                                  [np.nan,np.nan,2,2.44948974,2.82842712])
+
+    def test_add_broadcast(self):
+        h1 = Histogram(2,[0,1],3,[0,1],data=[[0,1,2],[3,4,5]])
+        h2 = Histogram(2,[0,1],data=[3,4])
+        h3 = h1 + h2
+        self.assertEqual(h3.shape, h1.shape)
+        assert_array_almost_equal(h3.data, [[3,4,5],[7,8,9]])
+
+        h3 = h2 + h1
+        self.assertEqual(h3.shape, h1.shape)
+        assert_array_almost_equal(h3.data, [[3,4,5],[7,8,9]])
 
     def test___truediv__(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
@@ -745,32 +853,9 @@ class TestHistogram(unittest.TestCase):
         # self.assertEqual(expected, histogram.fit_slices_signal(axis, *args, **kwargs))
         assert True # TODO: implement your test here
 
-    def test_integral(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.integral(uncert))
-        assert True # TODO: implement your test here
-
     def test_interpolate_nans(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.interpolate_nans(**kwargs))
-        assert True # TODO: implement your test here
-
-    def test_max(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.max(uncert))
-        assert True # TODO: implement your test here
-
-    def test_mean(self):
-        h = Histogram(10,[0,10])
-        h.fill([3,3,3])
-        self.assertAlmostEqual(h.mean()[0],3.5)
-
-        h.fill([1,5])
-        self.assertAlmostEqual(h.mean()[0],3.5)
-
-    def test_min(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.min(uncert))
         assert True # TODO: implement your test here
 
     def test_occupancy(self):
@@ -787,11 +872,6 @@ class TestHistogram(unittest.TestCase):
     def test_profile_gauss(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.profile_gauss(mean, width, axis, npar, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_projection(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.projection(axis))
         assert True # TODO: implement your test here
 
     def test_rebin(self):
