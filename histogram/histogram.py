@@ -466,9 +466,8 @@ class Histogram(object):
         '''
         return tuple([ax.edges for ax in self.axes])
 
-    @property
     def grid(self):
-        '''Meshgrid of the bincenters of each axis
+        '''Meshgrid of the.bincenters() of each axis
 
         This is a single array for 1D histograms - i.e. the bin-centers of the
         x-axis. For 2D histograms, this is a tuple of two 2D arrays::
@@ -482,12 +481,11 @@ class Histogram(object):
             xx, = h1.grid
         '''
         if self.dim == 1:
-            return (self.axes[0].bincenters, )
+            return (self.axes[0].bincenters(), )
         else:
-            centers = [ax.bincenters for ax in self.axes]
+            centers = [ax.bincenters() for ax in self.axes]
             return np.meshgrid(*centers, indexing='ij')
 
-    @property
     def edge_grid(self):
         '''Meshgrid built from the axes' edges
 
@@ -501,21 +499,20 @@ class Histogram(object):
             edges = [ax.edges for ax in self.axes]
             return np.meshgrid(*edges, indexing='ij')
 
-    @property
     def binwidths(self):
         '''Widths of all bins along each axis
 
         This will always return a tuple::
 
-            dx, dy = h2.binwidths
+            dx, dy = h2.binwidths()
 
         Here, ``dx`` and ``dy`` are arrays of the widths of each bin along the
         `x` and `y` axes respecitively. For 1D histograms, the output is still
         a tuple so typically, one should expand this out with a comma::
 
-            dx, = h1.binwidths
+            dx, = h1.binwidths()
         '''
-        return tuple([ax.binwidths for ax in self.axes])
+        return tuple([ax.binwidths() for ax in self.axes])
 
     def binwidth(self, b=1, axis=0):
         '''Width of a specific bin ``b`` along an axis
@@ -530,19 +527,18 @@ class Histogram(object):
         '''
         return self.axes[axis].binwidth(b)
 
-    @property
     def binvolumes(self):
         '''Volumes of each bin
 
-        Volume is defined as the product of the bin-widths along each axis for the given bin. For 1D histogram, this is the same as :py:attr:`Histogram.binwidths`. For 2D histograms, this returns a 2D array like the following where dxi is the width of the ith bin along the x-axis (first, index = 0)::
+        Volume is defined as the product of the bin-widths along each axis for the given bin. For 1D histogram, this is the same as :py:attr:`Histogram.binwidths()`. For 2D histograms, this returns a 2D array like the following where dxi is the width of the ith bin along the x-axis (first, index = 0)::
 
             [ [ dx0*dy0, dx0*dy1 ... ],
               [ dx1*dy0, dx1*dy1 ... ],
-              ... ] = h2.binvolumes
+              ... ] = h2.binvolumes()
 
-            h.binvolumes[i, j] = dxi * dyj
+            h.binvolumes()[i, j] = dxi * dyj
         '''
-        widths = self.binwidths
+        widths = self.binwidths()
         if self.dim == 1:
             return widths
         else:
@@ -650,7 +646,7 @@ class Histogram(object):
 
         Returns: ``(integral, uncertainty)``
         '''
-        res = np.sum(uarray(self.data, self.uncert) * self.binvolumes)
+        res = np.sum(uarray(self.data, self.uncert) * self.binvolumes())
         return nominal_value(res), std_dev(res)
 
     def min(self):
@@ -674,8 +670,8 @@ class Histogram(object):
         '''
         mean = []
         for i, axis in enumerate(self.axes):
-            bw = axis.binwidths
-            x = uarray(axis.bincenters, 0.5 * bw)
+            bw = axis.binwidths()
+            x = uarray(axis.bincenters(), 0.5 * bw)
             if self.dim > 1:
                 w = self.projection_data(i)
             else:
@@ -701,10 +697,10 @@ class Histogram(object):
         for i, (axis, mean) in enumerate(zip(self.axes, self.mean())):
             data = self.data.sum(set(range(self.dim)) - {i})
             sel = np.isfinite(data)
-            p = axis.bincenters[sel]
+            p = axis.bincenters()[sel]
             w = data[sel]
             if not axis.isuniform():
-                w *= axis.binwidths
+                w *= axis.binwidths()
             var.append(np.average((p-mean)**2, weights=w))
         return tuple(var)
 
@@ -797,13 +793,13 @@ class Histogram(object):
                 self.uncert = np.sqrt(self.data)
 
         if asratio:
-            ret = [0.5*ax.binwidths/(ax.max-ax.min)
+            ret = [0.5*ax.binwidths()/(ax.max-ax.min)
                    for ax in self.axes[:maxdim]]
             if len(ret) < maxdim:
                 ret += [self.uncert / (self.data.max() - self.data.min())]
 
         else:
-            ret = [0.5*ax.binwidths for ax in self.axes[:maxdim]]
+            ret = [0.5*ax.binwidths() for ax in self.axes[:maxdim]]
             if len(ret) < maxdim:
                 ret += [self.uncert]
 

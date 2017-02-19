@@ -132,16 +132,16 @@ class TestHistogramAxis(unittest.TestCase):
     def test_binwidths(self):
         a1 = HistogramAxis(100, [0, 10], 'x')
         a = np.linspace(0, 10, 101)
-        assert_array_almost_equal(a1.binwidths, a[1:] - a[:-1])
+        assert_array_almost_equal(a1.binwidths(), a[1:] - a[:-1])
 
         a2 = HistogramAxis(np.logspace(1, 5, 100), 'x')
         a = np.logspace(1, 5, 100)
-        assert_array_almost_equal(a2.binwidths, a[1:] - a[:-1])
+        assert_array_almost_equal(a2.binwidths(), a[1:] - a[:-1])
 
     def test_bincenters(self):
         a1 = HistogramAxis(100, [0, 10], 'x')
         a = np.linspace(0, 10, 101)
-        assert_array_almost_equal(a1.bincenters, 0.5*(a[:-1] + a[1:]))
+        assert_array_almost_equal(a1.bincenters(), 0.5*(a[:-1] + a[1:]))
 
     def test_overflow_value(self):
         a1 = HistogramAxis(100, [0, 10], 'x')

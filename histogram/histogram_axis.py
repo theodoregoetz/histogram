@@ -166,12 +166,10 @@ class HistogramAxis(object):
         '''2-tuple of the lowest and highest edges.'''
         return (self.min, self.max)
 
-    @property
     def binwidths(self):
         '''All bin widths as an array.'''
-        return (self.edges[1:] - self.edges[:-1])
+        return self.edges[1:] - self.edges[:-1]
 
-    @property
     def bincenters(self):
         '''Centers of all bins as an array.'''
         return 0.5 * (self.edges[:-1] + self.edges[1:])
@@ -286,7 +284,7 @@ class HistogramAxis(object):
                 abs(widths - mean) <= (atol + rtol * abs(median))
 
         '''
-        widths = self.binwidths
+        widths = self.binwidths()
         median = np.median(widths)
         return np.allclose(widths, median, rtol=rtol, atol=atol)
 

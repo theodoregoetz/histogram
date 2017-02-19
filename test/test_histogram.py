@@ -289,34 +289,34 @@ class TestHistogram(unittest.TestCase):
 
     def test_grid(self):
         h = Histogram([0,1,2])
-        self.assertEqual(len(h.grid), 1)
-        assert_array_almost_equal(h.grid[0], [0.5,1.5])
+        self.assertEqual(len(h.grid()), 1)
+        assert_array_almost_equal(h.grid()[0], [0.5,1.5])
         h = Histogram([0,1,2], [-1,0,1])
-        self.assertEqual(len(h.grid), 2)
-        assert_array_almost_equal(len(h.grid[0]), 2)
-        assert_array_almost_equal(len(h.grid[1]), 2)
-        assert_array_almost_equal(h.grid[0].ravel(), [0.5,0.5,1.5,1.5])
-        assert_array_almost_equal(h.grid[1].ravel(), [-0.5,0.5,-0.5,0.5])
+        self.assertEqual(len(h.grid()), 2)
+        assert_array_almost_equal(len(h.grid()[0]), 2)
+        assert_array_almost_equal(len(h.grid()[1]), 2)
+        assert_array_almost_equal(h.grid()[0].ravel(), [0.5,0.5,1.5,1.5])
+        assert_array_almost_equal(h.grid()[1].ravel(), [-0.5,0.5,-0.5,0.5])
 
     def test_edge_grid(self):
         h = Histogram([0,1,2])
-        self.assertEqual(len(h.edge_grid), 1)
-        assert_array_almost_equal(h.edge_grid[0], [0,1,2])
+        self.assertEqual(len(h.edge_grid()), 1)
+        assert_array_almost_equal(h.edge_grid()[0], [0,1,2])
         h = Histogram([0,1,2], [-1,0,1])
-        self.assertEqual(len(h.edge_grid), 2)
-        assert_array_almost_equal(len(h.edge_grid[0]), 3)
-        assert_array_almost_equal(len(h.edge_grid[1]), 3)
-        assert_array_almost_equal(h.edge_grid[0].ravel(), [0,0,0,1,1,1,2,2,2])
-        assert_array_almost_equal(h.edge_grid[1].ravel(), [-1,0,1]*3)
+        self.assertEqual(len(h.edge_grid()), 2)
+        assert_array_almost_equal(len(h.edge_grid()[0]), 3)
+        assert_array_almost_equal(len(h.edge_grid()[1]), 3)
+        assert_array_almost_equal(h.edge_grid()[0].ravel(), [0,0,0,1,1,1,2,2,2])
+        assert_array_almost_equal(h.edge_grid()[1].ravel(), [-1,0,1]*3)
 
     def test_binwidths(self):
         h = Histogram([0,1,2])
-        self.assertEqual(len(h.binwidths), 1)
-        assert_array_almost_equal(h.binwidths[0], [1,1])
+        self.assertEqual(len(h.binwidths()), 1)
+        assert_array_almost_equal(h.binwidths()[0], [1,1])
         h = Histogram([0,2,4], [-1,0,2])
-        self.assertEqual(len(h.binwidths), 2)
-        assert_array_almost_equal(h.binwidths[0], [2,2])
-        assert_array_almost_equal(h.binwidths[1], [1,2])
+        self.assertEqual(len(h.binwidths()), 2)
+        assert_array_almost_equal(h.binwidths()[0], [2,2])
+        assert_array_almost_equal(h.binwidths()[1], [1,2])
 
     def test_binwidth(self):
         h = Histogram([0,1,2])
@@ -331,20 +331,20 @@ class TestHistogram(unittest.TestCase):
 
     def test_binvolumes(self):
         h = Histogram([0,1,3])
-        self.assertEqual(tuple(len(x) for x in h.binvolumes), (2,))
-        self.assertEqual(h.binvolumes[0][0], 1)
-        self.assertEqual(h.binvolumes[0][1], 2)
+        self.assertEqual(tuple(len(x) for x in h.binvolumes()), (2,))
+        self.assertEqual(h.binvolumes()[0][0], 1)
+        self.assertEqual(h.binvolumes()[0][1], 2)
 
         h = Histogram([0,2,4], [-1,0,2,6])
-        self.assertEqual(len(h.binvolumes), 2)
-        self.assertEqual(len(h.binvolumes[0]), 3)
-        self.assertEqual(len(h.binvolumes[1]), 3)
-        self.assertEqual(h.binvolumes[0,0], 2)
-        self.assertEqual(h.binvolumes[0,1], 4)
-        self.assertEqual(h.binvolumes[0,2], 8)
-        self.assertEqual(h.binvolumes[1,0], 2)
-        self.assertEqual(h.binvolumes[1,1], 4)
-        self.assertEqual(h.binvolumes[1,2], 8)
+        self.assertEqual(len(h.binvolumes()), 2)
+        self.assertEqual(len(h.binvolumes()[0]), 3)
+        self.assertEqual(len(h.binvolumes()[1]), 3)
+        self.assertEqual(h.binvolumes()[0,0], 2)
+        self.assertEqual(h.binvolumes()[0,1], 4)
+        self.assertEqual(h.binvolumes()[0,2], 8)
+        self.assertEqual(h.binvolumes()[1,0], 2)
+        self.assertEqual(h.binvolumes()[1,1], 4)
+        self.assertEqual(h.binvolumes()[1,2], 8)
 
     def test_overflow_value(self):
         h = Histogram([0,1,2])
@@ -478,7 +478,7 @@ class TestHistogram(unittest.TestCase):
         h2.uncert = np.sqrt(np.abs(h2.data))
 
         def calc_integral(h, use_uncert=True):
-            bv = h.binvolumes
+            bv = h.binvolumes()
             res = np.sum(h.data * bv)
             if use_uncert:
                 e = np.sqrt(np.sum(h.uncert * h.uncert * bv * bv))
