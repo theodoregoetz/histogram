@@ -5,7 +5,7 @@ import numpy as np
 from .detail import isstr, isinteger
 
 class HistogramAxis(object):
-    r'''A single axis used internally by :class:`Histogram` to store
+    r"""A single axis used internally by :class:`Histogram` to store
     the bin edges in an open-grid format.
 
     An axis consists of a continuous range on the real-line, divided
@@ -38,7 +38,7 @@ class HistogramAxis(object):
 
             a3 = HistogramAxis(np.logspace(0,4,11))
 
-    '''
+    """
     def __init__(self, bins, limits=None, label=None):
         # allow second argument to be the label if it is a string,
         # bins is iterable and no other argument is used
@@ -67,15 +67,15 @@ class HistogramAxis(object):
             self.label = label
 
     def __str__(self):
-        '''String representation the edges array.
+        """String representation the edges array.
 
         The attribute :py:attr:`HistogramAxis.label` is not included in
         the output.
-        '''
+        """
         return str(self.edges)
 
     def __repr__(self):
-        '''Complete string representation of the histogram axis'''
+        """Complete string representation of the histogram axis"""
         fmt = 'HistogramAxis(bins={}{})'
         if self.label is None:
             lbl = ''
@@ -84,15 +84,15 @@ class HistogramAxis(object):
         return fmt.format(repr(self.edges.tolist()), lbl)
 
     def __eq__(self, that):
-        r'''Compare edges to within numpy's default tolerance.
-        Labels are ignored.'''
+        r"""Compare edges to within numpy's default tolerance.
+        Labels are ignored."""
         try:
             return np.allclose(self.edges,that.edges)
         except ValueError:
             return False
 
     def isidentical(self, that):
-        r'''Deep comparison of this axis with another.'''
+        r"""Deep comparison of this axis with another."""
         if not (self == that):
             return False
         if self.label != that.label:
@@ -101,7 +101,7 @@ class HistogramAxis(object):
 
     @property
     def edges(self):
-        '''The list of bin edges from low to high.'''
+        """The list of bin edges from low to high."""
         return self._edges
 
     @edges.setter
@@ -119,8 +119,8 @@ class HistogramAxis(object):
 
     @property
     def label(self):
-        '''The label of this axis including units if applicable.
-        Example: "distance (meters)".'''
+        """The label of this axis including units if applicable.
+        Example: "distance (meters)"."""
         return getattr(self, '_label', None)
 
     @label.setter
@@ -143,48 +143,48 @@ class HistogramAxis(object):
 
     @property
     def nbins(self):
-        '''Number of bins in this axis.'''
+        """Number of bins in this axis."""
         return len(self.edges) - 1
 
     @property
     def min(self):
-        '''Value of the lowest edge.'''
+        """Value of the lowest edge."""
         return self.edges[0]
 
     @property
     def max(self):
-        '''Value of the highest edge.'''
+        """Value of the highest edge."""
         return self.edges[-1]
 
     @property
     def mid(self):
-        '''Value of middle of this axis.'''
+        """Value of middle of this axis."""
         return 0.5 * (self.min + self.max)
 
     @property
     def limits(self):
-        '''2-tuple of the lowest and highest edges.'''
+        """2-tuple of the lowest and highest edges."""
         return (self.min, self.max)
 
     def binwidths(self):
-        '''All bin widths as an array.'''
+        """All bin widths as an array."""
         return self.edges[1:] - self.edges[:-1]
 
     def bincenters(self):
-        '''Centers of all bins as an array.'''
+        """Centers of all bins as an array."""
         return 0.5 * (self.edges[:-1] + self.edges[1:])
 
     @property
     def overflow_value(self):
-        '''Value guaranteed to be outside the range of this axis.'''
+        """Value guaranteed to be outside the range of this axis."""
         return self.max + 1.
 
     def clone(self):
-        '''Deep copy of this instance.'''
+        """Deep copy of this instance."""
         return HistogramAxis(self.edges.copy(), label=copy(self.label))
 
     def inaxis(self, x):
-        '''Check if `x` is within this axis.
+        """Check if `x` is within this axis.
 
         Arguments:
             x (float): Position along this axis.
@@ -194,11 +194,11 @@ class HistogramAxis(object):
 
         This follows the edge rules of :py:func:`numpy.digitize`:
         ``min <= x < max``.
-        '''
+        """
         return self.edges[0] <= x < self.edges[-1]
 
     def bin(self, x):
-        '''Bin index for the value `x`.
+        """Bin index for the value `x`.
 
         Arguments:
             x (float or array of floats): Position(s) along this axis.
@@ -208,11 +208,11 @@ class HistogramAxis(object):
 
         Notes:
             This follows the convention: low <= x < high.
-        '''
+        """
         return np.searchsorted(self.edges, x, side='right') - 1
 
     def edge_index(self, x, snap='nearest'):
-        '''Index of the edge based on the given snap.
+        """Index of the edge based on the given snap.
 
         Will always return a valid index from 0 to ``len(self.edges)-1``.
 
@@ -224,7 +224,7 @@ class HistogramAxis(object):
         Note:
             Output is a single number except for when ``snap='both'``
             where the output will be a tuple: `(low,high)`.
-        '''
+        """
 
         snap_options = ['nearest','low','high','both']
 
@@ -255,7 +255,7 @@ class HistogramAxis(object):
                 return highbin
 
     def binwidth(self, b=1):
-        '''Width of a specific bin.
+        """Width of a specific bin.
 
         Arguments:
             b (int): bin index
@@ -265,11 +265,11 @@ class HistogramAxis(object):
 
         Bin indexing starts with zero and by default, the width of the
         second bin (index: 1) is returned.
-        '''
+        """
         return (self.edges[b + 1] - self.edges[b])
 
     def isuniform(self, rtol=1e-05, atol=1e-08):
-        '''Check if all bins are of equal width.
+        """Check if all bins are of equal width.
 
         Arguments:
             rtol (float): relative tolerance parameter
@@ -283,7 +283,7 @@ class HistogramAxis(object):
 
                 abs(widths - mean) <= (atol + rtol * abs(median))
 
-        '''
+        """
         widths = self.binwidths()
         median = np.median(widths)
         return np.allclose(widths, median, rtol=rtol, atol=atol)
@@ -291,7 +291,7 @@ class HistogramAxis(object):
     _CutResult = namedtuple('CutResult', ['axis', 'mask'])
 
     def cut(self, low, high=None, snap='nearest'):
-        '''Return a truncated :py:class:`HistogramAxis`
+        """Return a truncated :py:class:`HistogramAxis`
 
         Arguments:
             low (float): Lowest bin will include this point
@@ -312,7 +312,7 @@ class HistogramAxis(object):
             ``snap == 'clip'`` in which case the low or high bins will
             be clipped. Clipping will likely make a uniform axis no
             longer uniform.
-        '''
+        """
         snap_options = ['nearest','expand','low','high','clip']
 
         if isstr(snap):
@@ -364,7 +364,7 @@ class HistogramAxis(object):
         return HistogramAxis._CutResult(newaxis, mask)
 
     def mergebins(self, nbins=2, snap='low', clip=True):
-        '''Merge neighboring bins.
+        """Merge neighboring bins.
 
         Arguments:
             nbins (int): Number of bins to merge.
@@ -378,7 +378,7 @@ class HistogramAxis(object):
 
         Returns:
             :py:class:`HistogramAxis`: A new instance.
-        '''
+        """
         snap_options = ['low','high']
 
         if __debug__:
