@@ -507,6 +507,7 @@ class TestHistogram(unittest.TestCase):
     def test_mean_1d(self):
         h = Histogram(10,[0,10])
         h.fill([3,3,3])
+        self.assertEqual(len(h.mean()), 1)
         m = h.mean()[0]
         self.assertAlmostEqual(m.n, 3.5)
         self.assertAlmostEqual(m.s, 0.5)
@@ -525,11 +526,68 @@ class TestHistogram(unittest.TestCase):
         h = Histogram(10,[0,10],15,[0,20])
         h.fill([3,3,3,5,5,5], [7,7,7,9,9,9])
         m = h.mean()
+        self.assertEqual(len(m), 2)
         self.assertAlmostEqual(m[0].n, 4.5)
         self.assertAlmostEqual(m[0].s, 0.540061724867)
         self.assertAlmostEqual(m[1].n, 8.0)
         self.assertAlmostEqual(m[1].s, 0.54433105395)
 
+    def test_var_1d(self):
+        h = Histogram(10,[0,10])
+        h.fill([3,3,3])
+        self.assertEqual(len(h.var()), 1)
+        v = h.var()[0]
+        self.assertAlmostEqual(v.n, 0.0)
+        self.assertAlmostEqual(v.s, 0.0)
+
+        h.fill([1,5])
+        v = h.var()[0]
+        self.assertAlmostEqual(v.n, 1.6)
+        self.assertAlmostEqual(v.s, 1.0430723848)
+
+        h.fill([7,7,7,8,9])
+        v = h.var()[0]
+        self.assertAlmostEqual(v.n, 6.41)
+        self.assertAlmostEqual(v.s, 1.9843286018)
+
+    def test_var_2d(self):
+        h = Histogram(10,[0,10],15,[0,20])
+        h.fill([3,3,3,5,5,5], [7,7,7,9,9,9])
+        v = h.var()
+        self.assertEqual(len(v), 2)
+        self.assertAlmostEqual(v[0].n, 1.0)
+        self.assertAlmostEqual(v[0].s, 0.7071067811865)
+        self.assertAlmostEqual(v[1].n, 0.4444444444444)
+        self.assertAlmostEqual(v[1].s, 0.628539361055)
+
+
+    def test_std_1d(self):
+        h = Histogram(10,[0,10])
+        h.fill([3,3,3])
+        self.assertEqual(len(h.std()), 1)
+        v = h.std()[0]
+        self.assertAlmostEqual(v.n, 0.0)
+        self.assertAlmostEqual(v.s, 0.0)
+
+        h.fill([1,5])
+        v = h.std()[0]
+        self.assertAlmostEqual(v.n, np.sqrt(1.6))
+        self.assertAlmostEqual(v.s, 0.41231056256)
+
+        h.fill([7,7,7,8,9])
+        v = h.std()[0]
+        self.assertAlmostEqual(v.n, np.sqrt(6.41))
+        self.assertAlmostEqual(v.s, 0.3918813377)
+
+    def test_std_2d(self):
+        h = Histogram(10,[0,10],15,[0,20])
+        h.fill([3,3,3,5,5,5], [7,7,7,9,9,9])
+        v = h.std()
+        self.assertEqual(len(v), 2)
+        self.assertAlmostEqual(v[0].n, 1.0)
+        self.assertAlmostEqual(v[0].s, 0.35355339)
+        self.assertAlmostEqual(v[1].n, np.sqrt(0.4444444444444))
+        self.assertAlmostEqual(v[1].s, 0.4714045208)
 
 
     def test_add(self):

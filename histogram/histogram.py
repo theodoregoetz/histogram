@@ -9,7 +9,7 @@ import numpy as np
 from scipy import optimize as opt
 from scipy import stats, ndimage, interpolate
 from uncertainties import nominal_value, std_dev, ufloat
-from uncertainties.unumpy import nominal_values, std_devs, uarray
+from uncertainties import unumpy as unp
 
 from .histogram_axis import HistogramAxis
 from .detail import isstr, isinteger, skippable, window
@@ -578,7 +578,7 @@ class Histogram(object):
             s = self.data.sum()
             result = ufloat(s, np.sqrt(s))
         else:
-            result = np.sum(uarray(self.data, self.uncert), axis=axes)
+            result = np.sum(unp.uarray(self.data, self.uncert), axis=axes)
         return result
 
     def sum(self, *axes):
@@ -618,8 +618,8 @@ class Histogram(object):
         else:
             if self.has_uncert:
                 result = self.sum_data(*axes)
-                newdata = nominal_values(result)
-                newuncert = std_devs(result)
+                newdata = unp.nominal_values(result)
+                newuncert = unp.std_devs(result)
             else:
                 newdata = np.sum(self.data, axis=axes)
                 newuncert = None
@@ -640,7 +640,7 @@ class Histogram(object):
 
     def integral(self):
         """Total volume-weighted sum of the histogram."""
-        res = np.sum(uarray(self.data, self.uncert) * self.binvolumes())
+        res = np.sum(unp.uarray(self.data, self.uncert) * self.binvolumes())
         return nominal_value(res), std_dev(res)
 
     def min(self):
@@ -667,12 +667,12 @@ class Histogram(object):
             if self.dim > 1:
                 w = self.projection_data(i)
             else:
-                w = uarray(self.data, self.uncert)
+                w = unp.uarray(self.data, self.uncert)
             if axis.isuniform():
-                x = uarray(axis.bincenters(), 0.5 * axis.binwidth())
+                x = unp.uarray(axis.bincenters(), 0.5 * axis.binwidth())
             else:
                 bw = axis.binwidths()
-                x = uarray(axis.bincenters(), 0.5 * bw)
+                x = unp.uarray(axis.bincenters(), 0.5 * bw)
                 w *= bw
             mean.append(np.sum(x * w) / np.sum(w))
         return tuple(mean)
@@ -694,12 +694,12 @@ class Histogram(object):
             if self.dim > 1:
                 w = self.projection_data(i)
             else:
-                w = uarray(self.data, self.uncert)
+                w = unp.uarray(self.data, self.uncert)
             if axis.isuniform():
-                x = uarray(axis.bincenters(), 0.5 * axis.binwidth())
+                x = unp.uarray(axis.bincenters(), 0.5 * axis.binwidth())
             else:
                 bw = axis.binwidths()
-                x = uarray(axis.bincenters(), 0.5 * bw)
+                x = unp.uarray(axis.bincenters(), 0.5 * bw)
                 w *= bw
             sum_w = np.sum(w)
             mean = np.sum(w * x) / sum_w
@@ -714,7 +714,8 @@ class Histogram(object):
             tuple: Standard deviation (float) along each axis: ``(xstd,
             ystd...)``.
         """
-        return tuple(np.sqrt(self.var()))
+        var = [ufloat(x.n,x.s) for x in self.var()]
+        return tuple(unp.sqrt(var))
 
     def extent(self, maxdim=2, uncert=True, pad=None):
         """Extent of axes and data
@@ -1166,18 +1167,18 @@ class Histogram(object):
         Uncertainty is not modified if both uncertainties are ``None``."""
         if isinstance(that, Histogram):
             if self.has_uncert or that.has_uncert:
-                self_data = uarray(self.data, self.uncert)
-                that_data = uarray(that.data, that.uncert)
+                self_data = unp.uarray(self.data, self.uncert)
+                that_data = unp.uarray(that.data, that.uncert)
                 self_data += that_data
-                self.data = nominal_values(self_data)
-                self.uncert = std_devs(self_data)
+                self.data = unp.nominal_values(self_data)
+                self.uncert = unp.std_devs(self_data)
             else:
                 self.data.T[...] += that.data.T
         else:
-            self_data = uarray(self.data, self.uncert)
+            self_data = unp.uarray(self.data, self.uncert)
             self_data.T[...] += np.asarray(that).T
-            self.data = nominal_values(self_data)
-            self.uncert = std_devs(self_data)
+            self.data = unp.nominal_values(self_data)
+            self.uncert = unp.std_devs(self_data)
         return self
 
     def __radd__(self, that):

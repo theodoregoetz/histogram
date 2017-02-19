@@ -75,7 +75,7 @@ class HistogramAxis(object):
         return str(self.edges)
 
     def __repr__(self):
-        """Complete string representation of the histogram axis"""
+        """Complete string representation of the histogram axis."""
         fmt = 'HistogramAxis(bins={}{})'
         if self.label is None:
             lbl = ''
