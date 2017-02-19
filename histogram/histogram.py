@@ -579,19 +579,14 @@ class Histogram(object):
 
         Returns: ``(data, uncertanty)``
         """
-        if len(axes) == 0 or axes == tuple(range(self.dim)):
-            if self.has_uncert:
-                data = np.sum(uarray(self.data, self.uncert))
-                result, uncert = nominal_value(data), std_dev(data)
-            else:
-                result, uncert = self.data.sum(), None
+        all_axes = tuple(range(self.dim))
+        axes = all_axes if len(axes) == 0 else tuple(sorted(axes))
+        if not self.has_uncert and axes == all_axes:
+            s = self.data.sum()
+            result = ufloat(s, np.sqrt(s))
         else:
-            if self.has_uncert:
-                data = np.sum(uarray(self.data, self.uncert), axis=axes)
-                result, uncert = nominal_values(data), std_devs(data)
-            else:
-                result, uncert = np.sum(self.data, axis=axes), None
-        return result, uncert
+            result = np.sum(uarray(self.data, self.uncert), axis=axes)
+        return result
 
     def sum(self, *axes):
         '''Sum of bin values or sum along one or more axes.
@@ -623,17 +618,27 @@ class Histogram(object):
             sum of h: 10
             h2 sum along axis 0: [0 6 4 0 0 0 0 0 0 0]
         '''
-        result, uncert = self.sum_data(*axes)
-        if not isinstance(result, Iterable):
-            if uncert is None:
-                return result
-            else:
-                return result, uncert
+        all_axes = tuple(range(self.dim))
+        axes = all_axes if len(axes) == 0 else tuple(sorted(axes))
+        if axes == all_axes:
+            return self.sum_data()
         else:
+            if self.has_uncert:
+                result = self.sum_data(*axes)
+                newdata = nominal_values(result)
+                newuncert = std_devs(result)
+            else:
+                newdata = np.sum(self.data, axis=axes)
+                newuncert = None
             ii = sorted(set(range(self.dim)) - set(axes))
             newaxes = [self.axes[i] for i in ii]
-            return Histogram(*newaxes, data=result, uncert=uncert,
+            return Histogram(*newaxes, data=newdata, uncert=newuncert,
                              title=copy(self.title), label=copy(self.label))
+
+    def projection_data(self, axis):
+        '''Projection of the data onto an axis.'''
+        sumaxes = set(range(self.dim)) - {axis}
+        return self.sum_data(*sumaxes)
 
     def projection(self, axis):
         '''Projection onto a single axis.'''
@@ -663,21 +668,21 @@ class Histogram(object):
 
             tuple: Mean (float) along each axis: ``(xmean, ymean...)``.
 
-        This will ignore all ``nan`` and ``inf`` values in the histogram.
         Bin-centers are used as the position and non-equal widths are
         incorporated into the weighting of the results.
 
         '''
         mean = []
         for i, axis in enumerate(self.axes):
-            sumaxes = tuple(set(range(self.dim)) - {i})
-            data = self.data.sum(sumaxes)
-            sel = np.isfinite(data)
-            p = axis.bincenters[sel]
-            w = data[sel]
+            bw = axis.binwidths
+            x = uarray(axis.bincenters, 0.5 * bw)
+            if self.dim > 1:
+                w = self.projection_data(i)
+            else:
+                w = uarray(self.data, self.uncert)
             if not axis.isuniform():
-                w *= axis.binwidths
-            mean.append(np.average(p, weights=w))
+                w *= bw
+            mean.append(np.sum(x * w) / np.sum(w))
         return tuple(mean)
 
     def var(self):

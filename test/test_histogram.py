@@ -356,15 +356,16 @@ class TestHistogram(unittest.TestCase):
     def test_sum1d(self):
         h = Histogram(10, [0, 10])
         h.fill([1, 2, 2, 3, 3, 3, 4, 4, 4, 4])
-        self.assertEqual(h.sum(), 10)
+        self.assertEqual(h.sum().n, 10)
+        self.assertEqual(h.sum().s, np.sqrt(10))
         h.fill(11)
-        self.assertEqual(h.sum(), 10)
-        self.assertEqual(h.sum(0), 10)
+        self.assertEqual(h.sum().n, 10)
+        self.assertEqual(h.sum(0).n, 10)
 
         h.uncert = h.uncert
-        s,u = h.sum()
-        self.assertAlmostEqual(s, 10)
-        self.assertAlmostEqual(u, 3.16227766)
+        s = h.sum()
+        self.assertAlmostEqual(s.n, 10)
+        self.assertAlmostEqual(s.s, 3.16227766)
 
     def test_sum2d(self):
         h2 = Histogram(10, [0, 10], 10, [0, 10])
@@ -376,7 +377,7 @@ class TestHistogram(unittest.TestCase):
         h2y_exp = Histogram(10, [0,10])
         h2y_exp.fill([1, 1, 1, 1, 1, 1, 2, 2, 2, 2])
 
-        self.assertEqual(h2.sum(), 10)
+        self.assertEqual(h2.sum().n, 10)
         h2y = h2.sum(0)
         h2x = h2.sum(1)
         self.assertTrue(h2y.isidentical(h2y_exp))
@@ -385,7 +386,7 @@ class TestHistogram(unittest.TestCase):
         h2.uncert = h2.uncert
         hx = h2.sum(1)
         hy = h2.sum(0)
-        self.assertAlmostEqual(hx.sum(), hy.sum())
+        self.assertAlmostEqual(hx.sum().n, hy.sum().n)
         self.assertEqual(hx.shape, (10,))
         self.assertEqual(hy.shape, (10,))
 
@@ -401,7 +402,7 @@ class TestHistogram(unittest.TestCase):
         h2 = Histogram(3, [0, 10], 4, [0, 10], 5, [0, 10])
         h2.fill(xx, yy, zz)
 
-        self.assertEqual(h2.sum(), 9)
+        self.assertEqual(h2.sum().n, 9)
 
         h2x_exp = Histogram(3, [0,10])
         h2x_exp.fill(xx)
@@ -428,16 +429,16 @@ class TestHistogram(unittest.TestCase):
     def test_sum_nonfinite(self):
         h = Histogram(3,[0,3], dtype=np.float)
         h.data = [np.nan, -1, 2]
-        self.assertTrue(np.isnan(h.sum()))
+        self.assertTrue(np.isnan(h.sum().n))
 
         h.data = [np.inf, -1, 2]
-        self.assertEqual(h.sum(), np.inf)
+        self.assertEqual(h.sum().n, np.inf)
 
         h.data = [-np.inf, -1, 2]
-        self.assertEqual(h.sum(), -np.inf)
+        self.assertEqual(h.sum().n, -np.inf)
 
         h.data = [np.inf, np.nan, 2]
-        self.assertTrue(np.isnan(h.sum()))
+        self.assertTrue(np.isnan(h.sum().n))
 
     def test_projection(self):
         h2 = Histogram(2, [0,1], 3, [0,9], data=[[-1,2,3],[4,2,-4]])
@@ -503,13 +504,31 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(h2.min(), -4 - .2)
         self.assertAlmostEqual(h2.max(), 5 + .2)
 
-    def test_mean(self):
+    def test_mean_1d(self):
         h = Histogram(10,[0,10])
         h.fill([3,3,3])
-        self.assertAlmostEqual(h.mean()[0],3.5)
+        m = h.mean()[0]
+        self.assertAlmostEqual(m.n, 3.5)
+        self.assertAlmostEqual(m.s, 0.5)
 
         h.fill([1,5])
-        self.assertAlmostEqual(h.mean()[0],3.5)
+        m = h.mean()[0]
+        self.assertAlmostEqual(m.n, 3.5)
+        self.assertAlmostEqual(m.s, 0.65574385243)
+
+        h.fill([7,7,7,8,9])
+        m = h.mean()[0]
+        self.assertAlmostEqual(m.n, 5.8)
+        self.assertAlmostEqual(m.s, 0.83426614458)
+
+    def test_mean_2d(self):
+        h = Histogram(10,[0,10],15,[0,20])
+        h.fill([3,3,3,5,5,5], [7,7,7,9,9,9])
+        m = h.mean()
+        self.assertAlmostEqual(m[0].n, 4.5)
+        self.assertAlmostEqual(m[0].s, 0.540061724867)
+        self.assertAlmostEqual(m[1].n, 8.0)
+        self.assertAlmostEqual(m[1].s, 0.54433105395)
 
 
 
