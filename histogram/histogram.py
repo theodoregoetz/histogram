@@ -738,9 +738,12 @@ class Histogram(object):
         for ax in self.axes[:maxdim]:
             ext += [ax.min, ax.max]
         if len(ext) < (2*maxdim):
-            ext += [self.min(uncert), self.max(uncert)]
+            if uncert:
+                ext += [self.min(), self.max()]
+            else:
+                ext += [np.nanmin(self.data), np.nanmax(self.data)]
         if pad is not None:
-            if not hasattr(pad, '__iter__'):
+            if not isinstance(pad, Iterable):
                 pad = [pad]*(2*maxdim)
             for dim in range(maxdim):
                 a, b = 2*dim, 2*dim+1

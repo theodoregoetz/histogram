@@ -560,7 +560,6 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(v[1].n, 0.4444444444444)
         self.assertAlmostEqual(v[1].s, 0.628539361055)
 
-
     def test_std_1d(self):
         h = Histogram(10,[0,10])
         h.fill([3,3,3])
@@ -588,6 +587,34 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(v[0].s, 0.35355339)
         self.assertAlmostEqual(v[1].n, np.sqrt(0.4444444444444))
         self.assertAlmostEqual(v[1].s, 0.4714045208)
+
+    def test_extent_1d(self):
+        h = Histogram(10,[0,10])
+        assert_array_almost_equal(h.extent(), [0,10,0,0])
+        assert_array_almost_equal(h.extent(uncert=False), [0,10,0,0])
+        assert_array_almost_equal(h.extent(pad=1), [-10,20,0,0])
+
+        h.fill([3,3,3])
+        ex = [0,10,0,3+np.sqrt(3)]
+        assert_array_almost_equal(h.extent(), ex)
+        assert_array_almost_equal(h.extent(uncert=False), [0,10,0,3])
+        assert_array_almost_equal(h.extent(uncert=False,pad=1), [-10,20,-3,6])
+
+        ex = [-10,20,0,3+np.sqrt(3)]
+        w = 3 + np.sqrt(3)
+        ex[2] -= w
+        ex[3] += w
+        assert_array_almost_equal(h.extent(pad=1), ex)
+
+        assert_array_almost_equal(h.extent(1), [0,10])
+
+    def test_extent_2d(self):
+        h = Histogram(10,[0,10],15,[0,20])
+        assert_array_almost_equal(h.extent(), [0,10,0,20])
+
+
+
+        h.fill([3,3,3,5,5,5], [7,7,7,9,9,9])
 
 
     def test_add(self):
@@ -890,11 +917,6 @@ class TestHistogram(unittest.TestCase):
         # self.assertEqual(expected, histogram.errorbars(maxdim, asratio))
         assert True # TODO: implement your test here
 
-    def test_extent(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.extent(maxdim, uncert, pad))
-        assert True # TODO: implement your test here
-
     def test_fill(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.fill(*args))
@@ -988,11 +1010,6 @@ class TestHistogram(unittest.TestCase):
     def test_smooth(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.smooth(weight))
-        assert True # TODO: implement your test here
-
-    def test_std(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.std())
         assert True # TODO: implement your test here
 
 
