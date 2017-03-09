@@ -522,6 +522,10 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(m.n, 5.8)
         self.assertAlmostEqual(m.s, 0.83426614458)
 
+        h = Histogram(5, [100-12.5, 200+12.5])
+        h.data[:] = [10, 12, 20, 8, 5]
+        self.assertAlmostEqual(h.mean()[0].n, 143+(14/22))
+
     def test_mean_2d(self):
         h = Histogram(10,[0,10],15,[0,20])
         h.fill([3,3,3,5,5,5], [7,7,7,9,9,9])
@@ -531,6 +535,13 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(m[0].s, 0.540061724867)
         self.assertAlmostEqual(m[1].n, 8.0)
         self.assertAlmostEqual(m[1].s, 0.54433105395)
+
+    def test_mean_nonuniform(self):
+        h = Histogram([0,2,3,4])
+        h.data[:] = [3,2,1]
+        m = h.mean()
+        self.assertAlmostEqual(m[0].n, 1.61111111111111)
+        self.assertAlmostEqual(m[0].s, 0.76076334009)
 
     def test_var_1d(self):
         h = Histogram(10,[0,10])
@@ -559,6 +570,13 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(v[0].s, 0.7071067811865)
         self.assertAlmostEqual(v[1].n, 0.4444444444444)
         self.assertAlmostEqual(v[1].s, 0.628539361055)
+
+    def test_var_nonuniform(self):
+        h = Histogram([0,2,3,4])
+        h.data[:] = [3,2,1]
+        v = h.var()
+        self.assertAlmostEqual(v[0].n, 0.82098765432)
+        self.assertAlmostEqual(v[0].s, 0.932651991698)
 
     def test_std_1d(self):
         h = Histogram(10,[0,10])
