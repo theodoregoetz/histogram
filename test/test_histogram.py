@@ -628,12 +628,21 @@ class TestHistogram(unittest.TestCase):
 
     def test_extent_2d(self):
         h = Histogram(10,[0,10],15,[0,20])
-        assert_array_almost_equal(h.extent(), [0,10,0,20])
-
-
+        assert_array_almost_equal(h.extent(2), [0,10,0,20])
 
         h.fill([3,3,3,5,5,5], [7,7,7,9,9,9])
 
+        ex = [0,10,0,20,0,3]
+        assert_array_almost_equal(h.extent(uncert=False), ex)
+        ex[-1] = 3 + np.sqrt(3)
+        assert_array_almost_equal(h.extent(), ex)
+
+    def test_errorbars(self):
+        h = Histogram([0,2,3,4])
+        h.uncert = [0,1,2]
+        ebars = h.errorbars()
+        assert_array_almost_equal(ebars[0], [1,0.5,0.5])
+        assert_array_almost_equal(ebars[1], [0,1,2])
 
     def test_add(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
@@ -928,11 +937,6 @@ class TestHistogram(unittest.TestCase):
     def test_dtype(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.dtype(that, div))
-        assert True # TODO: implement your test here
-
-    def test_errorbars(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.errorbars(maxdim, asratio))
         assert True # TODO: implement your test here
 
     def test_fill(self):

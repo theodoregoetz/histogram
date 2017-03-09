@@ -717,7 +717,7 @@ class Histogram(object):
         var = [ufloat(x.n,x.s) for x in self.var()]
         return tuple(unp.sqrt(var))
 
-    def extent(self, maxdim=2, uncert=True, pad=None):
+    def extent(self, maxdim=None, uncert=True, pad=None):
         """Extent of axes and data
 
         Returns:
@@ -734,6 +734,8 @@ class Histogram(object):
         a list of length ``2 * maxdim``.
 
         """
+        if maxdim is None:
+            maxdim = self.dim + 1
         ext = []
         for ax in self.axes[:maxdim]:
             ext += [ax.min, ax.max]
@@ -752,7 +754,7 @@ class Histogram(object):
                 ext[b] += pad[b] * w
         return tuple(ext)
 
-    def errorbars(self, maxdim=2, asratio=False):
+    def errorbars(self, maxdim=None, asratio=False):
         """Bin half-widths and data uncertainties
 
         Keyword Args:
@@ -788,9 +790,8 @@ class Histogram(object):
 
         .. image:: images/histogram_errorbars.png
         """
-        if maxdim > self.dim:
-            if self.uncert is None:
-                self.uncert = np.sqrt(self.data)
+        if maxdim is None:
+            maxdim = self.dim + 1
 
         if asratio:
             ret = [0.5*ax.binwidths()/(ax.max-ax.min)
