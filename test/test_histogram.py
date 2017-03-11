@@ -730,6 +730,62 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(h.data, [0,0,0])
         self.assertIsNone(getattr(h, '_uncert', None))
 
+    def test_fill_1d(self):
+        h = Histogram(10, [0, 10])
+
+        h.fill(1)
+        h.fill(2, 2)
+        h.fill([3, 3, 3])
+        h.fill([4, 4], 2)
+        h.fill([5, 5], [2, 3])
+
+        assert_array_almost_equal(h.data, [0, 1, 2, 3, 4, 5, 0, 0, 0, 0])
+
+    def test_fill_2d(self):
+        h = Histogram(3, [0, 3], 10, [0, 10])
+        xdata = [0, 0, 1, 1, 2]
+        ydata = [1, 2, 3, 4, 5]
+        weights = [1, 2, 3, 4, 5]
+        h.fill(xdata, ydata, weights)
+
+        assert_array_almost_equal(h.data,
+            np.array([[0,1,2,0,0,0,0,0,0,0],
+                      [0,0,0,3,4,0,0,0,0,0],
+                      [0,0,0,0,0,5,0,0,0,0]]))
+
+    def test_fill_one_1d(self):
+        h = Histogram(10, [0, 10])
+        h.fill_one(1)
+        h.fill_one(2,2)
+        for x in [3,3,3]:
+            h.fill_one(x)
+        for x in [4,4]:
+            h.fill_one(x,2)
+        for x,w in zip([5,5],[2,3]):
+            h.fill_one(x,w)
+        h.fill_one(100)
+        assert_array_almost_equal(h.data, [0, 1, 2, 3, 4, 5, 0, 0, 0, 0])
+
+    def test_fill_one_2d(self):
+        h = Histogram(3, [0, 3], 10, [0, 10])
+        for x,y,w in zip([0, 0, 1, 1, 2],
+                         [1, 2, 3, 4, 5],
+                         [1, 2, 3, 4, 5]):
+            h.fill_one((x,y),w)
+        h.fill_one((2.9,9.9))
+        h.fill_one((100,5))
+        h.fill_one((2,100))
+
+        assert_array_almost_equal(h.data,
+            np.array([[0,1,2,0,0,0,0,0,0,0],
+                      [0,0,0,3,4,0,0,0,0,0],
+                      [0,0,0,0,0,5,0,0,0,1]]))
+
+    def test_fill_from_sample(self):
+        # histogram = Histogram(*axes, **kwargs)
+        # self.assertEqual(expected, histogram.fill_from_sample(sample, weights))
+        assert True # TODO: implement your test here
+
 
     def test_add(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
@@ -977,21 +1033,6 @@ class TestHistogram(unittest.TestCase):
     def test_dtype(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.dtype(that, div))
-        assert True # TODO: implement your test here
-
-    def test_fill(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.fill(*args))
-        assert True # TODO: implement your test here
-
-    def test_fill_from_sample(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.fill_from_sample(sample, weights))
-        assert True # TODO: implement your test here
-
-    def test_fill_one(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.fill_one(pt, wt))
         assert True # TODO: implement your test here
 
     def test_fit(self):

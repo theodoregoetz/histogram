@@ -776,7 +776,6 @@ class Histogram(object):
         extent = [min(xx), max(xx), min(yy), max(yy)]
         return xx, yy, extent
 
-
 ### self modifying methods (set, fill)
     def __getitem__(self, *args):
         """Direct access to the filled data."""
@@ -831,7 +830,7 @@ class Histogram(object):
     def fill(self, *args):
         """Fill histogram with sample data.
 
-        Arguments (``\*args``) are the sample of data an optional associated
+        Arguments (``\*args``) are the sample of data with optional associated
         weights. Weights may be a single number or an array of length `N`. The
         default (``None``) is equivalent to ``weights=1``. Example::
 
