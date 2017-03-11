@@ -60,6 +60,20 @@ def plothist_polygon(ax, hist, **kwargs):
     kw.update(kwargs)
 
     x,y,extent = hist.aspolygon(**polygon_kwargs)
+
+    #def aspolygon(self, xlow=None, xhigh=None, ymin=0):
+    #    assert self.dim == 1, 'only 1D histograms can be translated into a polygon.'
+    #
+    #    ymin = ymin if ymin is not None else extent[2]
+    #
+    #    xx, yy, extent = self.asline(xlow, xhigh)
+    #
+    #    xx = np.hstack([xx[0], xx, xx[-1], xx[0]])
+    #    yy = np.hstack([ymin, yy, ymin, ymin])
+    #
+    #    extent[2] = ymin
+    #    return xx, yy, extent
+
     x = np.hstack([x,x[0]])
     y = np.hstack([y,y[0]])
     codes = [Path.MOVETO] \

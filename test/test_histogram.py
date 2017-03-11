@@ -644,6 +644,37 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(ebars[0], [1,0.5,0.5])
         assert_array_almost_equal(ebars[1], [0,1,2])
 
+    def test_asline(self):
+        h = Histogram(10,[0,10])
+        h.data = np.array([1,2,3,4,5,0,1,2,9,0],dtype=np.int64)
+        x,y,ext = h.asline()
+        assert_array_almost_equal(x,[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10])
+        assert_array_almost_equal(y,[1,1,2,2,3,3,4,4,5,5,0,0,1,1,2,2,9,9,0, 0])
+        assert_array_almost_equal(ext,[0,10,0,9])
+
+        h = Histogram(10,[0,10])
+        h.data = np.array([0,2,3,4,5,0,1,2,9,0],dtype=np.int64)
+        x,y,ext = h.asline()
+        assert_array_almost_equal(x,[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10])
+        assert_array_almost_equal(y,[0,0,2,2,3,3,4,4,5,5,0,0,1,1,2,2,9,9,0, 0])
+        assert_array_almost_equal(ext,[0,10,0,9])
+
+        h = Histogram(10,[0,10])
+        h.data = np.array([0,2,-4,4,5,0,1,2,9,0],dtype=np.int64)
+        x,y,ext = h.asline()
+        assert_array_almost_equal(x,[0,1,1,2, 2, 3,3,4,4,5,5,6,6,7,7,8,8,9,9,10])
+        assert_array_almost_equal(y,[0,0,2,2,-4,-4,4,4,5,5,0,0,1,1,2,2,9,9,0, 0])
+        assert_array_almost_equal(ext,[0,10,-4,9])
+
+        h = Histogram(10,[-1,9])
+        h.data = np.array([-1,2,-4,4,5,0,1,2,9,-10],dtype=np.int64)
+        x,y,ext = h.asline()
+        assert_array_almost_equal(x,[-1, 0,0,1, 1, 2,2,3,3,4,4,5,5,6,6,7,7,8,  8,  9])
+        assert_array_almost_equal(y,[-1,-1,2,2,-4,-4,4,4,5,5,0,0,1,1,2,2,9,9,-10,-10])
+        assert_array_almost_equal(ext,[-1,9,-10,9])
+
+
+
     def test_add(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
 
@@ -824,53 +855,6 @@ class TestHistogram(unittest.TestCase):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.added_uncert_ratio(that, nans))
         assert True # TODO: implement your test here
-
-    def test_asline(self):
-        h = Histogram(10,[0,10])
-        h.data = np.array([1,2,3,4,5,0,1,2,9,0],dtype=np.int64)
-        x,y,ext = h.asline()
-        assert_array_almost_equal(x,[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10])
-        assert_array_almost_equal(y,[1,1,2,2,3,3,4,4,5,5,0,0,1,1,2,2,9,9,0, 0])
-        assert_array_almost_equal(ext,[0,10,0,9])
-
-        h = Histogram(10,[0,10])
-        h.data = np.array([0,2,3,4,5,0,1,2,9,0],dtype=np.int64)
-        x,y,ext = h.asline()
-        assert_array_almost_equal(x,[0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10])
-        assert_array_almost_equal(y,[0,0,2,2,3,3,4,4,5,5,0,0,1,1,2,2,9,9,0, 0])
-        assert_array_almost_equal(ext,[0,10,0,9])
-
-        h = Histogram(10,[0,10])
-        h.data = np.array([0,2,-4,4,5,0,1,2,9,0],dtype=np.int64)
-        x,y,ext = h.asline()
-        assert_array_almost_equal(x,[0,1,1,2, 2, 3,3,4,4,5,5,6,6,7,7,8,8,9,9,10])
-        assert_array_almost_equal(y,[0,0,2,2,-4,-4,4,4,5,5,0,0,1,1,2,2,9,9,0, 0])
-        assert_array_almost_equal(ext,[0,10,-4,9])
-
-        h = Histogram(10,[-1,9])
-        h.data = np.array([-1,2,-4,4,5,0,1,2,9,-10],dtype=np.int64)
-        x,y,ext = h.asline()
-        assert_array_almost_equal(x,[-1, 0,0,1, 1, 2,2,3,3,4,4,5,5,6,6,7,7,8,  8,  9])
-        assert_array_almost_equal(y,[-1,-1,2,2,-4,-4,4,4,5,5,0,0,1,1,2,2,9,9,-10,-10])
-        assert_array_almost_equal(ext,[-1,9,-10,9])
-
-        h = Histogram(10,[0,10])
-        h.data = np.array([1,2,3,4,5,0,1,2,9,0],dtype=np.int64)
-
-        x,y,ext = h.asline(2)
-        assert_array_almost_equal(x,[2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10])
-        assert_array_almost_equal(y,[3,3,4,4,5,5,0,0,1,1,2,2,9,9,0, 0])
-        assert_array_almost_equal(ext,[2,10,0,9])
-
-        x,y,ext = h.asline(1.9)
-        assert_array_almost_equal(x,[2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10])
-        assert_array_almost_equal(y,[3,3,4,4,5,5,0,0,1,1,2,2,9,9,0, 0])
-        assert_array_almost_equal(ext,[2,10,0,9])
-
-        x,y,ext = h.asline(2.9,7)
-        assert_array_almost_equal(x,[3,4,4,5,5,6])
-        assert_array_almost_equal(y,[4,4,5,5,0,0])
-        assert_array_almost_equal(ext,[3,6,0,5])
 
     def test_aspolygon(self):
         # histogram = Histogram(*axes, **kwargs)

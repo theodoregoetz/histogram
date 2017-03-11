@@ -754,97 +754,17 @@ class Histogram(object):
                 ext[b] += pad[b] * w
         return tuple(ext)
 
-    def errorbars(self, maxdim=None, asratio=False):
-        """Bin half-widths and data uncertainties
-
-        Keyword Args:
-
-            maxdim (int): Number of dimensions to return (default: 2).
-            asratio (bool): Return ratios instead of absolute values (default:
-                False).
-
-        Returns:
-
-            list of arrays: Errors to be used for plotting this histogram.
-
-        Example::
-
-            from numpy import random as rand
-            from matplotlib import pyplot
-            from histogram import Histogram
-
-            rand.seed(1)
-
-            h = Histogram(10, [0, 10])
-            h.fill(rand.normal(5, 1, 500))
-
-            x, = h.grid
-            y = h.data
-            xerr, yerr = h.errorbars()
-
-            fig, ax = pyplot.subplots(figsize=(4, 2.5))
-            pt = ax.errorbar(x, y, xerr=xerr, yerr=yerr, ls='none')
-            fig.tight_layout()
-
-            pyplot.show()
-
-        .. image:: images/histogram_errorbars.png
-        """
+    def errorbars(self, maxdim=None):
+        """Bin half-widths and data uncertainties."""
         if maxdim is None:
             maxdim = self.dim + 1
-
-        if asratio:
-            ret = [0.5*ax.binwidths()/(ax.max-ax.min)
-                   for ax in self.axes[:maxdim]]
-            if len(ret) < maxdim:
-                ret += [self.uncert / (self.data.max() - self.data.min())]
-
-        else:
-            ret = [0.5*ax.binwidths() for ax in self.axes[:maxdim]]
-            if len(ret) < maxdim:
-                ret += [self.uncert]
-
+        ret = [0.5 * ax.binwidths() for ax in self.axes[:maxdim]]
+        if len(ret) < maxdim:
+            ret += [self.uncert]
         return ret
 
-    def asline(self, xlow=None, xhigh=None):
-        """Points describing this histogram as a line
-
-        Arguments:
-            xlow (float or None): Lower bound along axis.
-            xhigh (float or None): Upper bound along axis.
-
-        Returns:
-
-            ..
-
-            **tuple**: ``(x, y, extent)``
-
-            * **x** (1D float array) - `x`-coordinate array.
-            * **y** (1D float array) - `y`-coordinate array.
-            * **extent** (tuple) - ``(xmin, xmax, ymin, ymax)``.
-
-        Example::
-
-            from numpy import random as rand
-            from matplotlib import pyplot
-            from histogram import Histogram
-
-            rand.seed(1)
-
-            h = Histogram(10, [0, 10])
-            h.fill(rand.normal(5, 1, 500))
-
-            x, y, extent = h.asline()
-
-            fig, ax = pyplot.subplots(figsize=(4, 2.5))
-            pt = ax.plot(x, y, lw=2)
-            fig.tight_layout()
-
-            pyplot.show()
-
-        .. image:: images/histogram_asline.png
-
-        """
+    def asline(self):
+        """Points describing this histogram as a line."""
         assert self.dim == 1, 'only 1D histograms can be translated into a line.'
 
         x = self.axes[0].edges
@@ -853,57 +773,9 @@ class Histogram(object):
         xx = np.column_stack([x[:-1], x[1:]]).ravel()
         yy = np.column_stack([y, y]).ravel()
 
-        if (xlow is not None) or (xhigh is not None):
-            mask = np.ones(len(xx), dtype=np.bool)
-            if xlow is not None:
-                mask &= (xlow <= xx)
-            if xhigh is not None:
-                mask &= (xx < xhigh)
-            if not mask.any():
-                raise Exception('range is not valid')
-            if not mask.all():
-                xx = xx[mask]
-                yy = yy[mask]
-
-            a, b = None, None
-            if not mask[0]:
-                a = 1
-            if not mask[-1]:
-                b = -1
-            if (a is not None) or (b is not None):
-                xx = xx[a:b]
-                yy = yy[a:b]
-
         extent = [min(xx), max(xx), min(yy), max(yy)]
         return xx, yy, extent
 
-    def aspolygon(self, xlow=None, xhigh=None, ymin=0):
-        """Return a polygon of the histogram
-
-        Arguments:
-            ymin (scalar, optional): Base-line for the polygon. Usually set to zero for histograms of integer fill-type.
-            xlim (scalar 2-tuple, optional): Range in `x` to be used.
-
-        Returns:
-
-            ..
-
-            **tuple**: ``(points, extent)``.
-
-            * **points** (scalar array) - Points defining the polygon beginning and ending with the point ``(xmin, ymin)``.
-            * **extent** (scalar tuple) - Extent of the resulting polygon in the form: ``[xmin, xmax, ymin, ymax]``.
-        """
-        assert self.dim == 1, 'only 1D histograms can be translated into a polygon.'
-
-        ymin = ymin if ymin is not None else extent[2]
-
-        xx, yy, extent = self.asline(xlow, xhigh)
-
-        xx = np.hstack([xx[0], xx, xx[-1], xx[0]])
-        yy = np.hstack([ymin, yy, ymin, ymin])
-
-        extent[2] = ymin
-        return xx, yy, extent
 
 ### self modifying methods (set, fill)
     def __getitem__(self, *args):
