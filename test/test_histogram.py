@@ -673,6 +673,62 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(y,[-1,-1,2,2,-4,-4,4,4,5,5,0,0,1,1,2,2,9,9,-10,-10])
         assert_array_almost_equal(ext,[-1,9,-10,9])
 
+    def test_getitem_setitem(self):
+        h = Histogram(10,[0,10])
+        h[:] = list(range(10))
+        assert_array_almost_equal(h[:], list(range(10)))
+
+        h = Histogram(3,[0,10],4,[0,10])
+        h[...] = np.ones(shape=(3,4))
+        assert_array_almost_equal(h[:,0], [1,1,1])
+        assert_array_almost_equal(h[0,:], [1,1,1,1])
+
+    def test_set(self):
+        h = Histogram(3,[0,10])
+        h.set(3)
+        assert_array_almost_equal(h.data, [3,3,3])
+
+        h.set(list(range(3)), 6)
+        assert_array_almost_equal(h.data, [0,1,2])
+        assert_array_almost_equal(h.uncert, [6,6,6])
+
+        h = Histogram(3,[0,10],4,[0,10])
+        h.set(np.ones(shape=(3,4)), np.full((3,4), 5))
+        assert_array_almost_equal(h[:,0], [1,1,1])
+        assert_array_almost_equal(h[0,:], [1,1,1,1])
+        assert_array_almost_equal(h.uncert[:,0], [5,5,5])
+
+    def test_set_nans(self):
+        h = Histogram(3,[0,10],dtype=np.float)
+        h[:] = [1,np.nan,np.inf]
+        h.uncert = [1,np.nan,np.inf]
+        h.set_nans(0,1)
+        assert_array_almost_equal(h.data, [1,0,np.inf])
+        assert_array_almost_equal(h.uncert, [1,1,np.inf])
+
+    def test_set_infs(self):
+        h = Histogram(3,[0,10],dtype=np.float)
+        h[:] = [1,np.nan,np.inf]
+        h.uncert = [1,np.nan,np.inf]
+        h.set_infs(0,1)
+        assert_array_almost_equal(h.data, [1,np.nan,0])
+        assert_array_almost_equal(h.uncert, [1,np.nan,1])
+
+    def test_set_nonfinites(self):
+        h = Histogram(3,[0,10],dtype=np.float)
+        h[:] = [1,np.nan,np.inf]
+        h.uncert = [1,np.nan,np.inf]
+        h.set_nonfinites(0,1)
+        assert_array_almost_equal(h.data, [1,0,0])
+        assert_array_almost_equal(h.uncert, [1,1,1])
+
+    def test_reset(self):
+        h = Histogram(3,[0,10],dtype=np.float)
+        h[:] = [1,np.nan,np.inf]
+        h.uncert = [1,np.nan,np.inf]
+        h.reset()
+        assert_array_almost_equal(h.data, [0,0,0])
+        self.assertIsNone(getattr(h, '_uncert', None))
 
 
     def test_add(self):
@@ -987,16 +1043,6 @@ class TestHistogram(unittest.TestCase):
         hrebin = h.rebin(2)
         assert_array_almost_equal(hrebin.data, hexpect.data)
         assert_array_almost_equal(hrebin.axes[0].edges, hexpect.axes[0].edges)
-
-    def test_reset(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.reset())
-        assert True # TODO: implement your test here
-
-    def test_set(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.set(val, uncert))
-        assert True # TODO: implement your test here
 
     def test_slices(self):
         # histogram = Histogram(*axes, **kwargs)

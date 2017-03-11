@@ -779,15 +779,15 @@ class Histogram(object):
 
 ### self modifying methods (set, fill)
     def __getitem__(self, *args):
-        """Direct access to the filled data"""
+        """Direct access to the filled data."""
         return self.data.__getitem__(*args)
 
     def __setitem__(self, *args):
-        """Direct access to the filled data"""
+        """Direct access to the filled data."""
         return self.data.__setitem__(*args)
 
     def set(self, val, uncert=None):
-        """Set filled data to specific value
+        """Set filled data to specific values.
 
         This will set the uncertainty to ``None`` by default and will accept a single value or an array the same shape as the data. Data will be cast to the data type already stored in the histogram.
         """
@@ -796,35 +796,32 @@ class Histogram(object):
         else:
             self.data[...] = val
 
-        if uncert is None:
-            if self.uncert is not None:
-                self.uncert = None
-        else:
-            if self.uncert is None:
-                self.uncert = np.empty(self.data.shape)
+        if not hasattr(self, '_uncert'):
+            self._uncert = np.empty(self.data.shape)
 
+        if uncert is not None:
             if isinstance(uncert, np.ndarray):
                 self.uncert.T[...] = uncert.T
             else:
                 self.uncert[...] = uncert
 
-    def set_nans(self, val=0):
+    def set_nans(self, val=0, uncert=0):
         """Set all NaNs to a specific value."""
         self.data[np.isnan(self.data)] = val
         if hasattr(self, '_uncert'):
-            self.uncert[np.isnan(self.uncert)] = val
+            self.uncert[np.isnan(self.uncert)] = uncert
 
-    def set_infs(self, val=0):
+    def set_infs(self, val=0, uncert=0):
         """Set all infinity values to a specific value."""
         self.data[np.isinf(self.data)] = val
         if hasattr(self, '_uncert'):
-            self.uncert[np.isinf(self.uncert)] = val
+            self.uncert[np.isinf(self.uncert)] = uncert
 
-    def set_nonfinite(self, val=0):
+    def set_nonfinites(self, val=0, uncert=0):
         """Set all non-finite values to a specific value."""
         self.data[~np.isfinite(self.data)] = val
         if hasattr(self, '_uncert'):
-            self.uncert[~np.isfinite(self.uncert)] = val
+            self.uncert[~np.isfinite(self.uncert)] = uncert
 
     def reset(self):
         """Set data to zero and uncertainty to `None`."""
