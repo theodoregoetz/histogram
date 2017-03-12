@@ -154,6 +154,10 @@ class Histogram(object):
         self._data[...] = d
 
     @property
+    def has_uncert(self):
+        return hasattr(self, '_uncert')
+
+    @property
     def uncert(self):
         """:py:class:`numpy.ndarray` of the absolute uncertainty.
 
@@ -195,18 +199,14 @@ class Histogram(object):
         if u is None:
             del self.uncert
         else:
-            if not hasattr(self, '_uncert'):
+            if not self.has_uncert:
                 self._uncert = np.empty(self.data.shape, dtype=np.float64)
             self._uncert[...] = u
 
     @uncert.deleter
     def uncert(self):
-        if hasattr(self, '_uncert'):
+        if self.has_uncert:
             del self._uncert
-
-    @property
-    def has_uncert(self):
-        return hasattr(self, '_uncert')
 
     @property
     def uncert_ratio(self):
@@ -300,7 +300,7 @@ class Histogram(object):
         See also :py:meth:`Histogram.__eq__`."""
         if not (self == that):
             return False
-        if hasattr(self, '_uncert') or hasattr(that, '_uncert'):
+        if self.has_uncert or that.has_uncert:
             if not np.allclose(self.uncert, that.uncert):
                 return False
         if self.label != that.label:
@@ -348,7 +348,7 @@ class Histogram(object):
             args['label'] = '"{}"'.format(self.label)
         if self.title is not None:
             args['title'] = '"{}"'.format(self.title)
-        if hasattr(self, '_uncert'):
+        if self.has_uncert:
             args['uncert'] = str(self.uncert.tolist())
         argsstr = ', '.join('{}={}'.format(k, v)
                             for k, v in sorted(args.items()))
@@ -407,7 +407,7 @@ class Histogram(object):
 
         """
         ret = {'data' : self.data, 'axes': [a.asdict() for a in self.axes]}
-        if hasattr(self, '_uncert'):
+        if self.has_uncert:
             ret['uncert'] = self.uncert
         if self.label is not None:
             ret['label'] = self.label
@@ -795,7 +795,7 @@ class Histogram(object):
         else:
             self.data[...] = val
 
-        if not hasattr(self, '_uncert'):
+        if not self.has_uncert:
             self._uncert = np.empty(self.data.shape)
 
         if uncert is not None:
@@ -807,19 +807,19 @@ class Histogram(object):
     def set_nans(self, val=0, uncert=0):
         """Set all NaNs to a specific value."""
         self.data[np.isnan(self.data)] = val
-        if hasattr(self, '_uncert'):
+        if self.has_uncert:
             self.uncert[np.isnan(self.uncert)] = uncert
 
     def set_infs(self, val=0, uncert=0):
         """Set all infinity values to a specific value."""
         self.data[np.isinf(self.data)] = val
-        if hasattr(self, '_uncert'):
+        if self.has_uncert:
             self.uncert[np.isinf(self.uncert)] = uncert
 
     def set_nonfinites(self, val=0, uncert=0):
         """Set all non-finite values to a specific value."""
         self.data[~np.isfinite(self.data)] = val
-        if hasattr(self, '_uncert'):
+        if self.has_uncert:
             self.uncert[~np.isfinite(self.uncert)] = uncert
 
     def reset(self):
@@ -936,219 +936,171 @@ class Histogram(object):
         self.data += h.astype(self.data.dtype)
 
 ### operations
-    def clone(self, dtype=None, **kwargs):
-        """Create a complete copy of this histogram"""
+    def __deepcopy__(self, memo=None):
+        """Create a complete copy of this histogram."""
+        return self.copy()
+
+    def __copy__(self):
+        """Create a complete copy of this histogram."""
+        return self.copy()
+
+    def copy(self, dtype=None, **kwargs):
+        """Copy this histogram optionally changing dtype and labels."""
+        cls = self.__class__
+        newhist = cls.__new__(cls)
+
+        newhist.axes = [deepcopy(ax) for ax in self.axes]
         if dtype is None:
-            new_data = self.data.copy()
+            newhist._data = deepcopy(self._data)
         else:
-            new_data = self.data.astype(dtype)
-
+            newhist._data = self._data.astype(dtype)
+        newhist.title = kwargs.get('title', deepcopy(self.title))
+        newhist.label = kwargs.get('label', deepcopy(self.label))
         if self.has_uncert:
-            new_uncert = self.uncert.copy()
-        else:
-            new_uncert = None
+            newhist._uncert = copy(self._uncert)
 
-        return Histogram(
-            *[ax.clone() for ax in self.axes],
-            data = new_data,
-            uncert = new_uncert,
-            title = kwargs.get('title', copy(self.title)),
-            label = kwargs.get('label', copy(self.label)))
-
-    def added_uncert(self, that):
-        """Added uncertainty by absolute values
-
-        Returns the uncertainty added directly in quadrature with another histogram. This assumes Poisson statistics (``uncert = sqrt(data)``) if ``uncert is None``.
-        """
-        if not isinstance(that, Histogram):
-            return self.uncert
-
-        if self.uncert is None:
-            self_unc_sq = self.data.astype(np.float64)
-        else:
-            self_unc_sq = np.power(self.uncert, 2)
-
-        if that.uncert is None:
-            that_unc_sq = that.data.astype(np.float64)
-        else:
-            that_unc_sq = np.power(that.uncert, 2)
-
-        self_unc_sq.T[...] += that_unc_sq.T
-
-        return np.sqrt(self_unc_sq)
-
-    def added_uncert_ratio(self, that, nans=0):
-        """Added uncertainty by ratios of the data
-
-        Returns the uncertainty added by ratio and in quadrature with another histogram. This assumes Poisson statistics (``uncert = sqrt(data)``) if ``uncert is None``.
-        """
-        if not isinstance(that, Histogram):
-            return self.uncert
-
-        data = np.asarray(self.data, dtype=np.float64)
-
-        if self.uncert is None:
-            self_unc_ratio_sq = 1. / np.abs(data)
-        else:
-            self_unc_ratio_sq = np.power(self.uncert / data, 2)
-
-        data = np.asarray(that.data, dtype=np.float64)
-
-        if that.uncert is None:
-            that_unc_ratio_sq = 1. / np.abs(data)
-        else:
-            that_unc_ratio_sq = np.power(that.uncert.T / data.T, 2).T
-
-        self_unc_ratio_sq.T[...] += that_unc_ratio_sq.T
-
-        return np.sqrt(self_unc_ratio_sq)
-
-    def clear_nans(self, val=0):
-        """Set all non-finite bins to a specific value"""
-        isnan = np.isnan(self.data) | np.isinf(self.data)
-        self.data[isnan] = val
-        if self.uncert is not None:
-            isnan = np.isnan(self.uncert) | np.isinf(self.uncert)
-            self.uncert[isnan] = val
-
-    def dtype(self, that, div=False):
-        """Return dtype that should result from a binary operation
-
-        Default is the result for addition, subtraction or multiplication. With ``div = True``, this will always return ``float64``."""
-        if div:
-            return np.float64
-
-        if isinstance(that, Histogram):
-            that_dtype = that.data.dtype
-        else:
-            that_dtype = np.dtype(type(that))
-
-        if self.data.dtype == that_dtype:
-            return None
-        else:
-            inttypes = [np.int32, np.int64]
-            if (self.data.dtype in inttypes) and \
-               (that_dtype in inttypes):
-                return np.int64
-            else:
-                return np.float64
+        return newhist
 
     def __iadd__(self, that):
-        """In-place addition
-
-        Uncertainty is not modified if both uncertainties are ``None``."""
+        """In-place addition."""
         if isinstance(that, Histogram):
             if self.has_uncert or that.has_uncert:
                 self_data = unp.uarray(self.data, self.uncert)
                 that_data = unp.uarray(that.data, that.uncert)
-                self_data += that_data
-                self.data = unp.nominal_values(self_data)
+                self_data.T[...] += that_data.T
+                self.data[...] = unp.nominal_values(self_data)
                 self.uncert = unp.std_devs(self_data)
             else:
                 self.data.T[...] += that.data.T
         else:
             self_data = unp.uarray(self.data, self.uncert)
             self_data.T[...] += np.asarray(that).T
-            self.data = unp.nominal_values(self_data)
+            self.data[...] = unp.nominal_values(self_data)
             self.uncert = unp.std_devs(self_data)
         return self
 
     def __radd__(self, that):
-        """Commuting addition"""
+        """Commuting addition."""
         return self + that
 
     def __add__(self, that):
-        """Addition"""
+        """Addition."""
         if isinstance(that, Histogram) and self.dim < that.dim:
             return that + self
         else:
-            ret = self.clone(self.dtype(that))
+            if isinstance(that, Histogram):
+                that_dtype = that.data.dtype
+            else:
+                that_dtype = np.dtype(type(that))
+            copy_dtype = None
+            if self.has_uncert or (isinstance(that, Histogram) and
+                                   that.has_uncert):
+                copy_dtype = np.float64
+            elif self.data.dtype != that_dtype:
+                inttypes = [np.int32, np.int64]
+                if (self.data.dtype in inttypes) and \
+                   (that_dtype in inttypes):
+                    copy_dtype = np.int64
+                else:
+                    copy_dtype = np.float64
+            ret = self.copy(copy_dtype)
             ret += that
             return ret
 
     def __isub__(self, that):
-        """In-place subtraction
-
-        If the uncertainties are ``None``, then Poisson statistics are assumed."""
-        data = that.data if isinstance(that, Histogram) else that
-        self.uncert = self.added_uncert(that)
-        self.data.T[...] -= np.asarray(data).T
-        self.clear_nans()
+        """In-place subtraction."""
+        if isinstance(that, Histogram):
+            self_data = unp.uarray(self.data, self.uncert)
+            that_data = unp.uarray(that.data, that.uncert)
+            self_data.T[...] -= that_data.T
+            self.data[...] = unp.nominal_values(self_data)
+            self.uncert = unp.std_devs(self_data)
+        else:
+            self_data = unp.uarray(self.data, self.uncert)
+            self_data.T[...] -= np.asarray(that).T
+            self.data[...] = unp.nominal_values(self_data)
+            self.uncert = unp.std_devs(self_data)
         return self
 
     def __rsub__(self, that):
-        """Commuting subtraction"""
-        ret = self.clone(self.dtype(that))
+        """Commuting subtraction."""
+        ret = self.copy(self.dtype(that))
         ret.data = that - ret.data
         return ret
 
     def __sub__(self, that):
-        """Subtraction"""
-        ret = self.clone(self.dtype(that))
+        """Subtraction."""
+        ret = self.copy(np.float64)
         ret -= that
         return ret
 
     def __imul__(self, that):
-        """In-place multiplication"""
+        """In-place multiplication."""
         if isinstance(that, Histogram):
-            data = that.data
-            uncrat = self.added_uncert_ratio(that)
+            self_data = unp.uarray(self.data, self.uncert)
+            that_data = unp.uarray(that.data, that.uncert)
+            self_data.T[...] *= that_data.T
+            self.data[...] = unp.nominal_values(self_data)
+            self.uncert = unp.std_devs(self_data)
         else:
-            data = that
-            if self.uncert is None:
-                uncrat = 1. / np.sqrt(np.abs(self.data))
-            else:
-                uncrat = self.uncert / np.abs(self.data)
-        self.data.T[...] *= np.asarray(data).T
-        self.uncert = uncrat * self.data
-        self.clear_nans()
+            self_data = unp.uarray(self.data, self.uncert)
+            self_data.T[...] *= np.asarray(that).T
+            self.data[...] = unp.nominal_values(self_data)
+            self.uncert = unp.std_devs(self_data)
         return self
 
     def __rmul__(self, that):
-        """Commuting mulitplication"""
+        """Commuting mulitplication."""
         return self * that
 
     def __mul__(self, that):
-        """Multiplication"""
-        ret = self.clone(self.dtype(that))
+        """Multiplication."""
+        ret = self.copy(np.float64)
         ret *= that
         return ret
 
     def __itruediv__(self, that):
-        """In-place (true) division
-
-        If the uncertainties are ``None``, then Poisson statistics are assumed. After division, ``nan`` and ``inf`` values are set to zero."""
+        """In-place (true) division."""
+        olderr = np.seterr(divide='ignore')
         if isinstance(that, Histogram):
-            data = that.data
-            uncrat = self.added_uncert_ratio(that)
+            infs = np.isclose(that.data, 0)
+            nans = np.isclose(self.data, 0) & infs
+            ninfs = (self.data < 0) & infs
+            sel = ~(infs | nans)
+            self_data = unp.uarray(self.data[sel], self.uncert[sel])
+            that_data = unp.uarray(that.data[sel], that.uncert[sel])
+            self_data.T[...] /= that_data.T
+            self.data[sel] = unp.nominal_values(self_data)
+            self.uncert[sel] = unp.std_devs(self_data)
+            self.data[infs] = np.inf
+            self.data[ninfs] = -np.inf
+            self.data[nans] = np.nan
+            self.uncert[infs | nans] = np.nan
         else:
-            data = that
-            if self.uncert is None:
-                uncrat = 1. / np.sqrt(np.abs(self.data))
-            else:
-                uncrat = self.uncert / np.abs(self.data)
-        self.data.T[...] /= np.asarray(data).T
-        self.uncert = uncrat * self.data
-        self.clear_nans()
+            self_data = unp.uarray(self.data, self.uncert)
+            self_data.T[...] /= np.asarray(that).T
+            self.data[...] = unp.nominal_values(self_data)
+            self.uncert = unp.std_devs(self_data)
+        np.seterr(**olderr)
         return self
 
     def __rtruediv__(self, that):
-        """Commuting (true) division
+        """Commuting (true) division.
 
             that = 1.
             hret = that / hself
-
-        If the uncertainties are ``None``, then Poisson statistics are assumed. After division, ``nan`` and ``inf`` values are set to zero.
         """
-        ret = self.clone(np.float)
-        ret.data[...] = that / self.data
-        ret.uncert = self.added_uncert_ratio(that) * ret.data
-        self.clear_nans()
+        ret = self.copy(np.float64)
+        that_uarr = unp.uarray(that)
+        ret.data.T[...] = unp.nominal_values(that_uarr).T
+        ret._uncert = np.empty(shape=ret.data.shape)
+        ret._uncert.T[...] = unp.std_dev(that_uarr).T
+        ret /= self
         return ret
 
     def __truediv__(self, that):
-        """Division"""
-        ret = self.clone(np.float)
+        """Division."""
+        ret = self.copy(np.float64)
         ret /= that
         return ret
 
@@ -1199,7 +1151,7 @@ class Histogram(object):
 
         All non-finite bins are filled using :py:meth:`Histogram.interpolate_nans` before the Gaussian filter is applied.
         """
-        hnew = self.clone().interpolate_nans()
+        hnew = self.copy().interpolate_nans()
 
         Zf = ndimage.filters.gaussian_filter(hnew.data, 1, mode=mode)
         hnew.data   = weight*Zf + (1.-weight)*hnew.data
@@ -1366,7 +1318,7 @@ class Histogram(object):
         for i, (r, ax) in enumerate(zip(rng, self.axes)):
             xlow, xhigh = r
             if (xlow is None) and (xhigh is None):
-                newaxes += [ax.clone()]
+                newaxes += [ax.copy()]
             else:
                 a, m = ax.cut(xlow, xhigh, ('nearest', 'nearest'))
                 indices = np.argwhere(m)[:, 0]

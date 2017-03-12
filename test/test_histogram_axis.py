@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from copy import copy, deepcopy
 import numpy as np
 import unittest
 
@@ -147,15 +148,19 @@ class TestHistogramAxis(unittest.TestCase):
         a1 = HistogramAxis(100, [0, 10], 'x')
         self.assertFalse(a1.inaxis(a1.overflow_value))
 
-    def test_clone(self):
+    def test_copy(self):
         a1 = HistogramAxis(100, [0, 10], 'x')
-        a2 = a1.clone()
+        a2 = copy(a1)
         self.assertEqual(a1, a2)
         self.assertEqual(a1.label, a2.label)
         a2.edges = [0, 1, 2]
         self.assertNotEqual(a1, a2)
         a2.label = 'y'
         self.assertNotEqual(a1.label, a2.label)
+        a2 = deepcopy(a1)
+        a1.isidentical(a2)
+        a2 = a1.copy()
+        a1.isidentical(a2)
 
     def test_inaxis(self):
         a1 = HistogramAxis(100, [0, 10], 'x')

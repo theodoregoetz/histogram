@@ -179,9 +179,22 @@ class HistogramAxis(object):
         """Value guaranteed to be outside the range of this axis."""
         return self.max + 1.
 
-    def clone(self):
+    def __deepcopy__(self, memo):
         """Deep copy of this instance."""
-        return HistogramAxis(self.edges.copy(), label=copy(self.label))
+        cls = self.__class__
+        newaxis = cls.__new__(cls)
+        memo[id(self)] = newaxis
+        newaxis.edges = deepcopy(self.edges, memo)
+        newaxis.label = deepcopy(self.label, memo)
+        return newaxis
+
+    def __copy__(self):
+        """Deep copy of this instance."""
+        return deepcopy(self)
+
+    def copy(self):
+        """Return a copy of this axis."""
+        return deepcopy(self)
 
     def inaxis(self, x):
         """Check if `x` is within this axis.

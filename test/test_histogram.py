@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+from copy import copy, deepcopy
 import numpy as np
 import unittest
 
@@ -782,25 +783,48 @@ class TestHistogram(unittest.TestCase):
                       [0,0,0,0,0,5,0,0,0,1]]))
 
     def test_fill_from_sample(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.fill_from_sample(sample, weights))
-        assert True # TODO: implement your test here
+        h = Histogram(3, [0, 3], 10, [0, 10])
+        xdata = [0, 0, 1, 1, 2]
+        ydata = [1, 2, 3, 4, 5]
+        weights = [1, 2, 3, 4, 5]
+        h.fill_from_sample((xdata, ydata), weights)
 
+        assert_array_almost_equal(h.data,
+            np.array([[0,1,2,0,0,0,0,0,0,0],
+                      [0,0,0,3,4,0,0,0,0,0],
+                      [0,0,0,0,0,5,0,0,0,0]]))
+
+    def test_copy(self):
+        h = Histogram(3, [0, 3], 10, [0, 10])
+        xdata = [0, 0, 1, 1, 2]
+        ydata = [1, 2, 3, 4, 5]
+        weights = [1, 2, 3, 4, 5]
+        h.fill(xdata, ydata, weights)
+
+        h1 = deepcopy(h)
+        h.isidentical(h1)
+        h1 = copy(h)
+        h.isidentical(h1)
+        h1 = h.copy()
+        h.isidentical(h1)
 
     def test_add(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
 
         h = h1 + 1
+        self.assertEqual(h.data.dtype, np.dtype('int64'))
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [2,3,4])
         assert_array_almost_equal(h.uncert,  np.sqrt([1,2,3]))
 
         h = h1 + [2,3,4]
+        self.assertEqual(h.data.dtype, np.dtype('float64'))
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [3,5,7])
         assert_array_almost_equal(h.uncert,  np.sqrt([1,2,3]))
 
         h = h1 + np.array([2,3,4])
+        self.assertEqual(h.data.dtype, np.dtype('float64'))
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [3,5,7])
         assert_array_almost_equal(h.uncert,  np.sqrt([1,2,3]))
@@ -808,6 +832,7 @@ class TestHistogram(unittest.TestCase):
         h2 = Histogram(3,[0,10],data=[4,5,6])
 
         h = h1 + h2
+        self.assertEqual(h.data.dtype, np.dtype('int64'))
         assert_array_almost_equal(h1.data, [1,2,3])
         assert_array_almost_equal(h.data,  [5,7,9])
         assert_array_almost_equal(h.uncert,  np.sqrt([5,7,9]))
@@ -817,11 +842,13 @@ class TestHistogram(unittest.TestCase):
         h2 = Histogram(5,[0,10],data=[2,3,4,5,6])
 
         h3 = h1 + h2
+        self.assertEqual(h3.data.dtype, np.dtype('int64'))
         assert_array_almost_equal(h3.data,  [0,2,4,6,8])
         assert_array_almost_equal(h3.uncert,  np.sqrt([0,2,4,6,8]))
 
         h1.uncert = h1.uncert
         h3 = h1 + h2
+        self.assertEqual(h3.data.dtype, np.dtype('float64'))
         assert_array_almost_equal(h3.data,  [0,2,4,6,8])
         assert_array_almost_equal(h3.uncert,
                                   [np.nan,np.nan,2,2.44948974,2.82842712])
@@ -853,7 +880,12 @@ class TestHistogram(unittest.TestCase):
         h3 = h1 / h2
         assert_array_equal(h1.data, np.array([1,2,3],dtype=np.int64))
         assert_array_equal(h2.data, np.array([2,1,0],dtype=np.int64))
-        assert_array_almost_equal(h3.data, [0.5,2.0,0.0])
+        assert_array_almost_equal(h3.data, [0.5,2.0,np.inf])
+
+        h1.data[:] = [1,-2,3]
+        h2.data[:] = [1,0,0]
+        h3 = h1 / h2
+        assert_array_almost_equal(h3.data, [1,-np.inf,np.inf])
 
     def test_div_uncert(self):
         h1 = Histogram(3,[0,10],data=[1,2,3],uncert=[1,2,3])
@@ -889,23 +921,23 @@ class TestHistogram(unittest.TestCase):
         h1 = Histogram(3,[0,10],data=[1,2,3])
         h2 = Histogram(3,[0,10],data=[2,1,0])
 
-        h3 = h1.clone(np.float64)
+        h3 = h1.copy(np.float64)
         h3 /= 2
         assert_array_equal(h1.data, np.array([1,2,3],dtype=np.int64))
         assert_array_almost_equal(h3.data,  [0.5,1,1.5])
 
-        h3 = h1.clone()
+        h3 = copy(h1)
         try:
             h3 /= h1
-        except TypeError:
+        except OverflowError:
             assert True
         else:
             assert False
 
-        h3 = h1.clone(np.float64)
+        h3 = h1.copy(np.float64)
         h3 /= h2
         assert_array_equal(h1.data, np.array([1,2,3],dtype=np.int64))
-        assert_array_almost_equal(h3.data,  [0.5,2.0,0.0])
+        assert_array_almost_equal(h3.data,  [0.5,2.0,np.inf])
 
     def test___imul__(self):
         # histogram = Histogram(*axes, **kwargs)
@@ -976,11 +1008,6 @@ class TestHistogram(unittest.TestCase):
     def test_clear_nans(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.clear_nans(val))
-        assert True # TODO: implement your test here
-
-    def test_clone(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.clone(dtype, **kwargs))
         assert True # TODO: implement your test here
 
     def test_cut_1d(self):
