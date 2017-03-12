@@ -1003,7 +1003,7 @@ class Histogram(object):
                     copy_dtype = np.int64
                 else:
                     copy_dtype = np.float64
-            ret = self.copy(copy_dtype)
+            ret = self.copy(copy_dtype, label=None)
             ret += that
             return ret
 
@@ -1024,13 +1024,16 @@ class Histogram(object):
 
     def __rsub__(self, that):
         """Commuting subtraction."""
-        ret = self.copy(self.dtype(that))
-        ret.data = that - ret.data
+        ret = self.copy(np.float64, label=None)
+        ret.data.T[...] = unp.nominal_values(that).T
+        ret._uncert = np.empty(shape=ret.data.shape)
+        ret._uncert.T[...] = unp.std_devs(that).T
+        ret -= self
         return ret
 
     def __sub__(self, that):
         """Subtraction."""
-        ret = self.copy(np.float64)
+        ret = self.copy(np.float64, label=None)
         ret -= that
         return ret
 
@@ -1055,13 +1058,12 @@ class Histogram(object):
 
     def __mul__(self, that):
         """Multiplication."""
-        ret = self.copy(np.float64)
+        ret = self.copy(np.float64, label=None)
         ret *= that
         return ret
 
     def __itruediv__(self, that):
         """In-place (true) division."""
-        olderr = np.seterr(divide='ignore')
         if isinstance(that, Histogram):
             infs = np.isclose(that.data, 0)
             nans = np.isclose(self.data, 0) & infs
@@ -1081,7 +1083,6 @@ class Histogram(object):
             self_data.T[...] /= np.asarray(that).T
             self.data[...] = unp.nominal_values(self_data)
             self.uncert = unp.std_devs(self_data)
-        np.seterr(**olderr)
         return self
 
     def __rtruediv__(self, that):
@@ -1090,11 +1091,10 @@ class Histogram(object):
             that = 1.
             hret = that / hself
         """
-        ret = self.copy(np.float64)
-        that_uarr = unp.uarray(that)
-        ret.data.T[...] = unp.nominal_values(that_uarr).T
+        ret = self.copy(np.float64, label=None)
+        ret.data.T[...] = unp.nominal_values(that).T
         ret._uncert = np.empty(shape=ret.data.shape)
-        ret._uncert.T[...] = unp.std_dev(that_uarr).T
+        ret._uncert.T[...] = unp.std_devs(that).T
         ret /= self
         return ret
 

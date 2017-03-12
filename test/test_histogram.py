@@ -837,6 +837,17 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(h.data,  [5,7,9])
         assert_array_almost_equal(h.uncert,  np.sqrt([5,7,9]))
 
+        h1 = Histogram(3,[0,1],dtype=np.int64)
+        h2 = Histogram(3,[0,1],dtype=np.int32)
+        h = h1 + h2
+        self.assertEqual(h.data.dtype, np.dtype('int64'))
+
+    def test_radd(self):
+        h1 = Histogram(3,[0,1],data=[1,2,3])
+        h = 1 + h1
+        self.assertEqual(h.data.dtype, np.int64)
+        assert_array_equal(h.data, [2,3,4])
+
     def test_add_uncert(self):
         h1 = Histogram(5,[0,10],data=[-2,-1,0,1,2])
         h2 = Histogram(5,[0,10],data=[2,3,4,5,6])
@@ -864,7 +875,81 @@ class TestHistogram(unittest.TestCase):
         self.assertEqual(h3.shape, h1.shape)
         assert_array_almost_equal(h3.data, [[3,4,5],[7,8,9]])
 
-    def test___truediv__(self):
+    def test_iadd(self):
+        h1 = Histogram(3,[0,10],data=[1,2,3])
+
+        h1 += 1
+        assert_array_almost_equal(h1.data, [2,3,4])
+
+        h1 += [2,3,4]
+        assert_array_almost_equal(h1.data, [4,6,8])
+
+        h2 = Histogram(3,[0,10],data=[4,5,6])
+
+        h1 += h2
+        assert_array_almost_equal(h1.data, [8,11,14])
+
+    def test_sub(self):
+        h1 = Histogram(3,[0,10],data=[10,10,10])
+        h2 = Histogram(3,[0,10],data=[ 4, 5, 6])
+        h3 = h1 - h2
+        assert_array_almost_equal(h3.data, [6,5,4])
+
+    def test_isub(self):
+        h1 = Histogram(3,[0,10],data=[1,2,3])
+
+        h1 -= 1
+        assert_array_almost_equal(h1.data, [0,1,2])
+
+        h1 -= [2,3,4]
+        assert_array_almost_equal(h1.data, [-2,-2,-2])
+
+        h1 = Histogram(3,[0,10],data=[10,10,10])
+        h2 = Histogram(3,[0,10],data=[ 4, 5, 6])
+        h1 -= h2
+        assert_array_almost_equal(h1.data, [6,5,4])
+
+    def test_rsub(self):
+        h1 = Histogram(3,[0,10],data=[10,10,10])
+        h3 = [11,12,13] - h1
+        assert_array_almost_equal(h3.data, [1,2,3])
+
+    def test_imul(self):
+        h1 = Histogram(3,[0,10],data=[1,2,3])
+        h1 *= 2.
+        self.assertEqual(h1.data.dtype,np.int64)
+
+        h2 = Histogram(3,[0,10],data=[2,2,3])
+        h1 *= h2
+        assert_array_almost_equal(h1.data, [4, 8, 18])
+
+    def test_mul(self):
+        h1 = Histogram(3,[0,10],data=[1,2,3])
+        h2 = h1 * 2.
+        self.assertEqual(h2.data.dtype,np.float)
+
+        h2 = Histogram(3,[0,10],data=[2,2,3])
+        h3 = h1 * h2
+        assert_array_almost_equal(h3.data, [2,4,9])
+
+    def test_mul_uncert(self):
+        h1 = Histogram(3,[0,10],data=[1,2,3],uncert=[1,2,3])
+        h2 = h1 * 2
+        assert_array_almost_equal(h2.uncert,[2,4,6])
+        h3 = h1 * h2
+        uncrat = np.sqrt((h1.uncert/h1.data)**2 + (h2.uncert/h2.data)**2)
+        assert_array_almost_equal(h3.uncert,uncrat * h3.data)
+
+    def test___rmul__(self):
+        h1 = Histogram(3,[0,10],data=[1,2,3])
+        h2 = 2. * h1
+        self.assertEqual(h2.data.dtype,np.float)
+
+        h1 = Histogram(3,[0,10],data=[10,10,10])
+        h3 = [11,12,13] * h1
+        assert_array_almost_equal(h3.data, [110,120,130])
+
+    def test_truediv(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
         h2 = Histogram(3,[0,10],data=[2,1,0])
 
@@ -895,29 +980,7 @@ class TestHistogram(unittest.TestCase):
         uncrat = np.sqrt((h1.uncert/h1.data)**2 + (h2.uncert/h2.data)**2)
         assert_array_almost_equal(h3.uncert,uncrat * h3.data)
 
-    def test_mul_uncert(self):
-        h1 = Histogram(3,[0,10],data=[1,2,3],uncert=[1,2,3])
-        h2 = h1 * 2
-        assert_array_almost_equal(h2.uncert,[2,4,6])
-        h3 = h1 * h2
-        uncrat = np.sqrt((h1.uncert/h1.data)**2 + (h2.uncert/h2.data)**2)
-        assert_array_almost_equal(h3.uncert,uncrat * h3.data)
-
-    def test___iadd__(self):
-        h1 = Histogram(3,[0,10],data=[1,2,3])
-
-        h1 += 1
-        assert_array_almost_equal(h1.data, [2,3,4])
-
-        h1 += [2,3,4]
-        assert_array_almost_equal(h1.data, [4,6,8])
-
-        h2 = Histogram(3,[0,10],data=[4,5,6])
-
-        h1 += h2
-        assert_array_almost_equal(h1.data, [8,11,14])
-
-    def test___itruediv__(self):
+    def test_itruediv(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
         h2 = Histogram(3,[0,10],data=[2,1,0])
 
@@ -939,76 +1002,10 @@ class TestHistogram(unittest.TestCase):
         assert_array_equal(h1.data, np.array([1,2,3],dtype=np.int64))
         assert_array_almost_equal(h3.data,  [0.5,2.0,np.inf])
 
-    def test___imul__(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.__imul__(that))
-        assert True # TODO: implement your test here
-
-    def test___isub__(self):
+    def test_rtruediv(self):
         h1 = Histogram(3,[0,10],data=[1,2,3])
-
-        h1 -= 1
-        assert_array_almost_equal(h1.data, [0,1,2])
-
-        h1 -= [2,3,4]
-        assert_array_almost_equal(h1.data, [-2,-2,-2])
-
-        h1 = Histogram(3,[0,10],data=[10,10,10])
-        h2 = Histogram(3,[0,10],data=[ 4, 5, 6])
-        h1 -= h2
-        assert_array_almost_equal(h1.data, [6,5,4])
-
-    def test___mul__(self):
-        h1 = Histogram(3,[0,10],data=[1,2,3])
-
-        h2 = h1 * 2.
-        self.assertEqual(h2.data.dtype,np.float)
-
-    def test___radd__(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.__radd__(that))
-        assert True # TODO: implement your test here
-
-    def test___rtruediv__(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.__rtruediv__(that))
-        assert True # TODO: implement your test here
-
-    def test___rmul__(self):
-        h1 = Histogram(3,[0,10],data=[1,2,3])
-
-        h2 = 2. * h1
-        self.assertEqual(h2.data.dtype,np.float)
-
-    def test___rsub__(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.__rsub__(that))
-        assert True # TODO: implement your test here
-
-    def test___sub__(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.__sub__(that))
-        assert True # TODO: implement your test here
-
-    def test_added_uncert(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.added_uncert(that, nans))
-        assert True # TODO: implement your test here
-
-    def test_added_uncert_ratio(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.added_uncert_ratio(that, nans))
-        assert True # TODO: implement your test here
-
-    def test_aspolygon(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.aspolygon(ymin, range))
-        assert True # TODO: implement your test here
-
-    def test_clear_nans(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.clear_nans(val))
-        assert True # TODO: implement your test here
+        h = 2 / h1
+        assert_array_almost_equal(h.data, [2.0, 1.0, 0.666666666667])
 
     def test_cut_1d(self):
         h1 = Histogram(100,[0,10])
@@ -1055,11 +1052,6 @@ class TestHistogram(unittest.TestCase):
     def test_cut_data(self):
         # histogram = Histogram(*axes, **kwargs)
         # self.assertEqual(expected, histogram.cut_data(*range, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_dtype(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.dtype(that, div))
         assert True # TODO: implement your test here
 
     def test_fit(self):
