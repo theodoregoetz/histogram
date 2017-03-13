@@ -694,7 +694,7 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(h.uncert, [6,6,6])
 
         h = Histogram(3,[0,10],4,[0,10])
-        h.set(np.ones(shape=(3,4)), np.full((3,4), 5))
+        h.set(np.ones(shape=(3,4)), np.full((3,4), 5, dtype=np.float64))
         assert_array_almost_equal(h[:,0], [1,1,1])
         assert_array_almost_equal(h[0,:], [1,1,1,1])
         assert_array_almost_equal(h.uncert[:,0], [5,5,5])
@@ -1007,6 +1007,90 @@ class TestHistogram(unittest.TestCase):
         h = 2 / h1
         assert_array_almost_equal(h.data, [2.0, 1.0, 0.666666666667])
 
+    def test_interpolate_nonfinites_1d(self):
+        h = Histogram(5,[0,1],data=[1,2,np.nan,4,5],dtype=np.float64)
+        h.interpolate_nonfinites()
+        assert_array_almost_equal(h.data, [1,2,3,4,5])
+
+        h[2] = np.inf
+        h.interpolate_nonfinites()
+        assert_array_almost_equal(h.data, [1,2,3,4,5])
+
+        h.uncert = h.uncert
+        h.uncert[2] = np.nan
+        h.interpolate_nonfinites()
+        assert_array_almost_equal(h.data, [1,2,3,4,5])
+
+        h.uncert[2] = np.inf
+        h.interpolate_nonfinites()
+        assert_array_almost_equal(h.data, [1,2,3,4,5])
+
+    def test_interpolate_nonfinites_2d(self):
+        h = Histogram(3,[0,1],5,[0,1],dtype=np.float)
+        data = [[1,2,3,4,5],
+                [2,3,4,5,6],
+                [3,4,5,6,7]]
+        h[:] = data[:]
+        h[1,1] = np.nan
+        h[1,3] = np.inf
+        h.interpolate_nonfinites()
+        assert_array_almost_equal(h.data, data)
+
+    def test_smooth_1d(self):
+        h = Histogram(5,[0,1],data=[1,2,100,4,5])
+        h.smooth()
+        self.assertEqual(h.data.dtype, np.dtype('float64'))
+        assert_array_almost_equal(h.data,
+            [3.800462, 13.767176, 70.848758, 15.704054, 7.436677])
+
+        h[:] = [1,2,100,4,5]
+        h.uncert = h.data
+        h.smooth(1)
+        self.assertEqual(h.data.dtype, np.dtype('float64'))
+        assert_array_almost_equal(h.data,
+             [  6.600924,  25.534353,  41.697517,  27.408108,   9.873355])
+        assert_array_almost_equal(h.uncert,
+             [  6.600924,  25.534353,  41.697517,  27.408108,   9.873355])
+
+        h[:] = [1,2,100,4,5]
+        h.smooth(0)
+        self.assertEqual(h.data.dtype, np.dtype('float64'))
+        assert_array_almost_equal(h.data, [1,2,100,4,5])
+
+    def test_smooth_2d(self):
+        h = Histogram(3,[0,1],5,[0,1])
+        data = [[1,2,3,4,5],
+                [2,3,4,5,6],
+                [3,4,5,6,7]]
+        h[:] = data[:]
+        h[1,1] -= 3
+        h[1,3] += 3
+        h.uncert = h.data
+        h.smooth()
+        assert_array_almost_equal(
+            h.data,
+            [[ 1.275218,  2.085901,  3.179543,  4.273184,  5.083867],
+             [ 2.039745,  1.325137,  4.      ,  6.674863,  5.960255],
+             [ 2.916133,  3.726816,  4.820457,  5.914099,  6.724782]])
+        assert_array_almost_equal(
+            h.uncert,
+            [[ 1.275218,  2.085901,  3.179543,  4.273184,  5.083867],
+             [ 2.039745,  1.325137,  4.      ,  6.674863,  5.960255],
+             [ 2.916133,  3.726816,  4.820457,  5.914099,  6.724782]])
+
+        data = [[1,2,3,4,5],
+                [2,3,4,5,6],
+                [3,4,5,6,7]]
+        h[:] = data[:]
+        h[1,1] -= 3
+        h[1,3] += 3
+        h.smooth(1)
+        assert_array_almost_equal(
+            h.data,
+            [[ 1.550436,  2.171802,  3.359085,  4.546368,  5.167734],
+             [ 2.07949 ,  2.650273,  4.      ,  5.349727,  5.92051 ],
+             [ 2.832266,  3.453632,  4.640915,  5.828198,  6.449564]])
+
     def test_cut_1d(self):
         h1 = Histogram(100,[0,10])
 
@@ -1049,51 +1133,11 @@ class TestHistogram(unittest.TestCase):
         #h3a = h3.cut(-30,30,axis=0)
         h3b = h3.cut(270,330,axis=0)
 
-    def test_cut_data(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.cut_data(*range, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_fit(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.fit(fcn, p0, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_fit_signal(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.fit_signal(fcn_sig, fcn_bkg, p0, npsig, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_fit_slices(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.fit_slices(axis, *args, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_fit_slices_signal(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.fit_slices_signal(axis, *args, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_interpolate_nans(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.interpolate_nans(**kwargs))
-        assert True # TODO: implement your test here
-
     def test_occupancy(self):
         h = Histogram(10,[0,10])
         h.fill([1,1,1,2,2,2,3])
         hocc = h.occupancy(4,[-0.5,3.5])
         assert_array_almost_equal(hocc.data, [7,1,0,2])
-
-    def test_profile(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.profile(axis, fnsig, fnbkg, npsig, p0, cut, rebin, fnprof, p0prof, **kwargs))
-        assert True # TODO: implement your test here
-
-    def test_profile_gauss(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.profile_gauss(mean, width, axis, npar, **kwargs))
-        assert True # TODO: implement your test here
 
     def test_rebin(self):
         h = Histogram(10,[0,10])
@@ -1103,27 +1147,6 @@ class TestHistogram(unittest.TestCase):
         hrebin = h.rebin(2)
         assert_array_almost_equal(hrebin.data, hexpect.data)
         assert_array_almost_equal(hrebin.axes[0].edges, hexpect.axes[0].edges)
-
-    def test_slices(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.slices(axis))
-        assert True # TODO: implement your test here
-
-    def test_slices_data(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.slices_data(axis))
-        assert True # TODO: implement your test here
-
-    def test_slices_uncert(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.slices_uncert(axis))
-        assert True # TODO: implement your test here
-
-    def test_smooth(self):
-        # histogram = Histogram(*axes, **kwargs)
-        # self.assertEqual(expected, histogram.smooth(weight))
-        assert True # TODO: implement your test here
-
 
 
 if __name__ == '__main__':

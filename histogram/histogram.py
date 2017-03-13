@@ -1,8 +1,10 @@
 from __future__ import division, print_function
 
-from collections import Iterable
-from copy import copy, deepcopy
+import collections
 import itertools as it
+import numbers
+
+from copy import copy, deepcopy
 from warnings import warn
 
 import numpy as np
@@ -745,7 +747,7 @@ class Histogram(object):
             else:
                 ext += [np.nanmin(self.data), np.nanmax(self.data)]
         if pad is not None:
-            if not isinstance(pad, Iterable):
+            if not isinstance(pad, collections.Iterable):
                 pad = [pad]*(2*maxdim)
             for dim in range(maxdim):
                 a, b = 2*dim, 2*dim+1
@@ -1120,31 +1122,31 @@ class Histogram(object):
         or ``inf``.
 
         """
-        finite = np.isfinite(self.data).ravel()
-        if self.has_uncert:
-            finite &= np.isfinite(self.uncert).ravel()
-        if not all(finite):
-            g = self.grid()
-            points = np.vstack(g).reshape(self.dim, -1).T
-            values = self.data.ravel()
-            self.data[...] = interpolate.griddata(
-                points[finite],
-                values[finite],
-                points,
-                method=method,
-                **kwargs).reshape(self.shape)
+        if not issubclass(self.data.dtype.type, numbers.Integral):
+            finite = np.isfinite(self.data).ravel()
             if self.has_uncert:
-                values = self.uncert.ravel()
-                self.uncert[...] = interpolate.griddata(
+                finite &= np.isfinite(self.uncert).ravel()
+            if not all(finite):
+                g = self.grid()
+                points = np.vstack(g).reshape(self.dim, -1).T
+                values = self.data.ravel()
+                self.data[...] = interpolate.griddata(
                     points[finite],
                     values[finite],
                     points,
                     method=method,
                     **kwargs).reshape(self.shape)
-        return self
+                if self.has_uncert:
+                    values = self.uncert.ravel()
+                    self.uncert[...] = interpolate.griddata(
+                        points[finite],
+                        values[finite],
+                        points,
+                        method=method,
+                        **kwargs).reshape(self.shape)
 
     def smooth(self, weight=0.5, sigma=1, mode='nearest', **kwargs):
-        """Create a new smoothed histogram using a Gaussian filter.
+        """ histogram using a Gaussian filter.
 
         Keyword Args:
 
@@ -1160,16 +1162,19 @@ class Histogram(object):
 
         All non-finite bins are filled using
         :py:meth:`Histogram.interpolate_nans` before the Gaussian filter is
-        applied.
+        applied. If the underlying data is of integral type, it will be
+        converted to `numpy.float64` before the filter is applied.
         """
-        hnew = self.copy(np.float64)
-        hnew.interpolate_nans()
-        Zf = ndimage.filters.gaussian_filter(hnew.data, sigma=sigma, mode=mode, **kwargs)
-        hnew.data   = weight*Zf + (1.-weight)*hnew.data
-        if hnew.has_uncert:
-            Uf = ndimage.filters.gaussian_filter(hnew.uncert, sigma=sigma, mode=mode, **kwargs)
-            hnew.uncert = weight*Uf + (1.-weight)*hnew.uncert
-        return hnew
+        self.interpolate_nonfinites()
+        if issubclass(self.data.dtype.type, numbers.Integral):
+            self._data = self.data.astype(np.float64)
+        Zf = ndimage.filters.gaussian_filter(self.data, sigma=sigma, mode=mode,
+                                             **kwargs)
+        self.data   = weight * Zf + (1. - weight) * self.data
+        if self.has_uncert:
+            Uf = ndimage.filters.gaussian_filter(self.uncert, sigma=sigma,
+                                                 mode=mode, **kwargs)
+            self.uncert = weight * Uf + (1. - weight) * self.uncert
 
 ### slicing and shape changing
     def slices(self, axis=0):

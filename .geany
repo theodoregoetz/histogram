@@ -19,9 +19,9 @@ indent_mode=2
 
 [project]
 name=histogram
-base_path=.
+base_path=/home/john/local/src/histogram
 description=
-file_patterns=*.py;*.ini;.coverage;.gitignore;.hgignore;.travis.yml;*.rst;
+file_patterns=*.py;*.ini;.coverage;.gitignore;.hgignore;.travis.yml;*.rst;*.y*ml;*.txt;
 
 [long line marker]
 long_line_behaviour=1
@@ -37,7 +37,7 @@ external_dirs=
 
 [build-menu]
 NF_01_LB=test module
-NF_01_CM=/home/goetz/local/scripts/myscripts/cnose 
+NF_01_CM=$HOME/local/scripts/myscripts/cnose 
 NF_01_WD=%p
 NF_02_LB=Make _Object
 NF_02_CM=make %e.o
@@ -46,6 +46,9 @@ EX_00_LB=_Execute
 EX_00_CM=python "%f"
 EX_00_WD=
 PythonFT_00_LB=_Test
-PythonFT_00_CM=/home/goetz/local/scripts/myscripts/cnose histogram test
+PythonFT_00_CM=$HOME/local/scripts/myscripts/cnose histogram test
 PythonFT_00_WD=%p
 filetypes=Python;
+PythonFT_01_LB=
+PythonFT_01_CM=
+PythonFT_01_WD=
