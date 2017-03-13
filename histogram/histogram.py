@@ -1105,61 +1105,70 @@ class Histogram(object):
         return ret
 
 ### interpolating and smoothing
-    def interpolate_nans(self, method='cubic', **kwargs):
-        """Replace non-finite bins with interpolated values
+    def interpolate_nonfinites(self, method='cubic', **kwargs):
+        """Replace non-finite bins with interpolated values.
 
         Keyword Args:
 
-            method (str): passed directly to :py:func:`scipy.interpolate.griddata` and controls the method of interpolation used.
+            method (str): passed directly to
+                :py:func:`scipy.interpolate.griddata` and controls the method
+                of interpolation used.
             **kwargs: Passed directly to :py:func:`scipy.interpolate.griddata`.
 
-        This modifies the histogram, changing the data in-place. Bins are considered non-finite if the filled value or the uncertainty is ``nan`` or ``inf``.
+        This modifies the histogram, changing the data in-place. Bins are
+        considered non-finite if the filled value or the uncertainty is ``nan``
+        or ``inf``.
+
         """
         finite = np.isfinite(self.data).ravel()
-        if self.uncert is not None:
+        if self.has_uncert:
             finite &= np.isfinite(self.uncert).ravel()
-
         if not all(finite):
-            g = self.grid
+            g = self.grid()
             points = np.vstack(g).reshape(self.dim, -1).T
-
             values = self.data.ravel()
-
             self.data[...] = interpolate.griddata(
                 points[finite],
                 values[finite],
                 points,
+                method=method,
                 **kwargs).reshape(self.shape)
-
-            if self.uncert is not None:
+            if self.has_uncert:
                 values = self.uncert.ravel()
                 self.uncert[...] = interpolate.griddata(
                     points[finite],
                     values[finite],
                     points,
+                    method=method,
                     **kwargs).reshape(self.shape)
-
         return self
 
-    def smooth(self, weight=0.5, mode='nearest'):
-        """Create a new smoothed histogram using a Gaussian filter
+    def smooth(self, weight=0.5, sigma=1, mode='nearest', **kwargs):
+        """Create a new smoothed histogram using a Gaussian filter.
 
         Keyword Args:
 
-            weight (float [0, 1]): Linear weighting for Gaussian filter. A value of 1 will replace the data with the actual result from :py:func:`scipy.ndimage.filters.gaussian_filter`.
-            mode (str): Passed directly to :py:func:`scipy.ndimage.filters.gaussian_filter`.
+            weight (float [0, 1]): Linear weighting for Gaussian filter. A
+                value of 1 will replace the data with the actual result from
+                :py:func:`scipy.ndimage.filters.gaussian_filter`.
+            sigma (float or sequence of floats): Passed directly to
+                :py:func:`scipy.ndimage.filters.gaussian_filter`.
+            mode (str): Passed directly to
+                :py:func:`scipy.ndimage.filters.gaussian_filter`.
+            **kwargs: Passed directly to
+                :py:func:`scipy.ndimage.filters.gaussian_filter`.
 
-        All non-finite bins are filled using :py:meth:`Histogram.interpolate_nans` before the Gaussian filter is applied.
+        All non-finite bins are filled using
+        :py:meth:`Histogram.interpolate_nans` before the Gaussian filter is
+        applied.
         """
-        hnew = self.copy().interpolate_nans()
-
-        Zf = ndimage.filters.gaussian_filter(hnew.data, 1, mode=mode)
+        hnew = self.copy(np.float64)
+        hnew.interpolate_nans()
+        Zf = ndimage.filters.gaussian_filter(hnew.data, sigma=sigma, mode=mode, **kwargs)
         hnew.data   = weight*Zf + (1.-weight)*hnew.data
-
-        if hnew.uncert is not None:
-            Uf = ndimage.filters.gaussian_filter(hnew.uncert, 1, mode=mode)
+        if hnew.has_uncert:
+            Uf = ndimage.filters.gaussian_filter(hnew.uncert, sigma=sigma, mode=mode, **kwargs)
             hnew.uncert = weight*Uf + (1.-weight)*hnew.uncert
-
         return hnew
 
 ### slicing and shape changing
