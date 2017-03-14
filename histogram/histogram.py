@@ -1194,20 +1194,23 @@ class Histogram(object):
             uncert_slices = [None]*self.dim
         for d, u in zip(self.slices_data(axis), uncert_slices):
             yield Histogram(
-                *[copy(a) for i, a in enumerate(self.axes) if i != axis],
-                data = copy(d),
-                uncert = copy(u),
-                title = copy(self.title),
-                label = copy(self.label))
+                *[a for i, a in enumerate(self.axes) if i != axis],
+                data=d,
+                uncert=u,
+                title=self.title,
+                label=self.label)
 
     def rebin(self, nbins=2, axis=0, snap='low', clip=True):
-        """Create new histogram with merged bins
+        """Create a new histogram with merged bins.
 
         Keyword Args:
-            nbins (int): Number of bins to merge
-            axis (int): Axis along which to merge bins
-            snap (str): Controls edge behavior if `nbins` does not even divide the number of bins in this `axis`.
-            clip (bool): Wether or not to include the non-uniform bin in the case the `bins` does not evenly divide the number of bins in this `axis`.
+            nbins (int): Number of bins to merge.
+            axis (int): Axis along which to merge bins.
+            snap (str): Controls edge behavior if `nbins` does not evenly
+                divide the number of bins in this `axis`.
+            clip (bool): Wether or not to include the non-uniform bin in the
+                case that `bins` does not evenly divide the number of bins in
+                this `axis`.
         """
         if not hasattr(nbins, '__iter__'):
             ones = [1]*self.dim
@@ -1216,8 +1219,9 @@ class Histogram(object):
         if not hasattr(clip, '__iter__'):
             clip = [clip for _ in range(self.dim)]
 
+        # need to handle uncertainty using uncertainties module here
         def _rebin(x, nbins, clip):
-            xx = x.copy()
+            xx = copy(x)
             for i, (n, c) in enumerate(zip(nbins, clip)):
                 if n > 1:
                     xx = np.rollaxis(xx, i, 0)
@@ -1233,13 +1237,13 @@ class Histogram(object):
                             shp[0] = shp[0] + r
                         xx.resize(shp)
                     xx = xx.sum(1)
-                    xx = np.rollaxis(xx, 0, i+1)
+                    xx = np.rollaxis(xx, 0, i + 1)
             return xx
 
         axnew = [ax.mergebins(n, snap, clip) for ax, n in zip(self.axes, nbins)]
 
         hnew = Histogram(*axnew,
-            data = _rebin(self.data, nbins, clip),
+            data=_rebin(self.data, nbins, clip),
             title=self.title,
             label=self.label)
 
