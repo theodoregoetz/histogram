@@ -184,8 +184,8 @@ class HistogramAxis(object):
         cls = self.__class__
         newaxis = cls.__new__(cls)
         memo[id(self)] = newaxis
-        newaxis.edges = deepcopy(self.edges, memo)
-        newaxis.label = deepcopy(self.label, memo)
+        newaxis._edges = deepcopy(self.edges, memo)
+        newaxis._label = deepcopy(self.label, memo)
         return newaxis
 
     def __copy__(self):

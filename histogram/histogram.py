@@ -1177,41 +1177,28 @@ class Histogram(object):
             self.uncert = weight * Uf + (1. - weight) * self.uncert
 
 ### slicing and shape changing
-    def slices(self, axis=0):
-        """Generator of histograms along specified axis"""
-        axes = []
-        for i in range(self.dim):
-            if i != axis:
-                axes.append(self.axes[i])
-
-        data_slices = self.slices_data(axis)
-        uncert_slices = self.slices_uncert(axis)
-
-        for d, u in zip(data_slices, uncert_slices):
-            yield Histogram(
-                *axes,
-                data = d,
-                uncert = u,
-                title = copy(self.title),
-                label = copy(self.label))
-
     def slices_data(self, axis=0):
-        """Iterable over the data along specified axis"""
-        if axis == 0:
-            return self.data
-        else:
-            return np.rollaxis(self.data, axis)
+        """Iterable over the data along specified axis."""
+        return np.rollaxis(self.data, axis)
 
     def slices_uncert(self, axis=0):
-        """Iterable over the uncertainty along specified axis
+        """Iterable over the uncertainty along specified axis."""
+        uncert = self.uncert
+        return np.rollaxis(uncert, axis)
 
-        This will assume Poisson statistics if ``uncert is None``."""
-        if self.uncert is None:
-            self.uncert = np.sqrt(self.data)
-        if axis == 0:
-            return self.uncert
+    def slices(self, axis=0):
+        """Generator of histograms along specified axis."""
+        if self.has_uncert:
+            uncert_slices = self.slices_uncert(axis)
         else:
-            return np.rollaxis(self.uncert, axis)
+            uncert_slices = [None]*self.dim
+        for d, u in zip(self.slices_data(axis), uncert_slices):
+            yield Histogram(
+                *[copy(a) for i, a in enumerate(self.axes) if i != axis],
+                data = copy(d),
+                uncert = copy(u),
+                title = copy(self.title),
+                label = copy(self.label))
 
     def rebin(self, nbins=2, axis=0, snap='low', clip=True):
         """Create new histogram with merged bins

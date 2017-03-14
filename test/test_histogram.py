@@ -1091,6 +1091,57 @@ class TestHistogram(unittest.TestCase):
              [ 2.07949 ,  2.650273,  4.      ,  5.349727,  5.92051 ],
              [ 2.832266,  3.453632,  4.640915,  5.828198,  6.449564]])
 
+    def test_slices_data(self):
+        h = Histogram(3,[0,1],5,[0,1])
+        h.data = [[1,2,3,4,5],
+                  [2,3,4,5,6],
+                  [3,4,5,6,7]]
+        xslices = list(h.slices_data(0))
+        yslices = list(h.slices_data(1))
+        assert_array_equal(xslices, h.data)
+        assert_array_equal(yslices, h.data.T)
+
+    def test_slices_uncert(self):
+        h = Histogram(3,[0,1],5,[0,1])
+        h.uncert = [[1,2,3,4,5],
+                  [2,3,4,5,6],
+                  [3,4,5,6,7]]
+        xslices = list(h.slices_uncert(0))
+        yslices = list(h.slices_uncert(1))
+        assert_array_equal(xslices, h.uncert)
+        assert_array_equal(yslices, h.uncert.T)
+
+    def test_slices(self):
+        h = Histogram(3,[0,1],5,[0,1],'y','data')
+        h.data = [[1,2,3,4,5],
+                  [2,3,4,5,6],
+                  [3,4,5,6,7]]
+        itr = h.slices(0)
+        hs = next(itr)
+        hexpect = Histogram(5,[0,1],'y','data',data=[1,2,3,4,5])
+        self.assertTrue(hs.isidentical(hexpect))
+
+        hs = next(itr)
+        hexpect = Histogram(5,[0,1],'y','data',data=[2,3,4,5,6])
+        self.assertTrue(hs.isidentical(hexpect))
+
+        itr = h.slices(1)
+        hs = next(itr)
+        hexpect = Histogram((3,[0,1]),'data',data=[1,2,3])
+        self.assertTrue(hs.isidentical(hexpect))
+
+        hs = next(itr)
+        hexpect = Histogram((3,[0,1]),'data',data=[2,3,4])
+        self.assertTrue(hs.isidentical(hexpect))
+
+        h.uncert = h.uncert
+        itr = h.slices(1)
+        hs = next(itr)
+        hs = next(itr)
+        hexpect = Histogram((3,[0,1]),'data',data=[2,3,4],
+                            uncert=np.sqrt([2,3,4]))
+        self.assertTrue(hs.isidentical(hexpect))
+
     def test_cut_1d(self):
         h1 = Histogram(100,[0,10])
 

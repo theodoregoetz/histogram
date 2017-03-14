@@ -19,9 +19,9 @@ indent_mode=2
 
 [project]
 name=histogram
-base_path=/home/john/local/src/histogram
+base_path=.
 description=
-file_patterns=*.py;*.ini;.coverage;.gitignore;.hgignore;.travis.yml;*.rst;*.y*ml;*.txt;
+file_patterns=*.py;*.ini;*.rst;*.y*ml;.gitignore;.hgignore;
 
 [long line marker]
 long_line_behaviour=1
