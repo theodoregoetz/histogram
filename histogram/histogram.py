@@ -790,17 +790,20 @@ class Histogram(object):
     def set(self, val, uncert=None):
         """Set filled data to specific values.
 
-        This will set the uncertainty to ``None`` by default and will accept a single value or an array the same shape as the data. Data will be cast to the data type already stored in the histogram.
+        This will set the uncertainty to ``None`` by default and will accept a
+        single value or an array the same shape as the data. Data will be cast
+        to the data type already stored in the histogram.
         """
         if isinstance(val, np.ndarray):
             self.data.T[...] = val.T
         else:
             self.data[...] = val
 
-        if not self.has_uncert:
-            self._uncert = np.empty(self.data.shape)
-
-        if uncert is not None:
+        if uncert is None:
+            del self.uncert
+        else:
+            if not self.has_uncert:
+                self._uncert = np.empty(self.data.shape)
             if isinstance(uncert, np.ndarray):
                 self.uncert.T[...] = uncert.T
             else:
@@ -1212,47 +1215,48 @@ class Histogram(object):
                 case that `bins` does not evenly divide the number of bins in
                 this `axis`.
         """
-        if not hasattr(nbins, '__iter__'):
+        if not isinstance(nbins, collections.Iterable):
             ones = [1]*self.dim
             ones[axis] = nbins
             nbins = ones
-        if not hasattr(clip, '__iter__'):
+        if not isinstance(clip, collections.Iterable):
             clip = [clip for _ in range(self.dim)]
 
-        # need to handle uncertainty using uncertainties module here
-        def _rebin(x, nbins, clip):
-            xx = copy(x)
-            for i, (n, c) in enumerate(zip(nbins, clip)):
-                if n > 1:
-                    xx = np.rollaxis(xx, i, 0)
-                    a = xx.shape[0]
-                    d, r = divmod(a, n)
-                    shp = [d, n]
-                    if len(xx.shape) > 1:
-                        shp += list(xx.shape[1:])
-                    if r == 0:
-                        xx = xx.reshape(shp)
-                    else:
-                        if not c:
-                            shp[0] = shp[0] + r
-                        xx.resize(shp)
-                    xx = xx.sum(1)
-                    xx = np.rollaxis(xx, 0, i + 1)
-            return xx
+        axnew = [ax.mergebins(n, snap, c)
+                 for ax, n, c in zip(self.axes, nbins, clip)]
 
-        axnew = [ax.mergebins(n, snap, clip) for ax, n in zip(self.axes, nbins)]
+        if self.has_uncert:
+            x = unp.uarray(self.data.astype(np.float64), copy(self.uncert))
+        else:
+            x = self.data.copy()
 
-        hnew = Histogram(*axnew,
-            data=_rebin(self.data, nbins, clip),
-            title=self.title,
-            label=self.label)
+        for i, (n, c) in enumerate(zip(nbins, clip)):
+            if n > 1:
+                x = np.rollaxis(x, i, 0)
+                a = x.shape[0]
+                d, r = divmod(a, n)
+                shp = [d, n]
+                if len(x.shape) > 1:
+                    shp += list(x.shape[1:])
+                if r == 0:
+                    x = x.reshape(shp)
+                else:
+                    if not c:
+                        shp[0] = shp[0] + r
+                        x = np.concatenate(([0]*(n - r), x))
+                    x = np.resize(x, shp)
+                x = x.sum(1)
+                x = np.rollaxis(x, 0, i + 1)
 
-        if self.uncert is not None:
-            unc_ratio_sq = (self.uncert / self.data)**2
-            unc_ratio_sq = _rebin(unc_ratio_sq, nbins, clip)
-            hnew.uncert = np.sqrt(unc_ratio_sq) * hnew.data
+        if self.has_uncert:
+            data = unp.nominal_values(x)
+            uncert = unp.std_devs(x)
+        else:
+            data = x
+            uncert = None
 
-        return hnew
+        return Histogram(*axnew, title=self.title, label=self.label,
+                         data=data, uncert=uncert)
 
     def cut(self, *args, **kwargs):
         """Truncate a histogram along one or more axes.

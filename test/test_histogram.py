@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 from __future__ import division
 
 from copy import copy, deepcopy
@@ -1104,8 +1104,8 @@ class TestHistogram(unittest.TestCase):
     def test_slices_uncert(self):
         h = Histogram(3,[0,1],5,[0,1])
         h.uncert = [[1,2,3,4,5],
-                  [2,3,4,5,6],
-                  [3,4,5,6,7]]
+                    [2,3,4,5,6],
+                    [3,4,5,6,7]]
         xslices = list(h.slices_uncert(0))
         yslices = list(h.slices_uncert(1))
         assert_array_equal(xslices, h.uncert)
@@ -1141,6 +1141,42 @@ class TestHistogram(unittest.TestCase):
         hexpect = Histogram((3,[0,1]),'data',data=[2,3,4],
                             uncert=np.sqrt([2,3,4]))
         self.assertTrue(hs.isidentical(hexpect))
+
+    def test_rebin_1d(self):
+        h = Histogram(10,[0,10])
+        h.set(1)
+        hexpect = Histogram(5,[0,10])
+        hexpect.set(2)
+        self.assertFalse(h.has_uncert)
+        hrebin = h.rebin(2)
+
+        self.assertTrue(hrebin.isidentical(hexpect))
+        assert_array_almost_equal(hrebin.data, hexpect.data)
+        assert_array_almost_equal(hrebin.axes[0].edges, hexpect.axes[0].edges)
+
+        hexpect = Histogram(3,[0,9])
+        hexpect.set(3)
+        hrebin = h.rebin(3)
+        self.assertTrue(hrebin.isidentical(hexpect))
+
+        hexpect = Histogram(3,[1,10])
+        hexpect.set(3)
+        hrebin = h.rebin(3, snap='high')
+        self.assertTrue(hrebin.isidentical(hexpect))
+
+        hexpect = Histogram([0,1,4,7,10])
+        hexpect.data = [1,3,3,3]
+        hrebin = h.rebin(3, snap='high', clip=False)
+        self.assertTrue(hrebin.isidentical(hexpect))
+
+    def test_rebin_2d(self):
+        h = Histogram(3,[0,1],6,[0,1])
+        h.set(1)
+
+        hexpect = Histogram(3,[0,1],2,[0,1])
+        hexpect.set(3)
+        hrebin = h.rebin(3, 1)
+        self.assertTrue(hrebin.isidentical(hexpect))
 
     def test_cut_1d(self):
         h1 = Histogram(100,[0,10])
@@ -1189,15 +1225,6 @@ class TestHistogram(unittest.TestCase):
         h.fill([1,1,1,2,2,2,3])
         hocc = h.occupancy(4,[-0.5,3.5])
         assert_array_almost_equal(hocc.data, [7,1,0,2])
-
-    def test_rebin(self):
-        h = Histogram(10,[0,10])
-        h.set(1)
-        hexpect = Histogram(5,[0,10])
-        hexpect.set(2)
-        hrebin = h.rebin(2)
-        assert_array_almost_equal(hrebin.data, hexpect.data)
-        assert_array_almost_equal(hrebin.axes[0].edges, hexpect.axes[0].edges)
 
 
 if __name__ == '__main__':
