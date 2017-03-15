@@ -1170,13 +1170,34 @@ class TestHistogram(unittest.TestCase):
         self.assertTrue(hrebin.isidentical(hexpect))
 
     def test_rebin_2d(self):
-        h = Histogram(3,[0,1],6,[0,1])
+        h = Histogram(3,[0,3],6,[0,6])
         h.set(1)
 
-        hexpect = Histogram(3,[0,1],2,[0,1])
+        hexpect = Histogram(3,[0,3],2,[0,6])
         hexpect.set(3)
         hrebin = h.rebin(3, 1)
         self.assertTrue(hrebin.isidentical(hexpect))
+
+        hexpect = Histogram(1,[0,3],6,[0,6])
+        hexpect.set(3)
+        hrebin = h.rebin(3)
+        self.assertTrue(hrebin.isidentical(hexpect))
+
+        hexpect = Histogram(1,[0,2],6,[0,6])
+        hexpect.data = [[2,2,2,2,2,2]]
+        hrebin = h.rebin(2)
+        self.assertTrue(hrebin.isidentical(hexpect))
+
+        hexpect = Histogram(1,[1,3],6,[0,6])
+        hexpect.data = [[2,2,2,2,2,2]]
+        hrebin = h.rebin(2, snap='high')
+        self.assertTrue(hrebin.isidentical(hexpect))
+
+        #hexpect = Histogram([0,1,3],6,[0,6])
+        #hexpect.data = [[1,1,1,1,1,1],[2,2,2,2,2,2]]
+        #hrebin = h.rebin(2, snap='high', clip=False)
+        #self.assertTrue(hrebin.isidentical(hexpect))
+
 
     def test_cut_1d(self):
         h1 = Histogram(100,[0,10])
