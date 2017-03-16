@@ -1243,7 +1243,11 @@ class Histogram(object):
                 else:
                     if not c:
                         shp[0] = shp[0] + r
-                        x = np.concatenate(([0]*(n - r), x))
+                        zeros = np.zeros([n - r] + list(x.shape[1:]))
+                        if snap == 'low':
+                            x = np.concatenate((x, zeros))
+                        else:
+                            x = np.concatenate((zeros, x))
                     x = np.resize(x, shp)
                 x = x.sum(1)
                 x = np.rollaxis(x, 0, i + 1)
@@ -1304,10 +1308,10 @@ class Histogram(object):
         axis = kwargs.pop('axis', None)
         rng = []
         for a in args:
-            if hasattr(a, '__iter__'):
-                if (len(rng) % 2) == 1:
-                    rng += [None]
+            if isinstance(a, collections.Iterable):
                 rng += a
+                if len(a)== 1:
+                    rng += [None]
             else:
                 rng += [a]
         if (len(rng) % 2) == 1:
@@ -1335,19 +1339,6 @@ class Histogram(object):
                 newdata = newdata.take(indices, i)
                 if newuncert is not None:
                     newuncert = newuncert.take(indices, i)
-
-        """ DEBUG
-            print('\n')
-            print('args:', args)
-            print('oldedges:')
-            for a in self.axes:
-                print('    ', len(a.edges), a.edges)
-            print('newedges:')
-            for a in newaxes:
-                print('    ', len(a.edges), a.edges)
-            print('olddata shape:', self.data.shape)
-            print('newdata shape:', newdata.shape)
-        """
 
         return Histogram(*newaxes,
             data = newdata,

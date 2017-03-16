@@ -223,6 +223,10 @@ class TestHistogram(unittest.TestCase):
             ' 3.0], label="x"), data=[1, 2, 3], dtype="int64", label="l",'
             ' title="t", uncert=[0.0, 1.0, 2.0])')
 
+        h = Histogram(3, (0,3))
+        self.assertEqual(repr(h), 'Histogram(HistogramAxis(bins=[0.0, 1.0, 2.0,'
+            ' 3.0]), data=[0, 0, 0], dtype="int64")')
+
     def test_call(self):
         h1 = Histogram(10,[0,10],data=[x+10 for x in range(10)])
         h2 = Histogram(10,[0,10],9,[-10,-1])
@@ -243,6 +247,10 @@ class TestHistogram(unittest.TestCase):
         h.uncert = [3,4,5]
         d = h.asdict()
         assert_array_almost_equal(d['uncert'], [3,4,5])
+        self.assertTrue(h.isidentical(Histogram.fromdict(d)))
+
+        h = Histogram(3,[0,3])
+        d = h.asdict()
         self.assertTrue(h.isidentical(Histogram.fromdict(d)))
 
     def test_dim(self):
@@ -625,6 +633,9 @@ class TestHistogram(unittest.TestCase):
         ex[3] += w
         assert_array_almost_equal(h.extent(pad=1), ex)
 
+        ex = [-10,30,-3*w,5*w]
+        assert_array_almost_equal(h.extent(pad=[1,2,3,4]), ex)
+
         assert_array_almost_equal(h.extent(1), [0,10])
 
     def test_extent_2d(self):
@@ -644,6 +655,8 @@ class TestHistogram(unittest.TestCase):
         ebars = h.errorbars()
         assert_array_almost_equal(ebars[0], [1,0.5,0.5])
         assert_array_almost_equal(ebars[1], [0,1,2])
+        ebars = h.errorbars(1)
+        assert_array_almost_equal(ebars[0], [1,0.5,0.5])
 
     def test_asline(self):
         h = Histogram(10,[0,10])
@@ -1169,6 +1182,18 @@ class TestHistogram(unittest.TestCase):
         hrebin = h.rebin(3, snap='high', clip=False)
         self.assertTrue(hrebin.isidentical(hexpect))
 
+        hexpect = Histogram([0,3,6,9,10])
+        hexpect.data = [3,3,3,1]
+        hrebin = h.rebin(3, snap='low', clip=False)
+        self.assertTrue(hrebin.isidentical(hexpect))
+
+        h.uncert = np.ones(h.shape, dtype=np.float64)
+        hexpect = Histogram(3,[0,9])
+        hexpect.set(3)
+        hexpect.uncert = [np.sqrt(3)]*3
+        hrebin = h.rebin(3)
+        self.assertTrue(hrebin.isidentical(hexpect))
+
     def test_rebin_2d(self):
         h = Histogram(3,[0,3],6,[0,6])
         h.set(1)
@@ -1193,16 +1218,23 @@ class TestHistogram(unittest.TestCase):
         hrebin = h.rebin(2, snap='high')
         self.assertTrue(hrebin.isidentical(hexpect))
 
-        #hexpect = Histogram([0,1,3],6,[0,6])
-        #hexpect.data = [[1,1,1,1,1,1],[2,2,2,2,2,2]]
-        #hrebin = h.rebin(2, snap='high', clip=False)
-        #self.assertTrue(hrebin.isidentical(hexpect))
+    def test_rebin_2d_noclip(self):
+        h = Histogram(3,[0,3],6,[0,6])
+        h.set(1)
 
+        hexpect = Histogram([0,2,3],6,[0,6])
+        hexpect.data = [[2,2,2,2,2,2],[1,1,1,1,1,1]]
+        hrebin = h.rebin(2, snap='low', clip=False)
+        self.assertTrue(hrebin.isidentical(hexpect))
+
+        hexpect = Histogram([0,1,3],6,[0,6])
+        hexpect.data = [[1,1,1,1,1,1],[2,2,2,2,2,2]]
+        hrebin = h.rebin(2, snap='high', clip=False)
+        self.assertTrue(hrebin.isidentical(hexpect))
 
     def test_cut_1d(self):
         h1 = Histogram(100,[0,10])
 
-        '''
         h1a = h1.cut(-3,3)
         h1c = h1.cut(1,3)
         h1b = h1.cut(0,3)
@@ -1213,38 +1245,68 @@ class TestHistogram(unittest.TestCase):
         h1.data = np.linspace(0,9,10)
 
         h1a = h1.cut(-3,3)
-        assert_array_almost_equal(h1a.axes[0].edges,[0,1,2,3]))
-        assert_array_almost_equal(h1a.data,[0,1,2]))
+        assert_array_almost_equal(h1a.axes[0].edges,[0,1,2,3])
+        assert_array_almost_equal(h1a.data,[0,1,2])
 
         h1c = h1.cut(1,3)
-        assert_array_almost_equal(h1c.axes[0].edges,[1,2,3]))
-        assert_array_almost_equal(h1c.data,[1,2]))
+        assert_array_almost_equal(h1c.axes[0].edges,[1,2,3])
+        assert_array_almost_equal(h1c.data,[1,2])
 
         h1b = h1.cut(0,3)
-        assert_array_almost_equal(h1b.axes[0].edges,[0,1,2,3]))
-        assert_array_almost_equal(h1b.data,[0,1,2]))
+        assert_array_almost_equal(h1b.axes[0].edges,[0,1,2,3])
+        assert_array_almost_equal(h1b.data,[0,1,2])
 
         h1d = h1.cut(3,10)
-        assert_array_almost_equal(h1d.axes[0].edges,[3,4,5,6,7,8,9,10]))
-        assert_array_almost_equal(h1d.data,[3,4,5,6,7,8,9]))
+        assert_array_almost_equal(h1d.axes[0].edges,[3,4,5,6,7,8,9,10])
+        assert_array_almost_equal(h1d.data,[3,4,5,6,7,8,9])
 
         h1e = h1.cut(3,20)
-        assert_array_almost_equal(h1e.axes[0].edges,[3,4,5,6,7,8,9,10]))
-        assert_array_almost_equal(h1e.data,[3,4,5,6,7,8,9]))
-        '''
+        assert_array_almost_equal(h1e.axes[0].edges,[3,4,5,6,7,8,9,10])
+        assert_array_almost_equal(h1e.data,[3,4,5,6,7,8,9])
+
+    def test_cut_1d_alt(self):
+        h = Histogram(10,[0,10],data=np.linspace(0,9,10))
+
+        hcut = h.cut(7)
+        assert_array_almost_equal(hcut.axes[0].edges, [7,8,9,10])
+        assert_array_almost_equal(hcut.data, [7,8,9])
+
+        hcut = h.cut((7,))
+        assert_array_almost_equal(hcut.axes[0].edges, [7,8,9,10])
+        assert_array_almost_equal(hcut.data, [7,8,9])
+
+        hcut = h.cut(None,3)
+        assert_array_almost_equal(hcut.axes[0].edges, [0,1,2,3])
+        assert_array_almost_equal(hcut.data, [0,1,2])
+
+        hcut = h.cut((None,3))
+        assert_array_almost_equal(hcut.axes[0].edges, [0,1,2,3])
+        assert_array_almost_equal(hcut.data, [0,1,2])
 
     def test_cut_2d(self):
-        h2 = Histogram((100,[0,10]),(90,[-3,3]))
-        #h2a = h2.cut((-1,1),axis=0)
+        h2 = Histogram((20,[0,10]),(12,[-3,3]))
+        h2.set(1)
+        h2a = h2.cut((-1,1),axis=0)
+        hexpect = Histogram(2,[0,1],12,[-3,3])
+        hexpect.set(1)
+        self.assertTrue(h2a.isidentical(hexpect))
+
+        h2b = h2.cut((-1,1),axis=1)
+        hexpect = Histogram(2,[0,1],12,[-3,3])
+        hexpect.set(1)
+        self.assertTrue(h2a.isidentical(hexpect))
 
         h3 = Histogram((100,[-30,330]), (100,[-50,50]))
-        #h3a = h3.cut(-30,30,axis=0)
+        h3a = h3.cut(-30,30,axis=0)
         h3b = h3.cut(270,330,axis=0)
 
     def test_occupancy(self):
         h = Histogram(10,[0,10])
         h.fill([1,1,1,2,2,2,3])
         hocc = h.occupancy(4,[-0.5,3.5])
+        assert_array_almost_equal(hocc.data, [7,1,0,2])
+
+        hocc = h.occupancy(4)
         assert_array_almost_equal(hocc.data, [7,1,0,2])
 
 
