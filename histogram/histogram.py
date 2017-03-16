@@ -1204,7 +1204,7 @@ class Histogram(object):
                 label=self.label)
 
     def rebin(self, nbins=2, axis=0, snap='low', clip=True):
-        """Create a new histogram with merged bins.
+        """Create a new histogram with merged bins along an axis.
 
         Keyword Args:
             nbins (int): Number of bins to merge.
@@ -1215,42 +1215,33 @@ class Histogram(object):
                 case that `bins` does not evenly divide the number of bins in
                 this `axis`.
         """
-        if not isinstance(nbins, collections.Iterable):
-            ones = [1]*self.dim
-            ones[axis] = nbins
-            nbins = ones
-        if not isinstance(clip, collections.Iterable):
-            clip = [clip for _ in range(self.dim)]
-
-        axnew = [ax.mergebins(n, snap, c)
-                 for ax, n, c in zip(self.axes, nbins, clip)]
+        axnew = [ax.mergebins(nbins, snap, clip) if i == axis else ax
+                 for i, ax in enumerate(self.axes)]
 
         if self.has_uncert:
             x = unp.uarray(self.data.astype(np.float64), copy(self.uncert))
         else:
             x = self.data.copy()
 
-        for i, (n, c) in enumerate(zip(nbins, clip)):
-            if n > 1:
-                x = np.rollaxis(x, i, 0)
-                a = x.shape[0]
-                d, r = divmod(a, n)
-                shp = [d, n]
-                if len(x.shape) > 1:
-                    shp += list(x.shape[1:])
-                if r == 0:
-                    x = x.reshape(shp)
+        x = np.rollaxis(x, axis, 0)
+        a = x.shape[0]
+        d, r = divmod(a, nbins)
+        shp = [d, nbins]
+        if len(x.shape) > 1:
+            shp += list(x.shape[1:])
+        if r == 0:
+            x = x.reshape(shp)
+        else:
+            if not clip:
+                shp[0] = shp[0] + r
+                zeros = np.zeros([nbins - r] + list(x.shape[1:]))
+                if snap == 'low':
+                    x = np.concatenate((x, zeros))
                 else:
-                    if not c:
-                        shp[0] = shp[0] + r
-                        zeros = np.zeros([n - r] + list(x.shape[1:]))
-                        if snap == 'low':
-                            x = np.concatenate((x, zeros))
-                        else:
-                            x = np.concatenate((zeros, x))
-                    x = np.resize(x, shp)
-                x = x.sum(1)
-                x = np.rollaxis(x, 0, i + 1)
+                    x = np.concatenate((zeros, x))
+            x = np.resize(x, shp)
+        x = x.sum(1)
+        x = np.rollaxis(x, 0, axis + 1)
 
         if self.has_uncert:
             data = unp.nominal_values(x)
@@ -1327,7 +1318,10 @@ class Histogram(object):
 
         newaxes = []
         newdata = copy(self.data)
-        newuncert = copy(self.uncert)
+        if self.has_uncert:
+            newuncert = copy(self.uncert)
+        else:
+            newuncert = None
         for i, (r, ax) in enumerate(zip(rng, self.axes)):
             xlow, xhigh = r
             if (xlow is None) and (xhigh is None):

@@ -702,6 +702,13 @@ class TestHistogram(unittest.TestCase):
         h.set(3)
         assert_array_almost_equal(h.data, [3,3,3])
 
+        h.uncert = [5,5,5]
+        self.assertTrue(h.has_uncert)
+        h.set(3)
+        self.assertFalse(h.has_uncert)
+        h.set(3, 6)
+        assert_array_almost_equal(h.uncert, [6,6,6])
+
         h.set(list(range(3)), 6)
         assert_array_almost_equal(h.data, [0,1,2])
         assert_array_almost_equal(h.uncert, [6,6,6])
@@ -714,6 +721,12 @@ class TestHistogram(unittest.TestCase):
 
     def test_set_nans(self):
         h = Histogram(3,[0,10],dtype=np.float)
+
+        h[:] = [1,np.nan,np.inf]
+        h.set_nans(0)
+        assert_array_almost_equal(h.data, [1,0,np.inf])
+        self.assertFalse(h.has_uncert)
+
         h[:] = [1,np.nan,np.inf]
         h.uncert = [1,np.nan,np.inf]
         h.set_nans(0,1)
@@ -722,6 +735,12 @@ class TestHistogram(unittest.TestCase):
 
     def test_set_infs(self):
         h = Histogram(3,[0,10],dtype=np.float)
+
+        h[:] = [1,np.nan,np.inf]
+        h.set_infs(0)
+        assert_array_almost_equal(h.data, [1,np.nan,0])
+        self.assertFalse(h.has_uncert)
+
         h[:] = [1,np.nan,np.inf]
         h.uncert = [1,np.nan,np.inf]
         h.set_infs(0,1)
@@ -730,6 +749,12 @@ class TestHistogram(unittest.TestCase):
 
     def test_set_nonfinites(self):
         h = Histogram(3,[0,10],dtype=np.float)
+
+        h[:] = [1,np.nan,np.inf]
+        h.set_nonfinites(0,1)
+        assert_array_almost_equal(h.data, [1,0,0])
+        self.assertFalse(h.has_uncert)
+
         h[:] = [1,np.nan,np.inf]
         h.uncert = [1,np.nan,np.inf]
         h.set_nonfinites(0,1)
@@ -1155,6 +1180,14 @@ class TestHistogram(unittest.TestCase):
                             uncert=np.sqrt([2,3,4]))
         self.assertTrue(hs.isidentical(hexpect))
 
+        hslices = list(h.slices(0))
+        hexpect = Histogram(5,[0,1],'y','data',data=[1,2,3,4,5])
+        self.assertTrue(hslices[0].isidentical(hexpect))
+        hexpect.data[:] += 1
+        self.assertTrue(hslices[1].isidentical(hexpect))
+        hexpect.data[:] += 1
+        self.assertTrue(hslices[2].isidentical(hexpect))
+
     def test_rebin_1d(self):
         h = Histogram(10,[0,10])
         h.set(1)
@@ -1263,6 +1296,12 @@ class TestHistogram(unittest.TestCase):
         h1e = h1.cut(3,20)
         assert_array_almost_equal(h1e.axes[0].edges,[3,4,5,6,7,8,9,10])
         assert_array_almost_equal(h1e.data,[3,4,5,6,7,8,9])
+
+        h1.uncert = [2]*len(h1.data)
+        h1e = h1.cut(3,20)
+        assert_array_almost_equal(h1e.axes[0].edges,[3,4,5,6,7,8,9,10])
+        assert_array_almost_equal(h1e.data,[3,4,5,6,7,8,9])
+        assert_array_almost_equal(h1e.uncert,[2]*7)
 
     def test_cut_1d_alt(self):
         h = Histogram(10,[0,10],data=np.linspace(0,9,10))
