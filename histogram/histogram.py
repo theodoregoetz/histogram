@@ -756,13 +756,20 @@ class Histogram(object):
                 ext[b] += pad[b] * w
         return tuple(ext)
 
-    def errorbars(self, maxdim=None):
+    def errorbars(self, maxdim=None, asratio=False):
         """Bin half-widths and data uncertainties."""
         if maxdim is None:
             maxdim = self.dim + 1
         ret = [0.5 * ax.binwidths() for ax in self.axes[:maxdim]]
         if len(ret) < maxdim:
             ret += [self.uncert]
+
+        if asratio:
+            for x, ax in zip(ret, self.axes):
+                x /= ax.range
+            if maxdim > self.dim:
+                ret[-1] /= self.data.max() - self.data.min()
+
         return ret
 
     def asline(self):

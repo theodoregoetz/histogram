@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 '''
 Plotting a 2D histogram of some random data
 in three different ways and including labels
@@ -32,7 +32,9 @@ pt0 = ax[0].plothist(h, cmap=cm.GnBu)
 pt1 = ax[1].plothist(h, cmap=cm.GnBu, style='contour', filled=True)
 
 pt3a = ax[2].plothist(h, cmap=cm.GnBu)
-pt3b = ax[2].plothist(h.smooth(1), overlay=True,
+
+h.smooth(1)
+pt3b = ax[2].plothist(h, overlay=True,
                       style='contour', colors='black', levels=3)
 
 pyplot.show()

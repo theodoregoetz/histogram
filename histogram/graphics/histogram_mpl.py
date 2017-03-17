@@ -18,14 +18,14 @@ def plothist_errorbar(ax, hist, **kwargs):
         linestyle = kwargs.pop('linestyle','none') )
     kw.update(kwargs)
 
-    if hist.uncert is None:
+    if hist.has_uncert:
         hist.uncert = np.sqrt(hist.data)
 
     if mask is not None:
-        (x,),y = hist.grid[mask], hist.data[mask]
+        (x,),y = hist.grid()[mask], hist.data[mask]
         xerr,yerr = [e[mask] for e in hist.errorbars()]
     else:
-        (x,),y = hist.grid, hist.data
+        (x,),y = hist.grid(), hist.data
         xerr,yerr = hist.errorbars()
 
     nans = ~np.isfinite(yerr)
@@ -47,10 +47,6 @@ def plothist_errorbar(ax, hist, **kwargs):
 
 def plothist_polygon(ax, hist, **kwargs):
     baseline = kwargs.pop('baseline',rc.plot.baseline)
-    polygon_kwargs = dict(
-        ymin = kwargs.pop('ymin',0),
-        xlow = kwargs.pop('xlow',None),
-        xhigh = kwargs.pop('xhigh',None) )
 
     kw = dict(
         linewidth = kwargs.pop('linewidth',kwargs.pop('lw',0)),
@@ -59,40 +55,16 @@ def plothist_polygon(ax, hist, **kwargs):
         kw['color'] = kwargs.pop('color',next(ax._get_lines.prop_cycler)['color'])
     kw.update(kwargs)
 
-    x,y,extent = hist.aspolygon(**polygon_kwargs)
+    pt = ax.fill_between(hist.axes[0].edges,
+                         np.concatenate((hist.data, [0])),
+                         y2=kwargs.pop('ymin',0),
+                         step='post',
+                         **kw)
 
-    #def aspolygon(self, xlow=None, xhigh=None, ymin=0):
-    #    assert self.dim == 1, 'only 1D histograms can be translated into a polygon.'
-    #
-    #    ymin = ymin if ymin is not None else extent[2]
-    #
-    #    xx, yy, extent = self.asline(xlow, xhigh)
-    #
-    #    xx = np.hstack([xx[0], xx, xx[-1], xx[0]])
-    #    yy = np.hstack([ymin, yy, ymin, ymin])
-    #
-    #    extent[2] = ymin
-    #    return xx, yy, extent
-
-    x = np.hstack([x,x[0]])
-    y = np.hstack([y,y[0]])
-    codes = [Path.MOVETO] \
-          + [Path.LINETO]*(len(x) - 3) \
-          + [Path.MOVETO,
-             Path.CLOSEPOLY]
-
-    if baseline == 'left':
-        x,y = y,x
-
-    pt = PathPatch(Path(np.vstack([x,y]).T, codes), **kw)
-    ax.add_patch(pt)
     return pt
 
 def plothist_line(ax, hist, **kwargs):
     baseline = kwargs.pop('baseline',rc.plot.baseline)
-    line_kwargs = dict(
-        xlow = kwargs.pop('xlow',None),
-        xhigh = kwargs.pop('xhigh',None) )
 
     kw = dict(
         linewidth = kwargs.pop('linewidth',kwargs.pop('lw',1)),
@@ -100,35 +72,12 @@ def plothist_line(ax, hist, **kwargs):
         color = kwargs.pop('color',next(ax._get_lines.prop_cycler)['color']) )
     kw.update(kwargs)
 
-    x, y, extent = hist.asline(**line_kwargs)
+    x, y, extent = hist.asline()
 
     if baseline == 'left':
         x,y = y,x
 
-    # what about drawstyle steps-post here?
-
     return ax.plot(x,y,**kw)
-
-def plothist_fill_between(ax, *hists, **kwargs):
-
-    # Axes.fill_between now has step='post' option which should be used here
-    #ax.fill_between(xx, list(yy)+[0], step='post', linestyle='None')
-
-    points = []
-    for h in hists:
-        points.append(h.asline())
-    print(points)
-    pts = []
-    for i in range(len(points)-1):
-        pts.append(
-            ax.fill_between(
-                points[i][0],
-                points[i][1],
-                points[i+1][1],
-                **kwargs
-            )
-        )
-    return pts
 
 def plothist_1d(ax, hist, **kwargs):
     baseline = kwargs.get('baseline',rc.plot.baseline)
@@ -146,9 +95,10 @@ def plothist_1d(ax, hist, **kwargs):
             style = 'errorbar'
 
     if style is None:
-        if hist.uncert is None:
-            style = 'polygon'
+        if hist.has_uncert:
+            style = 'errorbar'
         else:
+            print(hist.errorbars(asratio=True))
             maxratios = np.array([x.max() for x in hist.errorbars(asratio=True)])
             if np.any(maxratios > 0.2):
                 style = 'errorbar'
@@ -235,7 +185,7 @@ def plothist_pcolor(ax, hist, **kwargs):
 def plothist_contour(ax, hist, **kwargs):
     levels = kwargs.pop('levels',None)
     filled = kwargs.pop('filled',False)
-    args = list(hist.grid)
+    args = list(hist.grid())
     args.append(hist.data)
     if levels is not None:
         args.append(levels)
@@ -306,7 +256,7 @@ def plothist_2d(ax, hist, **kwargs):
         # if bin centers are close to integer values
         # then limit the axes' ticks to integers
         for hax,axis in zip(hist.axes,[ax.xaxis,ax.yaxis]):
-            grid = hax.bincenters
+            grid = hax.bincenters()
             f = grid - np.floor(grid)
             median = np.median(f)
             if abs(median) < 0.0001:

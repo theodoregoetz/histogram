@@ -166,6 +166,11 @@ class HistogramAxis(object):
         """2-tuple of the lowest and highest edges."""
         return (self.min, self.max)
 
+    @property
+    def range(self):
+        """Total range of this axis, min to max."""
+        return self.max - self.min
+
     def binwidths(self):
         """All bin widths as an array."""
         return self.edges[1:] - self.edges[:-1]

@@ -29,7 +29,7 @@ def plothist_strip(fig, hlist, haxis, hook=None, hook_kw={}, **kwargs):
     n = len(hlist)
     rows,cols = calc_2d_grid_dimensions(n)
 
-    axs = subplots(fig,rows,cols,
+    axs = mpl_subplots.subplots(fig,rows,cols,
         sharex=kwargs.pop('sharex',True),
         sharey=kwargs.pop('sharex','row'),
         subplot_kw = kwargs.pop('subplot_kw',None))
