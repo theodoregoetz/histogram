@@ -9,14 +9,11 @@ def plothist_errorbar(fig, hist, **kwargs):
     baseline = kwargs.pop('baseline',rc.plot.baseline)
     mask = kwargs.pop('mask',None)
 
-    if hist.uncert is None:
-        hist.uncert = np.sqrt(hist.data)
-
     if mask is not None:
-        x,y = hist.grid[mask], hist.data[mask]
+        x,y = hist.grid()[mask], hist.data[mask]
         xerr,yerr = [e[mask] for e in hist.errorbars()]
     else:
-        x,y = hist.grid, hist.data
+        x,y = hist.grid(), hist.data
         xerr,yerr = hist.errorbars()
 
     nans = ~np.isfinite(yerr)
@@ -99,21 +96,21 @@ def plothist_1d(fig, hist, **kwargs):
         if baseline == 'left':
             xmin,xmax,ymin,ymax = ymin,ymax,xmin,xmax
 
-        pt.x_range = Range1d(start=xmin, end=xmax)
-        pt.xaxis.bounds = xmin,xmax
-        pt.y_range = Range1d(start=ymin, end=ymax)
-        pt.yaxis.bounds = ymin,ymax
+        #pt.x_range = Range1d(start=xmin, end=xmax)
+        #pt.xaxis.bounds = xmin,xmax
+        #pt.y_range = Range1d(start=ymin, end=ymax)
+        #pt.yaxis.bounds = ymin,ymax
 
-        if hist.axes[0].label is not None:
-            if baseline == 'left':
-                pt.xaxis.axis_label = hist.axes[0].label
-            elif baseline == 'bottom':
-                pt.yaxis.axis_label = hist.axes[0].label
-        if hist.label is not None:
-            if baseline == 'left':
-                pt.xaxis.axis_label = hist.label
-            elif baseline == 'bottom':
-                pt.yaxis.axis_label = hist.label
+        #if hist.axes[0].label is not None:
+        #    if baseline == 'left':
+        #        pt.xaxis.axis_label = hist.axes[0].label
+        #    elif baseline == 'bottom':
+        #        pt.yaxis.axis_label = hist.axes[0].label
+        #if hist.label is not None:
+        #    if baseline == 'left':
+        #        pt.xaxis.axis_label = hist.label
+        #    elif baseline == 'bottom':
+        #        pt.yaxis.axis_label = hist.label
 
     return pt
 
