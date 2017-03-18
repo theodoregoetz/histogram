@@ -10,10 +10,10 @@ def plothist_errorbar(fig, hist, **kwargs):
     mask = kwargs.pop('mask',None)
 
     if mask is not None:
-        x,y = hist.grid()[mask], hist.data[mask]
+        x,y = hist.grid()[0][mask], hist.data[mask]
         xerr,yerr = [e[mask] for e in hist.errorbars()]
     else:
-        x,y = hist.grid(), hist.data
+        x,y = hist.grid()[0], hist.data
         xerr,yerr = hist.errorbars()
 
     nans = ~np.isfinite(yerr)
@@ -31,22 +31,21 @@ def plothist_errorbar(fig, hist, **kwargs):
         y,x = x,y
         xerr,yerr = yerr,xerr
 
-    err_xs = list(zip(x,x)) + \
-             [(val-err,val+err) for val,err in zip(x,xerr)]
+    x0 = np.concatenate((x - xerr, x))
+    x1 = np.concatenate((x + xerr, x))
+    y0 = np.concatenate((y, y - yerr))
+    y1 = np.concatenate((y, y + yerr))
 
-    err_ys = [(val-err,val+err) for val,err in zip(y,yerr)] + \
-             list(zip(y,y))
-
-    return fig.multi_line(err_xs, err_ys, *kwargs)
+    return fig.segment(x0, y0, x1, y1, **kwargs)
 
 def plothist_polygon(fig, hist, **kwargs):
     baseline = kwargs.pop('baseline',rc.plot.baseline)
-    polygon_kwargs = dict(
-        ymin = kwargs.pop('ymin',0),
-        xlow = kwargs.pop('xlow',None),
-        xhigh = kwargs.pop('xhigh',None) )
+    ymin = kwargs.pop('ymin',0)
 
-    x,y,extent = hist.aspolygon(**polygon_kwargs)
+    x,y,extent = hist.asline()
+
+    x = np.concatenate(([x[0]], x, [x[-1]]))
+    y = np.concatenate(([ymin], y, [ymin]))
 
     if baseline == 'left':
         y,x = x,y
@@ -56,13 +55,10 @@ def plothist_polygon(fig, hist, **kwargs):
 
 def plothist_line(fig, hist, **kwargs):
     baseline = kwargs.pop('baseline',rc.plot.baseline)
-    line_kwargs = dict(
-        xlow = kwargs.pop('xlow',None),
-        xhigh = kwargs.pop('xhigh',None) )
 
-    x,y,extent = hist.asline(**line_kwargs)
+    x,y,extent = hist.asline()
 
-    pt = fig.plot(x,y,**kwargs)
+    pt = fig.line(x,y,**kwargs)
     return pt
 
 def plothist_1d(fig, hist, **kwargs):

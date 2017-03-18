@@ -98,7 +98,6 @@ def plothist_1d(ax, hist, **kwargs):
         if hist.has_uncert:
             style = 'errorbar'
         else:
-            print(hist.errorbars(asratio=True))
             maxratios = np.array([x.max() for x in hist.errorbars(asratio=True)])
             if np.any(maxratios > 0.2):
                 style = 'errorbar'
