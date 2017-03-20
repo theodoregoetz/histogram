@@ -28,4 +28,4 @@ def load_histogram_from_npz(filepath):
         elif data[k].dtype.kind == 'U':
             data[k] = data[k].tostring().decode('utf-32')
     decode_dict(data)
-    return Histogram.fromdict(**data)
+    return Histogram.fromdict(data)

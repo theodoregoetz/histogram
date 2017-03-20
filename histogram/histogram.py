@@ -1156,7 +1156,7 @@ class Histogram(object):
                         **kwargs).reshape(self.shape)
 
     def smooth(self, weight=0.5, sigma=1, mode='nearest', **kwargs):
-        """ histogram using a Gaussian filter.
+        """Smooth the histogram using a Gaussian filter.
 
         Keyword Args:
 
@@ -1350,7 +1350,9 @@ class Histogram(object):
     def occupancy(self, bins=100, limits=None, **kwargs):
         """Histogram the filled data of this histogram
 
-        Returns a new histogram showing the occupancy of the data. This is effectively histograming the data points, ignoring the axes and uncertanties.
+        Returns a new histogram showing the occupancy of the data. This is
+        effectively histograming the data points, ignoring the axes and
+        uncertanties.
         """
         nans = np.isnan(self.data)
         if limits is None:
@@ -1363,7 +1365,9 @@ class Histogram(object):
     def fit(self, fcn, p0, **kwargs):
         """Fit a function to the histogram
 
-        Fits the function ``fcn`` to the histogram, returning estimated parameters, their covariance matrix and a tuple containing the specified test result (chi-square test is default).
+        Fits the function ``fcn`` to the histogram, returning estimated
+        parameters, their covariance matrix and a tuple containing the
+        specified test result (chi-square test is default).
         """
 
         test = kwargs.pop('test', 'chisquare').lower()
@@ -1371,7 +1375,7 @@ class Histogram(object):
         sel = kwargs.pop('sel', np.ones(self.data.shape, dtype=bool))
 
         if 'sigma' in kwargs:
-            warn('"sigma" keyword not accepted, use "uncert".')
+            warn('"sigma" keyword not valid, use "uncert".')
         if 'abolute_sigma' in kwargs:
             warn('"absolue_sigma" keyword not used (always considered True).')
 
@@ -1386,7 +1390,7 @@ class Histogram(object):
         ### Setup data selection
         sel &= np.isfinite(self.data)
 
-        xx = self.grid
+        xx = self.grid()
         for x in xx:
             sel &= np.isfinite(x)
         xx = np.squeeze(tuple(x[sel].astype(np.float64) for x in xx))

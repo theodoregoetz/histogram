@@ -1,7 +1,7 @@
 from warnings import warn
 
 try:
-    from .histogram import plothist
+    from .graphics import plothist
     have_graphics = True
 except ImportError:
     warn('Could not import graphics.', ImportWarning)

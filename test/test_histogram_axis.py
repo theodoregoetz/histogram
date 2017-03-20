@@ -130,6 +130,12 @@ class TestHistogramAxis(unittest.TestCase):
         a1 = HistogramAxis(100, [0, 10], 'x')
         self.assertEqual(a1.limits, tuple((0, 10)))
 
+    def test_range(self):
+        a1 = HistogramAxis(10, [0, 10])
+        self.assertEqual(a1.range, 10)
+        a1 = HistogramAxis(10, [-10, 10])
+        self.assertEqual(a1.range, 20)
+
     def test_binwidths(self):
         a1 = HistogramAxis(100, [0, 10], 'x')
         a = np.linspace(0, 10, 101)

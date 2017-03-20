@@ -651,12 +651,19 @@ class TestHistogram(unittest.TestCase):
 
     def test_errorbars(self):
         h = Histogram([0,2,3,4])
+        h.data[:] = [1,2,5]
         h.uncert = [0,1,2]
         ebars = h.errorbars()
         assert_array_almost_equal(ebars[0], [1,0.5,0.5])
         assert_array_almost_equal(ebars[1], [0,1,2])
         ebars = h.errorbars(1)
         assert_array_almost_equal(ebars[0], [1,0.5,0.5])
+        ebars = h.errorbars(asratio=True)
+        assert_array_almost_equal(ebars[0], [.25, .125, .125])
+        assert_array_almost_equal(ebars[1], [0, .25, .5])
+        ebars = h.errorbars(1,asratio=True)
+        assert_array_almost_equal(ebars[0], [.25, .125, .125])
+        self.assertEqual(len(ebars), 1)
 
     def test_asline(self):
         h = Histogram(10,[0,10])

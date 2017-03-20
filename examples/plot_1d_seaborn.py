@@ -41,7 +41,8 @@ pttot = ax.plothist(htot, style='errorbar', lw=2,
 
 # Histogram.smooth() applies a gaussian
 # filter to the data
-hsmooth = htot.smooth(weight=1)
+hsmooth = htot.copy(dtype=np.float64)
+hsmooth.smooth(weight=1)
 ax.plothist(hsmooth, style='line', lw=3, zorder=1)
 
 pyplot.show()
