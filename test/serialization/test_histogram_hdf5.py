@@ -8,7 +8,7 @@ from histogram import rc as histrc
 from histogram import Histogram
 
 
-class TestSerializationNumpy(unittest.TestCase):
+class TestSerializationHDF5(unittest.TestCase):
     def setUp(self):
         histrc.overwrite.overwrite = 'always'
 
@@ -16,7 +16,7 @@ class TestSerializationNumpy(unittest.TestCase):
         histrc.overwrite.overwrite = 'ask'
 
     def test_unicode(self):
-        ftmp = NamedTemporaryFile(suffix='.npz', delete=False)
+        ftmp = NamedTemporaryFile(suffix='.h5', delete=False)
         try:
             h = Histogram(3,[0,3])
             h.data[:] = [-3,0,5]
@@ -30,8 +30,8 @@ class TestSerializationNumpy(unittest.TestCase):
         finally:
             os.remove(ftmp.name)
 
-    def test_npz_1d(self):
-        ftmp = NamedTemporaryFile(suffix='.npz', delete=False)
+    def test_hist_1d(self):
+        ftmp = NamedTemporaryFile(suffix='.h5', delete=False)
         try:
             ftmp.close()
             h = Histogram(3,[0,3])
@@ -55,11 +55,16 @@ class TestSerializationNumpy(unittest.TestCase):
             htmp = Histogram.load(ftmp.name)
             self.assertTrue(h.isidentical(htmp))
 
+            h.uncert = [2,3,4]
+            h.save(ftmp.name)
+            htmp = Histogram.load(ftmp.name)
+            self.assertTrue(h.isidentical(htmp))
+
         finally:
             os.remove(ftmp.name)
 
-    def test_npz_2d(self):
-        ftmp = NamedTemporaryFile(suffix='.npz', delete=False)
+    def test_hist_2d(self):
+        ftmp = NamedTemporaryFile(suffix='.h5', delete=False)
         try:
             ftmp.close()
             h = Histogram(3,[0,3],4,[0,4])

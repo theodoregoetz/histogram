@@ -4,16 +4,14 @@ import numpy as np
 import ROOT
 
 from .. import Histogram, HistogramAxis
-from ..detail.strings import encoded_str, decoded_str
 
 def asroot(hist, name):
     '''Convert this histogram to a CERN/ROOT object (TH1F, TH2F, etc)'''
     if hist.dim > 3:
         raise TypeError('Can not convert histogram with dimensions > 3 to ROOT')
 
-    title = encoded_str(hist.title) if hist.title is not None else encoded_str(name)
-
-    args = [name,title]
+    title = (hist.title or '').encode('unicode-escape').decode('latin-1')
+    args = []
     for ax in hist.axes:
         args.append(ax.nbins)
         args.append(ax.edges)
@@ -23,11 +21,11 @@ def asroot(hist, name):
         2: ROOT.TH2D,
         3: ROOT.TH3D }
 
-    hnew = hnew_dispatch[hist.dim](*args)
+    hnew = hnew_dispatch[hist.dim](name, title, *args)
 
-    hnew.SetContent(hist.data.astype(np.float64))
-    if hist.uncert is not None:
-        hnew.SetError(hist.uncert.astype(np.float64))
+    hnew.SetContent(hist.data.astype(np.float64).ravel())
+    if hist.has_uncert:
+        hnew.SetError(hist.uncert.astype(np.float64).ravel())
 
     axlabel_dispatch = {
         0: hnew.GetXaxis().SetTitle,
@@ -36,13 +34,14 @@ def asroot(hist, name):
 
     for i,ax in enumerate(hist.axes):
         if ax.label is not None:
-            axlabel_dispatch[i](encoded_str(ax.label))
+            axlabel_dispatch[i](ax.label.encode('unicode-escape').decode('latin-1'))
 
     if hist.label is not None:
         if hist.dim < 3:
-            axlabel_dispatch[hist.dim](encoded_str(hist.label))
+            axlabel_dispatch[hist.dim](hist.label.encode('unicode-escape').decode('latin-1'))
         else:
-            warn('CERN/ROOT 3D Histograms do not store a content label. Information (hist.label = \''+hist.label+'\') has been lost.')
+            warn('CERN/ROOT 3D Histograms do not store a content label.'
+                 ' hist.label has been lost: "{}"'.format(hist.label))
 
     return hnew
 
@@ -65,7 +64,7 @@ def fromroot(hist):
         nbins = ax.GetNbins()
         shape.append(nbins)
         edges = [ax.GetBinLowEdge(b) for b in range(1,nbins+2)]
-        label = decoded_str(ax.GetTitle())
+        label = ax.GetTitle().encode('latin-1').decode('unicode-escape') or None
 
         axes.append(HistogramAxis(edges, label=label))
 
@@ -80,13 +79,13 @@ def fromroot(hist):
         uncert[i] = hist.GetBinError(i)
     uncert.shape = shape
 
-    title = decoded_str(hist.GetTitle())
-    label = decoded_str(getax_dispatch[dim]().GetTitle())
+    title = hist.GetTitle().encode('latin-1').decode('unicode-escape')
+    label = getax_dispatch[dim]().GetTitle().encode('latin-1').decode('unicode-escape')
 
     return Histogram(
         *axes,
-        label=label,
-        title=title,
+        label=label or None,
+        title=title or None,
         data=data,
         uncert=uncert )
 

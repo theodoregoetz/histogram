@@ -14,7 +14,7 @@ install:
     # Install System Dependencies (Ubuntu 14.04)
   - sudo apt-get install -qq -y build-essential g++ gfortran lib{atlas,lapack,blas}-dev lib{png12,freetype6,hdf5}-dev
   #- sudo apt-get install -qq -y python-dev libroot-bindings-python5.34
-  - sudo apt-get install -qq -y python3-dev
+  - sudo apt-get install -qq -y python3-dev libroot-bindings-python-dev
 
     # Install Python Dependencies
   - pip install --upgrade pip tox coveralls
