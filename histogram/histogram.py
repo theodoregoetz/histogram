@@ -1,10 +1,10 @@
 from __future__ import division, print_function
 
-import collections
 import itertools as it
-import numbers
 
+from collections import Iterable
 from copy import copy, deepcopy
+from numbers import Integral
 from warnings import warn
 
 import numpy as np
@@ -14,7 +14,7 @@ from uncertainties import nominal_value, std_dev, ufloat
 from uncertainties import unumpy as unp
 
 from .histogram_axis import HistogramAxis
-from .detail import isstr, isinteger, skippable, window
+from .detail import string_types, skippable, window
 from . import rc
 
 # ignore divide by zero (silently create nan's)
@@ -70,20 +70,21 @@ class Histogram(object):
 
         self.axes = []
         for skip, (arg0, arg1, arg2) in skippable(window(axes, size=3)):
-            if hasattr(arg0, '__iter__') and not isstr(arg0):
+            if (isinstance(arg0, Iterable) and
+                    not isinstance(arg0, string_types)):
                 try:
                     arg0_array = np.asarray(arg0)
                     if (arg0_array.dtype == object) or (len(arg0_array.shape) != 1):
                         self.axes.append(HistogramAxis(*arg0))
-                    elif isstr(arg1):
+                    elif isinstance(arg1, string_types):
                         self.axes.append(HistogramAxis(arg0_array, arg1))
                         skip(1)
                     else:
                         self.axes.append(HistogramAxis(arg0_array))
                 except ValueError:
                     self.axes.append(HistogramAxis(*arg0))
-            elif isinteger(arg0):
-                if isstr(arg2):
+            elif isinstance(arg0, Integral):
+                if isinstance(arg2, string_types):
                     self.axes.append(HistogramAxis(arg0, arg1, arg2))
                     skip(2)
                 else:
@@ -92,11 +93,11 @@ class Histogram(object):
             elif isinstance(arg0, HistogramAxis):
                 self.axes.append(arg0)
             else:
-                assert isstr(arg0) or arg0 is None
-                assert isstr(arg1) or arg1 is None
+                assert isinstance(arg0, string_types) or arg0 is None
+                assert isinstance(arg1, string_types) or arg1 is None
                 assert arg2 is None
                 for a in (arg0, arg1):
-                    if isstr(a):
+                    if isinstance(a, string_types):
                         if label is None:
                             label = a
                         elif title is None:
@@ -747,7 +748,7 @@ class Histogram(object):
             else:
                 ext += [np.nanmin(self.data), np.nanmax(self.data)]
         if pad is not None:
-            if not isinstance(pad, collections.Iterable):
+            if not isinstance(pad, Iterable):
                 pad = [pad]*(2*maxdim)
             for dim in range(maxdim):
                 a, b = 2*dim, 2*dim+1
@@ -941,7 +942,7 @@ class Histogram(object):
             sample = np.array(sample)
         wt = weights
         if weights is not None:
-            if not hasattr(weights, '__iter__'):
+            if not isinstance(weights, Iterable):
                 wt = np.empty((sample.T.shape[0], ))
                 wt[...] = weights
         h, e = np.histogramdd(sample.T, self.edges, weights=wt)
@@ -1132,7 +1133,7 @@ class Histogram(object):
         or ``inf``.
 
         """
-        if not issubclass(self.data.dtype.type, numbers.Integral):
+        if not issubclass(self.data.dtype.type, Integral):
             finite = np.isfinite(self.data).ravel()
             if self.has_uncert:
                 finite &= np.isfinite(self.uncert).ravel()
@@ -1176,7 +1177,7 @@ class Histogram(object):
         converted to `numpy.float64` before the filter is applied.
         """
         self.interpolate_nonfinites()
-        if issubclass(self.data.dtype.type, numbers.Integral):
+        if issubclass(self.data.dtype.type, Integral):
             self._data = self.data.astype(np.float64)
         Zf = ndimage.filters.gaussian_filter(self.data, sigma=sigma, mode=mode,
                                              **kwargs)
@@ -1306,7 +1307,7 @@ class Histogram(object):
         axis = kwargs.pop('axis', None)
         rng = []
         for a in args:
-            if isinstance(a, collections.Iterable):
+            if isinstance(a, Iterable):
                 rng += a
                 if len(a)== 1:
                     rng += [None]
