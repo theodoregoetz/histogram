@@ -1,24 +1,25 @@
 language: python
 sudo: required
-dist: trusty
+
+python:
+  - "3.5"
+
+services:
+  - docker
 
 git:
   depth: 3
 
-python:
-  - "3.6"
-
 install:
-  - sudo apt-get -qq update
-
-    # Install System Dependencies (Ubuntu 14.04)
-  - sudo apt-get install -qq -y build-essential g++ gfortran lib{atlas,lapack,blas}-dev lib{png12,freetype6,hdf5}-dev
-  #- sudo apt-get install -qq -y python-dev libroot-bindings-python5.34
-  - sudo apt-get install -qq -y python3-dev libroot-bindings-python-dev
-
-    # Install Python Dependencies
-  - pip install --upgrade pip tox coveralls
+  - docker pull fedora
+  - pip install -U coveralls
 
 script:
-  - tox -epy36
-  - coveralls
+  - >
+    docker run -t -v ${PWD}:${PWD}:Z fedora /bin/sh -c
+    "dnf install -y python3-{numpy,scipy,pillow,matplotlib,cycler,h5py,root,tox};
+    cd ${PWD};
+    tox -epy35;"
+
+after_script:
+    - coveralls
