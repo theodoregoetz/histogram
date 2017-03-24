@@ -1,8 +1,8 @@
 from copy import copy, deepcopy
-from collections import namedtuple
+from collections import Iterable, namedtuple
 import numpy as np
 
-from .detail import isstr, isinteger
+from .detail import string_types
 
 class HistogramAxis(object):
     r"""A single axis used internally by :class:`Histogram` to store
@@ -42,20 +42,22 @@ class HistogramAxis(object):
     def __init__(self, bins, limits=None, label=None):
         # allow second argument to be the label if it is a string,
         # bins is iterable and no other argument is used
-        if hasattr(bins,'__iter__') and label is None and isstr(limits):
+        if (isinstance(bins, Iterable) and
+                label is None and
+                isinstance(limits, string_types)):
             label = limits
             limits = None
 
         if __debug__:
             if limits is None:
-                if not hasattr(bins, '__iter__'):
+                if not isinstance(bins, Iterable):
                     raise ValueError('bins must be iterable length >= 2')
             else:
                 if len(limits) != 2:
                     raise ValueError('limits must be iterable length 2')
                 if bins < 1:
                     raise ValueError('must have at least one bin')
-            if not (isstr(label) or (label is None)):
+            if not (isinstance(label, string_types) or (label is None)):
                 raise ValueError('label must be string or None')
 
         if limits is None:
@@ -139,7 +141,7 @@ class HistogramAxis(object):
 
     @staticmethod
     def fromdict(d):
-        return HistogramAxis(bins=d['edges'], label=d.get('label',None))
+        return HistogramAxis(bins=d['edges'], label=d.get('label', None))
 
     @property
     def nbins(self):
@@ -331,9 +333,9 @@ class HistogramAxis(object):
             be clipped. Clipping will likely make a uniform axis no
             longer uniform.
         """
-        snap_options = ['nearest','expand','low','high','clip']
+        snap_options = ['nearest', 'expand', 'low', 'high', 'clip']
 
-        if isstr(snap):
+        if isinstance(snap, string_types):
             snap = (snap, snap)
 
         if __debug__:

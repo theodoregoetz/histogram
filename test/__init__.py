@@ -1,8 +1,3 @@
-from .test_histogram import *
-from .test_histogram_axis import *
-from .test_run_control import *
-from .serialization import *
-
 def main():
     import logging
     import os
