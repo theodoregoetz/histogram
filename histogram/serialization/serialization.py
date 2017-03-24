@@ -6,7 +6,9 @@ from .ask_overwrite import ask_overwrite
 from .histogram_numpy import save_histogram_to_npz, load_histogram_from_npz
 
 try:
-    from .histogram_hdf5 import save_histogram_to_hdf5, load_histogram_from_hdf5
+    from .histogram_hdf5 import (
+        save_histogram_to_hdf5, load_histogram_from_hdf5,
+        save_histograms_to_hdf5, load_histograms_from_hdf5)
     have_h5py = True
 except ImportError:
     have_h5py = False
@@ -77,3 +79,36 @@ def load_histogram(filepath, prefix=None):
         return load_histogram_from_npz(filepath)
 
 Histogram.load = load_histogram
+
+
+def save_histograms(filepath, prefix=None, **hdict):
+    if prefix is not None:
+        filepath = os.path.join(prefix, filepath)
+    elif rc.histdir is not None:
+        if not os.path.isabs(filepath):
+            filepath = os.path.join(rc.histdir, filepath)
+    if not any(filepath.endswith(x) for x in ['.hdf5', '.h5']):
+        filepath += '.hdf5'
+    if not ask_overwrite(filepath):
+        print('not overwriting {}'.format(filepath))
+    else:
+        global have_h5py
+        if not have_h5py:
+            raise ImportError('Missing module: h5py')
+        save_histogram_to_hdf5(filepath, hist, **kwargs)
+
+
+def load_histograms(filepath, prefix=None):
+    if prefix is not None:
+        filepath = os.path.join(prefix, filepath)
+    elif rc.histdir is not None:
+        if not os.path.isabs(filepath):
+            filepath = os.path.join(rc.histdir, filepath)
+    if not any(filepath.endswith(x) for x in ['.hdf5', '.h5']):
+        filepath += '.hdf5'
+    if not os.path.exists(filepath):
+        raise Exception(filepath + ' not found.')
+    global have_h5py
+    if not have_h5py:
+        raise ImportError('Missing module: h5py')
+    return load_histograms_from_hdf5(filepath)

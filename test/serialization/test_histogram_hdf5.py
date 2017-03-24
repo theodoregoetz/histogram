@@ -103,10 +103,13 @@ class TestSerializationHDF5(unittest.TestCase):
                 h3=Histogram(3,[0,1],label='counts'),
                 h4=Histogram(3,[0,1],label='counts',title='title'),
                 h5=Histogram(3,[0,1],4,[-1,1]),
-                h6=Histogram(3,[0,1],2,[-1,1],data=[[1,2,3],[4,5,6]])
-                h7=Histogram(3,[0,1],2,[-1,1],data=[[1,2,3],[4,5,6]],uncert=[[.2]*3,[.4]*3]),
+                h6=Histogram(3,[0,1],2,[-1,1],data=[[1,2],[3,4],[5,6]]),
+                h7=Histogram(3,[0,1],2,[-1,1],data=[[1,2],[3,4],[5,6]],
+                             uncert=[[1,2],[3,4],[5,6]]),
                 h8=Histogram(3,[0,1],2,[-1,1],label='counts'),
                 h9=Histogram(3,[0,1],2,[-1,1],label='counts',title='τιτλε'))
+
+
 
         finally:
             os.remove(ftmp.name)

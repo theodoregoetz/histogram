@@ -70,7 +70,7 @@ def load_histogram_from_hdf5(filepath):
         return load_histogram_from_hdf5_group(h5file)
 
 
-def save_histograms(filepath, prefix=None, **hdict):
+def save_histograms_to_hdf5(filepath, prefix=None, **hdict):
     '''
     saves a dict{str_name : Histogram} object to a file
     in hdf5 format
@@ -92,7 +92,7 @@ def save_histograms(filepath, prefix=None, **hdict):
                 save_histogram_to_hdf5_group(grp, hist)
 
 
-def load_histograms(filepath, prefix=None):
+def load_histograms_from_hdf5(filepath, prefix=None):
     '''
     reads in a dict{str_name : Histogram} object from a file
     in hdf5 format
