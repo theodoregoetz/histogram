@@ -8,7 +8,7 @@ from .. import Histogram, HistogramAxis
 def asroot(hist, name):
     '''Convert this histogram to a CERN/ROOT object (TH1F, TH2F, etc)'''
     if hist.dim > 3:
-        raise TypeError('Can not convert histogram with dimensions > 3 to ROOT')
+        raise ValueError('Can not convert histogram with dimensions > 3 to ROOT')
 
     title = (hist.title or '').encode('unicode-escape').decode('latin-1')
     args = []

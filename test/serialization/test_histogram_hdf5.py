@@ -64,7 +64,7 @@ class TestSerializationHDF5(unittest.TestCase):
             os.remove(ftmp.name)
 
     def test_hist_2d(self):
-        ftmp = NamedTemporaryFile(suffix='.h5', delete=False)
+        ftmp = NamedTemporaryFile(suffix='.hdf5', delete=False)
         try:
             ftmp.close()
             h = Histogram(3,[0,3],4,[0,4])
@@ -88,6 +88,25 @@ class TestSerializationHDF5(unittest.TestCase):
             h.save(ftmp.name)
             htmp = Histogram.load(ftmp.name)
             self.assertTrue(h.isidentical(htmp))
+
+        finally:
+            os.remove(ftmp.name)
+
+    def test_histograms(self):
+        ftmp = NamedTemporaryFile(suffix='h5', delete=False)
+        try:
+            ftmp.close()
+            hh = dict(
+                h0=Histogram(3,[0,1]),
+                h1=Histogram(3,[0,1],data=[-1,0,2]),
+                h2=Histogram(3,[0,1],data=[-1,0,2],uncert=[0.5,-0.2,1000.]),
+                h3=Histogram(3,[0,1],label='counts'),
+                h4=Histogram(3,[0,1],label='counts',title='title'),
+                h5=Histogram(3,[0,1],4,[-1,1]),
+                h6=Histogram(3,[0,1],2,[-1,1],data=[[1,2,3],[4,5,6]])
+                h7=Histogram(3,[0,1],2,[-1,1],data=[[1,2,3],[4,5,6]],uncert=[[.2]*3,[.4]*3]),
+                h8=Histogram(3,[0,1],2,[-1,1],label='counts'),
+                h9=Histogram(3,[0,1],2,[-1,1],label='counts',title='τιτλε'))
 
         finally:
             os.remove(ftmp.name)

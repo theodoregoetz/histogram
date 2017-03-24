@@ -2,6 +2,7 @@
 import numpy as np
 import os
 import unittest
+import warnings
 
 from tempfile import NamedTemporaryFile
 
@@ -99,6 +100,23 @@ class TestSerializationRoot(unittest.TestCase):
 
         finally:
             os.remove(ftmp.name)
+
+    def test_hist_3d(self):
+        h = Histogram(3,[0,1],'xx',4,[-1,1],'yy',5,[5,10],'zz','counts','data')
+        ftmp = NamedTemporaryFile(suffix='.root', delete=False)
+        try:
+            ftmp.close()
+            with warnings.catch_warnings(record=True) as w:
+                h.save(ftmp.name)
+            self.assertEqual(len(w), 1)
+            self.assertRegex(str(w[-1].message), 'label')
+        finally:
+            os.remove(ftmp.name)
+
+    def test_hist_4d(self):
+        h = Histogram(3,[0,1],3,[0,1],3,[0,1],3,[0,1])
+        with self.assertRaises(ValueError):
+            h.save('test.root')
 
 
 if __name__ == '__main__':

@@ -9,7 +9,6 @@ import h5py
 
 from .. import Histogram, HistogramAxis, rc
 from .ask_overwrite import ask_overwrite
-from ..detail.strings import encoded_str, decoded_str
 
 
 def create_dataset(group, name, data):
