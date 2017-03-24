@@ -1,3 +1,17 @@
+import sys
+
+if sys.version_info < (3,1):
+    import unittest
+
+    def assertIsNone(self, obj):
+        return self.assertTrue(obj is None)
+    unittest.TestCase.assertIsNone = assertIsNone
+
+    if sys.version_info < (3,3):
+        def assertRegex(self, text, regexp, msg=None):
+            return self.assertRegexpMatches(text, regexp, msg)
+        unittest.TestCase.assertRegex = assertRegex
+
 def main():
     import logging
     import os

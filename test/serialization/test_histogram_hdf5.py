@@ -1,4 +1,6 @@
 # coding: utf-8
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -43,6 +45,8 @@ class TestSerializationHDF5(unittest.TestCase):
             h.axes[0].label = 'x (cm)'
             h.save(ftmp.name)
             htmp = Histogram.load(ftmp.name)
+            #print(type(h.axes[0].label), h.axes[0].label)
+            #print(type(htmp.axes[0].label), htmp.axes[0].label)
             self.assertTrue(h.isidentical(htmp))
 
             h.label = 'counts'

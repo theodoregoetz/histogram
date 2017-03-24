@@ -1,3 +1,6 @@
+# coding: utf-8
+from builtins import str
+
 from copy import copy, deepcopy
 from collections import Iterable, namedtuple
 import numpy as np
@@ -141,7 +144,10 @@ class HistogramAxis(object):
 
     @staticmethod
     def fromdict(d):
-        return HistogramAxis(bins=d['edges'], label=d.get('label', None))
+        label = d.get('label', None)
+        if label is not None:
+            label = str(label)
+        return HistogramAxis(bins=d['edges'], label=label)
 
     @property
     def nbins(self):
