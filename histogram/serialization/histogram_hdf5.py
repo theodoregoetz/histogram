@@ -1,4 +1,3 @@
-# coding: utf-8
 import platform
 import sys
 import os
@@ -22,11 +21,11 @@ def save_histogram_to_hdf5_group(grp, hist):
     for i, ax in enumerate(hist.axes):
         edge = create_dataset(grp, 'edges{}'.format(i), ax.edges)
         if ax.label is not None:
-            edge.attrs['label'] = ax.label #np.array(ax.label, np.string_)
+            edge.attrs['label'] = ax.label
     if hist.label is not None:
-        grp.attrs['label'] = hist.label #.encode('utf-8')
+        grp.attrs['label'] = hist.label
     if hist.title is not None:
-        grp.attrs['title'] = hist.title #.encode('utf-8')
+        grp.attrs['title'] = hist.title
 
 
 def load_histogram_from_hdf5_group(grp):
@@ -35,16 +34,9 @@ def load_histogram_from_hdf5_group(grp):
     for i in range(len(data.shape)):
         edges = grp['edges{}'.format(i)]
         label = edges.attrs.get('label', None)
-        #if label is not None:
-        #    print('decoding', type(label), label, type(label.decode('unicode-escape')), label.decode('unicode-escape'))
-        #    label = label.decode('unicode-escape')
         axes.append(HistogramAxis(edges, label=label))
     label = grp.attrs.get('label', None)
-    #if label is not None:
-    #    label = label.decode('utf-8')
     title = grp.attrs.get('title', None)
-    #if title is not None:
-    #    title = title.decode('utf-8')
     return Histogram(
         *axes,
         data=data,

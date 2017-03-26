@@ -1,5 +1,6 @@
-from __future__ import division, print_function
+from __future__ import division, unicode_literals
 from builtins import str
+from six import text_type
 
 import itertools as it
 
@@ -232,7 +233,7 @@ class Histogram(object):
         if t is None:
             del self.title
         else:
-            self._title = str(t)
+            self._title = text_type(t)
 
     @title.deleter
     def title(self):
@@ -251,7 +252,7 @@ class Histogram(object):
         if l is None:
             del self.label
         else:
-            self._label = str(l)
+            self._label = text_type(l)
 
     @label.deleter
     def label(self):
@@ -387,7 +388,7 @@ class Histogram(object):
         output::
 
             164
-            428
+            428str(
             909
 
         """
@@ -402,7 +403,7 @@ class Histogram(object):
 
         return self.data[tuple(bin)]
 
-    def asdict(self):
+    def asdict(self, encoding=None, flat=False):
         """Dictionary representation of this histogram.
 
         This includes uncertainty, axes, labels and title and is used to
@@ -410,20 +411,48 @@ class Histogram(object):
         :py:func:`save_histogram_to_npz`).
 
         """
-        ret = {'data' : self.data, 'axes': [a.asdict() for a in self.axes]}
+        ret = {'data' : self.data}
+        if flat:
+            for i, ax in enumerate(self.axes):
+                for k, v in ax.asdict(encoding).items():
+                    key = 'axes:{}:{}'.format(i, k)
+                    ret[key] = v
+        else:
+            ret['axes'] = [a.asdict(encoding) for a in self.axes]
         if self.has_uncert:
             ret['uncert'] = self.uncert
         if self.label is not None:
-            ret['label'] = self.label
+            if encoding is not None:
+                ret['label'] = self.label.encode(encoding)
+            else:
+                ret['label'] = self.label
         if self.title is not None:
-            ret['title'] = self.title
+            if encoding is not None:
+                ret['title'] = self.title.encode(encoding)
+            else:
+                ret['title'] = self.title
         return ret
 
     @staticmethod
-    def fromdict(d):
-        """Create new :py:class:`Histogram` from a dictionary.
-        """
-        axes = [HistogramAxis.fromdict(a) for a in d.pop('axes')]
+    def fromdict(d, encoding=None):
+        """Create new :py:class:`Histogram` from a dictionary."""
+        if 'axes' in d:
+            axes = [HistogramAxis.fromdict(a, encoding) for a in d.pop('axes')]
+        else:
+            axes = []
+            for i in range(d['data'].ndim):
+                axdict = {}
+                for k in ['edges', 'label']:
+                    key = 'axes:{}:{}'.format(i, k)
+                    if key in d:
+                        axdict[k] = d.pop(key)
+                axes.append(axdict)
+            axes = [HistogramAxis.fromdict(a, encoding) for a in axes]
+        if encoding is not None:
+            if 'label' in d:
+                d['label'] = d['label'].decode(encoding)
+            if 'title' in d:
+                d['title'] = d['title'].decode(encoding)
         return Histogram(*axes, **d)
 
 ###    dimension and shape

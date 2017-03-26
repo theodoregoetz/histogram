@@ -1,4 +1,5 @@
 import os
+import sys
 from codecs import open
 from os import path
 from subprocess import Popen, PIPE
@@ -45,6 +46,12 @@ version_info = {ver[0]},{ver[1]},{ver[2]}
 
     with open(filename,'w') as fout:
         fout.write(fmt.format(**opts))
+
+def requires():
+    reqs = ['six', 'numpy', 'scipy', 'uncertainties']
+    if sys.version_info < (3,):
+        reqs.append('future')
+    return reqs
 
 def setup_opts():
     opts = dict(
@@ -95,7 +102,7 @@ def setup_opts():
         ],
         packages=['histogram'],
         setup_requires=['numpy'],
-        install_requires=['numpy','scipy','uncertainties'],
+        install_requires=requires(),
         extras_require={
             'all' : ['matplotlib','cycler','bokeh','h5py'],
         },

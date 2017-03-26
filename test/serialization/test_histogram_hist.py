@@ -1,4 +1,6 @@
 # coding: utf-8
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -43,24 +45,6 @@ class TestSerializationHist(unittest.TestCase):
             h.axes[0].label = 'x (cm)'
             h.save(ftmp.name)
             htmp = Histogram.load(ftmp.name)
-            self.assertTrue(h.isidentical(htmp))
-
-            # force underlying numpy storage to hold utf-8 data
-            h.axes[0]._label = 'xx'.encode('utf-8')
-            h.save(ftmp.name)
-            htmp = Histogram.load(ftmp.name)
-            # loaded histogram will have whatever str(''.encode('utf-8'))
-            # returns which will be different for py 2/3
-            h.axes[0].label = 'xx'.encode('utf-8')
-            self.assertTrue(h.isidentical(htmp))
-
-            # force underlying numpy storage to hold utf-8 data
-            h.axes[0]._label = 'xx'.encode('utf-32')
-            h.save(ftmp.name)
-            htmp = Histogram.load(ftmp.name)
-            # loaded histogram will have whatever str(''.encode('utf-32'))
-            # returns which will be different for py 2/3
-            h.axes[0].label = 'xx'.encode('utf-32')
             self.assertTrue(h.isidentical(htmp))
 
             h.label = 'counts'

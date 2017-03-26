@@ -1,5 +1,6 @@
-# coding: utf-8
+from __future__ import unicode_literals
 from builtins import str
+from six import text_type
 
 from copy import copy, deepcopy
 from collections import Iterable, namedtuple
@@ -85,6 +86,7 @@ class HistogramAxis(object):
         if self.label is None:
             lbl = ''
         else:
+            x = '{}'.format(self.label)
             lbl = ', label="{}"'.format(self.label)
         return fmt.format(repr(self.edges.tolist()), lbl)
 
@@ -130,23 +132,27 @@ class HistogramAxis(object):
 
     @label.setter
     def label(self, l):
-        self._label = str(l)
+        self._label = text_type(l)
 
     @label.deleter
     def label(self):
         del self._label
 
-    def asdict(self):
+    def asdict(self, encoding=None):
         ret = {'edges':self.edges}
         if self.label is not None:
-            ret.update(label=self.label)
+            if encoding is not None:
+                ret['label'] = self.label.encode(encoding)
+            else:
+                ret['label'] = self.label
         return ret
 
     @staticmethod
-    def fromdict(d):
+    def fromdict(d, encoding=None):
         label = d.get('label', None)
-        if label is not None:
-            label = str(label)
+        if encoding is not None:
+            if label is not None:
+                label = label.decode(encoding)
         return HistogramAxis(bins=d['edges'], label=label)
 
     @property
