@@ -1,12 +1,10 @@
 from __future__ import unicode_literals
 from builtins import str
-from six import text_type
+from six import string_types, text_type
 
 from copy import copy, deepcopy
 from collections import Iterable, namedtuple
 import numpy as np
-
-from .detail import string_types
 
 class HistogramAxis(object):
     r"""A single axis used internally by :class:`Histogram` to store

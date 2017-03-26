@@ -1,6 +1,6 @@
 from __future__ import division, unicode_literals
 from builtins import str
-from six import text_type
+from six import string_types, text_type
 
 import itertools as it
 
@@ -16,7 +16,7 @@ from uncertainties import nominal_value, std_dev, ufloat
 from uncertainties import unumpy as unp
 
 from .histogram_axis import HistogramAxis
-from .detail import string_types, skippable, window
+from .detail import skippable, window
 from . import rc
 
 # ignore divide by zero (silently create nan's)
