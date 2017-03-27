@@ -49,7 +49,7 @@ version_info = {ver[0]},{ver[1]},{ver[2]}
 
 def requires():
     reqs = ['six', 'numpy', 'scipy', 'uncertainties']
-    if sys.version_info < (3,):
+    if sys.version_info.major < 3:
         reqs.append('future')
     return reqs
 

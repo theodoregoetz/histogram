@@ -14,7 +14,7 @@ def create_dataset(group, name, data):
     return group.create_dataset(name, data.shape, data.dtype, data[...])
 
 
-def save_histogram_to_hdf5_group(grp, hist):
+def save_histogram_to_hdf5_group(hist, grp):
     create_dataset(grp, 'data', hist.data)
     if hist.has_uncert:
         create_dataset(grp, 'uncert', hist.uncert)
@@ -45,13 +45,13 @@ def load_histogram_from_hdf5_group(grp):
         title=title)
 
 
-def save_histogram_to_hdf5(filepath, hist):
+def save_histogram_to_hdf5(hist, filepath):
     '''
     saves a Histogram object to a file
     in hdf5 format
     '''
     with h5py.File(filepath, 'w') as h5file:
-        save_histogram_to_hdf5_group(h5file, hist)
+        save_histogram_to_hdf5_group(hist, h5file)
 
 
 def load_histogram_from_hdf5(filepath):
@@ -63,40 +63,23 @@ def load_histogram_from_hdf5(filepath):
         return load_histogram_from_hdf5_group(h5file)
 
 
-def save_histograms_to_hdf5(filepath, prefix=None, **hdict):
+def save_histograms_to_hdf5(hdict, filepath):
     '''
     saves a dict{str_name : Histogram} object to a file
     in hdf5 format
     '''
-    if prefix is not None:
-        filepath = os.path.join(prefix, filepath)
-    elif rc.histdir is not None:
-        if os.path.isabs(filepath):
-            filepath = os.path.join(rc.histdir, filepath)
-    if not ask_overwrite(filepath):
-        print('not overwriting {}'.format(filepath))
-    else:
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        with h5py.File(filepath, 'w') as h5file:
-            for hname in hdict:
-                hist = hdict[hname]
-                grp = h5file.create_group(hname)
-                save_histogram_to_hdf5_group(grp, hist)
+    with h5py.File(filepath, 'w') as h5file:
+        for hname in hdict:
+            hist = hdict[hname]
+            grp = h5file.create_group(hname)
+            save_histogram_to_hdf5_group(hist, grp)
 
 
-def load_histograms_from_hdf5(filepath, prefix=None):
+def load_histograms_from_hdf5(filepath):
     '''
     reads in a dict{str_name : Histogram} object from a file
     in hdf5 format
     '''
-    if prefix is not None:
-        filepath = os.path.join(prefix, filepath)
-    elif rc.histdir is not None:
-        if os.path.isabs(filepath):
-            filepath = os.path.join(rc.histdir, filepath)
-    if not os.path.exists(filepath):
-        raise Exception(filepath+' not found.')
     with h5py.File(filepath, 'r') as h5file:
         h = {}
         for grp in h5file:

@@ -7,7 +7,7 @@ import unittest
 from tempfile import NamedTemporaryFile
 
 from histogram import rc as histrc
-from histogram import Histogram
+from histogram import Histogram, save_histograms, load_histograms
 
 
 class TestSerializationHDF5(unittest.TestCase):
@@ -20,6 +20,7 @@ class TestSerializationHDF5(unittest.TestCase):
     def test_unicode(self):
         ftmp = NamedTemporaryFile(suffix='.h5', delete=False)
         try:
+            ftmp.close()
             h = Histogram(3,[0,3])
             h.data[:] = [-3,0,5]
             h.title = 'χ-squared'
@@ -97,7 +98,7 @@ class TestSerializationHDF5(unittest.TestCase):
             os.remove(ftmp.name)
 
     def test_histograms(self):
-        ftmp = NamedTemporaryFile(suffix='h5', delete=False)
+        ftmp = NamedTemporaryFile(suffix='.h5', delete=False)
         try:
             ftmp.close()
             hh = dict(
@@ -113,7 +114,11 @@ class TestSerializationHDF5(unittest.TestCase):
                 h8=Histogram(3,[0,1],2,[-1,1],label='counts'),
                 h9=Histogram(3,[0,1],2,[-1,1],label='counts',title='τιτλε'))
 
+            save_histograms(hh, ftmp.name)
+            hhtmp = load_histograms(ftmp.name)
 
+            for k in sorted(hh):
+                self.assertTrue(hh[k].isidentical(hhtmp[k]))
 
         finally:
             os.remove(ftmp.name)

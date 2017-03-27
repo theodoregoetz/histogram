@@ -4,7 +4,7 @@ import numpy as np
 
 from .. import Histogram
 
-def save_histogram_to_npz(filepath, hist):
+def save_histogram_to_npz(hist, filepath):
     '''
     saves a Histogram object to a file
     in npz format

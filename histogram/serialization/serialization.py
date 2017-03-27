@@ -25,7 +25,7 @@ except ImportError:
          ' You will not be able to convert to/from ROOT format.', ImportWarning)
 
 
-def save_histogram(filepath, hist, prefix=None, **kwargs):
+def save_histogram(hist, filepath, prefix=None, **kwargs):
     if prefix is not None:
         filepath = os.path.join(prefix, filepath)
     elif rc.histdir is not None:
@@ -41,17 +41,16 @@ def save_histogram(filepath, hist, prefix=None, **kwargs):
             global have_h5py
             if not have_h5py:
                 raise ImportError('Missing module: h5py')
-            save_histogram_to_hdf5(filepath, hist, **kwargs)
+            save_histogram_to_hdf5(hist, filepath, **kwargs)
         elif filepath.endswith('.root'):
             global have_pyroot
             if not have_pyroot:
                 raise ImportError('Missing module: ROOT')
-            save_histogram_to_root(filepath, hist, **kwargs)
+            save_histogram_to_root(hist, filepath, **kwargs)
         else:
-            save_histogram_to_npz(filepath, hist, **kwargs)
+            save_histogram_to_npz(hist, filepath, **kwargs)
 
-Histogram.save = lambda self, filepath, prefix=None, **kw: \
-    save_histogram(filepath, self, prefix=prefix, **kw)
+Histogram.save = save_histogram
 
 
 @staticmethod
@@ -82,7 +81,7 @@ def load_histogram(filepath, prefix=None):
 Histogram.load = load_histogram
 
 
-def save_histograms(filepath, prefix=None, **hdict):
+def save_histograms(hdict, filepath, prefix=None):
     if prefix is not None:
         filepath = os.path.join(prefix, filepath)
     elif rc.histdir is not None:
@@ -96,7 +95,7 @@ def save_histograms(filepath, prefix=None, **hdict):
         global have_h5py
         if not have_h5py:
             raise ImportError('Missing module: h5py')
-        save_histogram_to_hdf5(filepath, hist, **kwargs)
+        save_histograms_to_hdf5(hdict, filepath)
 
 
 def load_histograms(filepath, prefix=None):

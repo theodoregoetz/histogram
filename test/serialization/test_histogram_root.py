@@ -116,9 +116,13 @@ class TestSerializationRoot(unittest.TestCase):
             os.remove(ftmp.name)
 
     def test_hist_4d(self):
-        h = Histogram(3,[0,1],3,[0,1],3,[0,1],3,[0,1])
-        with self.assertRaises(ValueError):
-            h.save('test.root')
+        ftmp = NamedTemporaryFile(suffix='.root', delete=False)
+        try:
+            h = Histogram(3,[0,1],3,[0,1],3,[0,1],3,[0,1])
+            with self.assertRaises(ValueError):
+                h.save(ftmp.name)
+        finally:
+            os.remove(ftmp.name)
 
 
 if __name__ == '__main__':

@@ -92,8 +92,8 @@ def fromroot(hist):
 Histogram.fromroot = fromroot
 
 
-def save_histogram_to_root(filepath,hist,mode='RECREATE'):
-    fout = ROOT.TFile(filepath,mode)
+def save_histogram_to_root(hist, filepath, mode='RECREATE'):
+    fout = ROOT.TFile(filepath, mode)
     h = hist.asroot('h')
     fout.Write('h')
     fout.Close()
