@@ -12,6 +12,24 @@ if sys.version_info < (3,1):
             return self.assertRegexpMatches(text, regexp, msg)
         unittest.TestCase.assertRegex = assertRegex
 
+import os
+import platform
+from subprocess import Popen, PIPE
+from .graphics.image_comparison import ImageComparator
+
+baseline_directory = 'image_comparisons/baseline'
+if os.path.exists(baseline_directory):
+    proc = Popen('git pull', cwd=baseline_directory, shell=True,
+                 env=os.environ)
+else:
+    cmd = 'git clone --depth=1 --branch={} {} {}'.format(
+        '-'.join(platform.dist()[:2]),
+        'file:///home/goetz/histogram_baseline',
+        'image_comparisons/baseline')
+    proc = Popen(cmd, shell=True, env=os.environ)
+proc.wait()
+comparator = ImageComparator(baseline_directory)
+
 def main():
     import logging
     import os
