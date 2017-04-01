@@ -17,7 +17,9 @@ install:
 script:
   - >
     docker run -t -v ${PWD}:${PWD}:Z fedora /bin/sh -c
-    "dnf install -y git python3-{numpy,scipy,pillow,matplotlib,h5py,root,tox};
+    "dnf install -qy git python3-{numpy,scipy,pillow,matplotlib,h5py,root,tox};
+    python3 -mpip install -U pip;
+    python3 -mpip install -U numpy scipy pillow matplotlib h5py root tox;
     cd ${PWD};
     tox -epy35;"
 
