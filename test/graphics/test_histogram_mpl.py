@@ -8,7 +8,10 @@ from numpy import random as rand
 
 import matplotlib
 matplotlib.use('Agg')
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans']
 import matplotlib.pyplot as plt
+
 
 from histogram import Histogram
 
