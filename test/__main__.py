@@ -1,6 +1,7 @@
 from test import main
 
 from .graphics.test_histogram_mpl import *
+from .serialization.test_ask_overwrite import *
 from .serialization.test_histogram_hist import *
 from .serialization.test_histogram_hdf5 import *
 from .serialization.test_histogram_numpy import *

@@ -1,3 +1,5 @@
+from builtins import input
+
 import sys
 import os
 from distutils.util import strtobool
@@ -7,7 +9,6 @@ import datetime
 from .. import rc
 
 def ask_overwrite(filepath):
-    global rc
     if not os.path.exists(filepath):
         dirpath = os.path.dirname(os.path.abspath(filepath))
         if not os.path.exists(dirpath):
@@ -30,10 +31,7 @@ def ask_overwrite(filepath):
         sys.stdout.write('Overwrite file {}? [Yes, No, nEver, Always]\n'.format(filepath))
         while True:
 
-            if sys.version_info < (3,0):
-                intext = raw_input().lower()
-            else:
-                intext = input().lower()
+            intext = input().lower()
 
             try:
                 return strtobool(intext)

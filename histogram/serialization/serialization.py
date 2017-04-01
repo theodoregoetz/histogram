@@ -1,10 +1,13 @@
 # coding: utf-8
+import logging
 import os
-from warnings import warn
+import warnings
 
 from .. import Histogram, rc
 from .ask_overwrite import ask_overwrite
 from .histogram_numpy import save_histogram_to_npz, load_histogram_from_npz
+
+log = logging.getLogger(__name__)
 
 try:
     from .histogram_hdf5 import (
@@ -13,16 +16,17 @@ try:
     have_h5py = True
 except ImportError:
     have_h5py = False
-    warn('Could not import h5py. You will not be able to load/save'
-         ' histograms stored in hdf5 format.', ImportWarning)
+    warnings.warn('Could not import h5py. You will not be able to load/save'
+                  ' histograms stored in hdf5 format.', ImportWarning)
 
 try:
     from .histogram_root import save_histogram_to_root, load_histogram_from_root
     have_pyroot = True
 except ImportError:
     have_pyroot = False
-    warn('Could not import ROOT (python bindings to CERN\'s ROOT).'
-         ' You will not be able to convert to/from ROOT format.', ImportWarning)
+    warnings.warn('Could not import ROOT (python bindings to CERN\'s ROOT).'
+                  ' You will not be able to convert to/from ROOT format.',
+                  ImportWarning)
 
 
 def save_histogram(hist, filepath, prefix=None, **kwargs):
@@ -35,15 +39,13 @@ def save_histogram(hist, filepath, prefix=None, **kwargs):
                                               '.h5', '.root']):
         filepath += '.hist'
     if not ask_overwrite(filepath):
-        print('not overwriting {}'.format(filepath))
+        log.warning('not overwriting {}'.format(filepath))
     else:
         if any(filepath.endswith(x) for x in ['.hdf5', '.h5']):
-            global have_h5py
             if not have_h5py:
                 raise ImportError('Missing module: h5py')
             save_histogram_to_hdf5(hist, filepath, **kwargs)
         elif filepath.endswith('.root'):
-            global have_pyroot
             if not have_pyroot:
                 raise ImportError('Missing module: ROOT')
             save_histogram_to_root(hist, filepath, **kwargs)
@@ -66,12 +68,10 @@ def load_histogram(filepath, prefix=None):
     if not os.path.exists(filepath):
         raise Exception(filepath + ' not found.')
     if any(filepath.endswith(x) for x in ['.hdf5', '.h5']):
-        global have_h5py
         if not have_h5py:
             raise ImportError('Missing module: h5py')
         return load_histogram_from_hdf5(filepath)
     elif filepath.endswith('.root'):
-        global have_pyroot
         if not have_pyroot:
             raise ImportError('Missing module: ROOT')
         return load_histogram_from_root(filepath)
@@ -90,9 +90,8 @@ def save_histograms(hdict, filepath, prefix=None):
     if not any(filepath.endswith(x) for x in ['.hdf5', '.h5']):
         filepath += '.hdf5'
     if not ask_overwrite(filepath):
-        print('not overwriting {}'.format(filepath))
+        log.warning('not overwriting {}'.format(filepath))
     else:
-        global have_h5py
         if not have_h5py:
             raise ImportError('Missing module: h5py')
         save_histograms_to_hdf5(hdict, filepath)
@@ -108,7 +107,6 @@ def load_histograms(filepath, prefix=None):
         filepath += '.hdf5'
     if not os.path.exists(filepath):
         raise Exception(filepath + ' not found.')
-    global have_h5py
     if not have_h5py:
         raise ImportError('Missing module: h5py')
     return load_histograms_from_hdf5(filepath)
