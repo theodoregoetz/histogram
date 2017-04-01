@@ -1,6 +1,13 @@
 import sys
 
-if sys.version_info < (3,1):
+if sys.version_info.major < 3:
+    import tempfile
+    from backports.tempfile import TemporaryDirectory
+    tempfile.TemporaryDirectory = TemporaryDirectory
+
+    import backports.unittest_mock
+    backports.unittest_mock.install()
+
     import unittest
 
     def assertIsNone(self, obj):
@@ -22,9 +29,12 @@ if os.path.exists(baseline_directory):
     proc = Popen('git pull', cwd=baseline_directory, shell=True,
                  env=os.environ)
 else:
+    dist = platform.dist()
+    ver = sys.version_info
+    branch = '{}-{}-py{}'.format(dist[0], dist[1], '',join(ver[:2]))
     cmd = 'git clone --depth=1 --branch={} {} {}'.format(
-        '-'.join(platform.dist()[:2]),
-        'file:///home/goetz/histogram_baseline',
+        branch,
+        'https://github.com/theodoregoetz/histogram_baseline.git',
         'image_comparisons/baseline')
     proc = Popen(cmd, shell=True, env=os.environ)
 proc.wait()

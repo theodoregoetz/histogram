@@ -8,6 +8,7 @@ from tempfile import NamedTemporaryFile
 
 from histogram import rc as histrc
 from histogram import Histogram, save_histograms, load_histograms
+import histogram
 
 
 class TestSerializationHDF5(unittest.TestCase):
@@ -116,6 +117,8 @@ class TestSerializationHDF5(unittest.TestCase):
 
             save_histograms(hh, ftmp.name)
             hhtmp = load_histograms(ftmp.name)
+            #histogram.serialization.serialization.save_histograms(hh, ftmp.name)
+            #hhtmp = histogram.serialization.serialization.load_histograms(ftmp.name)
 
             for k in sorted(hh):
                 self.assertTrue(hh[k].isidentical(hhtmp[k]))

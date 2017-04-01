@@ -47,10 +47,16 @@ version_info = {ver[0]},{ver[1]},{ver[2]}
     with open(filename,'w') as fout:
         fout.write(fmt.format(**opts))
 
-def requires():
-    reqs = ['six', 'numpy', 'scipy', 'uncertainties']
-    if sys.version_info.major < 3:
-        reqs.append('future')
+def requires(target):
+    reqs = ['numpy']
+    if target in ['install', 'all']:
+        reqs += ['six', 'scipy', 'uncertainties']
+        if sys.version_info.major < 3:
+            reqs += ['future']
+        if target == 'all':
+            reqs += ['matplotlib','cycler','bokeh','h5py']
+            if sys.version_info.major < 3:
+                reqs += ['backports.tempfile', 'backports.unittest_mock']
     return reqs
 
 def setup_opts():
@@ -101,10 +107,10 @@ def setup_opts():
             'visualization',
         ],
         packages=['histogram'],
-        setup_requires=['numpy'],
-        install_requires=requires(),
+        setup_requires=requires('setup'),
+        install_requires=requires('install'),
         extras_require={
-            'all' : ['matplotlib','cycler','bokeh','h5py'],
+            'all' : requires('all'),
         },
     )
     return opts

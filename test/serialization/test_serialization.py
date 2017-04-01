@@ -1,6 +1,5 @@
 # coding: utf-8
 from __future__ import unicode_literals
-import builtins
 
 import os
 import sys
@@ -8,14 +7,20 @@ import unittest
 
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest.mock import patch, Mock
-from warnings import catch_warnings
+from warnings import catch_warnings, simplefilter
+
+if sys.version_info.major < 3:
+    import __builtin__ as builtins
+else:
+    import builtins
 
 from histogram import rc as histrc
 from histogram import Histogram, save_histograms, load_histograms
 
 
 class TestSerialization(unittest.TestCase):
-    # histrc.overwrite.overwrite = 'always' | 'ask' | 'never'
+    def setUp(self):
+        simplefilter('always')
 
     def test_prefix(self):
         histrc.overwrite.overwrite = 'always'
@@ -39,9 +44,7 @@ class TestSerialization(unittest.TestCase):
 
         histrc.overwrite.overwrite = 'ask'
 
-
-
-    def test_no_h5py(self):
+    def _test_no_h5py(self):
         orig_import = __import__
 
         def import_mock(name, *args, **kwargs):
@@ -74,6 +77,7 @@ class TestSerialization(unittest.TestCase):
             else:
                 return orig_import(name, *args, **kwargs)
 
+        del sys.modules['histogram']
         del sys.modules['histogram.serialization']
         del sys.modules['histogram.serialization.serialization']
         del sys.modules['histogram.serialization.histogram_root']
@@ -85,6 +89,7 @@ class TestSerialization(unittest.TestCase):
                 self.assertRegex(str(w[-1].message), 'Could not import ROOT.')
                 self.assertFalse(serialization.have_pyroot)
 
+        del sys.modules['histogram']
         del sys.modules['histogram.serialization']
         del sys.modules['histogram.serialization.serialization']
         from histogram.serialization import serialization

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import unittest
+from warnings import simplefilter
 
 from numpy import random as rand
 
@@ -14,6 +15,9 @@ from histogram import Histogram
 from .. import comparator
 
 class TestImage(unittest.TestCase):
+    def setUp(self):
+        simplefilter('ignore')
+
     def test_hist_1d(self):
 
         rand.seed(1)
