@@ -22,6 +22,7 @@ except ImportError:
 @unittest.skipIf(NO_PYROOT, 'no PyROOT found')
 class TestSerializationRoot(unittest.TestCase):
     def setUp(self):
+        warnings.simplefilter('always')
         histrc.overwrite.overwrite = 'always'
 
     def tearDown(self):

@@ -25,19 +25,22 @@ from subprocess import Popen, PIPE
 from .graphics.image_comparison import ImageComparator
 
 baseline_directory = 'image_comparisons/baseline'
+repo = 'https://github.com/theodoregoetz/histogram_baseline.git'
+dist = platform.dist()
+ver = sys.version_info
+branch = '{}-{}-py{}'.format(dist[0], dist[1], ''.join(str(x) for x in ver[:2]))
 if os.path.exists(baseline_directory):
-    proc = Popen('git pull', cwd=baseline_directory, shell=True,
-                 env=os.environ)
+    cmds = ['git fetch --depth=1 {repo} {branch}:{branch}',
+            'git checkout {branch}']
+    for cmd in cmds:
+        proc = Popen(cmd.format(repo=repo, branch=branch), shell=True,
+                     env=os.environ, cwd=baseline_directory)
+        proc.wait()
 else:
-    dist = platform.dist()
-    ver = sys.version_info
-    branch = '{}-{}-py{}'.format(dist[0], dist[1], '',join(ver[:2]))
-    cmd = 'git clone --depth=1 --branch={} {} {}'.format(
-        branch,
-        'https://github.com/theodoregoetz/histogram_baseline.git',
-        'image_comparisons/baseline')
+    cmd = 'git clone --depth=1 --branch={branch} {repo} {outdir}'
+    cmd = cmd.format(repo=repo, branch=branch, outdir=baseline_directory)
     proc = Popen(cmd, shell=True, env=os.environ)
-proc.wait()
+    proc.wait()
 comparator = ImageComparator(baseline_directory)
 
 def main():
