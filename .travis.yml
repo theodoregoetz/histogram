@@ -1,3 +1,12 @@
+# Dockerfile for theodoregoetz/fedora-python:
+#from fedora
+#run dnf -qy update
+#run dnf -qy install git python{2,3}-{numpy,scipy,pillow,matplotlib,h5py,root} python3-tox
+#run python2 -mpip install -U pip
+#run python2 -mpip install -U numpy scipy pillow matplotlib h5py
+#run python3 -mpip install -U pip
+#run python3 -mpip install -U numpy scipy pillow matplotlib h5py
+
 language: python
 sudo: required
 
@@ -11,13 +20,13 @@ git:
   depth: 3
 
 install:
-  - docker pull fedora
+  - docker pull theodoregoetz/fedora-python
   - pip install -U coveralls
 
 script:
   - >
-    docker run -t -v ${PWD}:${PWD}:Z fedora /bin/sh -c
-    "dnf install -qy git python3-{numpy,scipy,pillow,matplotlib,h5py,root,tox};
+    docker run -t -v ${PWD}:${PWD}:Z theodoregoetz/fedora-python /bin/sh -c
+    "dnf update -y;
     python3 -mpip install -U pip;
     python3 -mpip install -U numpy scipy pillow matplotlib h5py;
     cd ${PWD};
