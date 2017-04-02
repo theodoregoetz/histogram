@@ -8,7 +8,6 @@ import warnings
 
 from tempfile import NamedTemporaryFile
 
-from histogram import rc as histrc
 from histogram import Histogram
 
 
@@ -23,10 +22,6 @@ except ImportError:
 class TestSerializationRoot(unittest.TestCase):
     def setUp(self):
         warnings.simplefilter('always')
-        histrc.overwrite.overwrite = 'always'
-
-    def tearDown(self):
-        histrc.overwrite.overwrite = 'ask'
 
     def test_unicode(self):
         ftmp = NamedTemporaryFile(suffix='.root', delete=False)

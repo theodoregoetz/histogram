@@ -6,17 +6,10 @@ import unittest
 
 from tempfile import NamedTemporaryFile
 
-from histogram import rc as histrc
 from histogram import Histogram
 
 
 class TestSerializationNumpy(unittest.TestCase):
-    def setUp(self):
-        histrc.overwrite.overwrite = 'always'
-
-    def tearDown(self):
-        histrc.overwrite.overwrite = 'ask'
-
     def test_unicode(self):
         ftmp = NamedTemporaryFile(suffix='.npz', delete=False)
         try:

@@ -1,6 +1,6 @@
 import unittest
 
-from histogram.detail import RunControl
+from histogram.detail import RunControl, skippable
 
 
 class TestRunControl(unittest.TestCase):
@@ -35,10 +35,6 @@ class TestRunControl(unittest.TestCase):
         rc.clear()
 
         rc.fill_type = 'int'
-        rc.histdir = None
-        rc.overwrite.overwrite = 'ask'
-        rc.overwrite.timestamp = None
-        rc.overwrite.timeout = 30*60
         rc.plot.baseline = 'bottom'
         rc.plot.patch.alpha = 0.6
 
@@ -46,10 +42,6 @@ class TestRunControl(unittest.TestCase):
 
         rc_str = '''\
 fill_type = 'int'
-histdir = None
-overwrite.overwrite = 'ask'
-overwrite.timeout = 1800
-overwrite.timestamp = None
 plot.baseline = 'bottom'
 plot.patch.alpha = 0.6'''
 
@@ -57,6 +49,20 @@ plot.patch.alpha = 0.6'''
         rc.clear()
         rc.update(**rc_saved)
 
+
+class TestIterArgs(unittest.TestCase):
+    def test_skippable(self):
+        val = 0
+        itr = iter(skippable([0,1,2,3]))
+        itr(1)
+        itr, a = next(itr)
+        itr, a = itr.next()
+        self.assertEqual(a, 2)
+
+        for skip, arg in skippable([0,1,2,3]):
+            self.assertEqual(arg, val)
+            skip(1)
+            val += 2
 
 if __name__ == '__main__':
     from . import main

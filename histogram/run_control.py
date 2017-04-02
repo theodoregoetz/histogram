@@ -4,10 +4,6 @@ from .detail import RunControl
 rc = RunControl()
 
 rc.fill_type = 'int'
-rc.histdir = None
-rc.overwrite.overwrite = 'ask'
-rc.overwrite.timestamp = None
-rc.overwrite.timeout = 30*60
 rc.plot.baseline = 'bottom'
 rc.plot.patch.alpha = 0.6
 

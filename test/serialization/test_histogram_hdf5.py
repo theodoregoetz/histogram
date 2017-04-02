@@ -6,18 +6,11 @@ import unittest
 
 from tempfile import NamedTemporaryFile
 
-from histogram import rc as histrc
 from histogram import Histogram, save_histograms, load_histograms
 import histogram
 
 
 class TestSerializationHDF5(unittest.TestCase):
-    def setUp(self):
-        histrc.overwrite.overwrite = 'always'
-
-    def tearDown(self):
-        histrc.overwrite.overwrite = 'ask'
-
     def test_unicode(self):
         ftmp = NamedTemporaryFile(suffix='.h5', delete=False)
         try:

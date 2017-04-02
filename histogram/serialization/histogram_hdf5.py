@@ -6,15 +6,14 @@ import numpy as np
 
 import h5py
 
-from .. import Histogram, HistogramAxis, rc
-from .ask_overwrite import ask_overwrite
+from .. import Histogram, HistogramAxis
 
 
 def create_dataset(group, name, data):
     return group.create_dataset(name, data.shape, data.dtype, data[...])
 
 
-def save_histogram_to_hdf5_group(hist, grp):
+def save_histogram_hdf5_group(hist, grp):
     create_dataset(grp, 'data', hist.data)
     if hist.has_uncert:
         create_dataset(grp, 'uncert', hist.uncert)
@@ -28,7 +27,7 @@ def save_histogram_to_hdf5_group(hist, grp):
         grp.attrs['title'] = hist.title
 
 
-def load_histogram_from_hdf5_group(grp):
+def load_histogram_hdf5_group(grp):
     data = grp['data']
     axes = []
     for i in range(len(data.shape)):
@@ -45,25 +44,25 @@ def load_histogram_from_hdf5_group(grp):
         title=title)
 
 
-def save_histogram_to_hdf5(hist, filepath):
+def save_histogram_hdf5(hist, filepath):
     '''
     saves a Histogram object to a file
     in hdf5 format
     '''
     with h5py.File(filepath, 'w') as h5file:
-        save_histogram_to_hdf5_group(hist, h5file)
+        save_histogram_hdf5_group(hist, h5file)
 
 
-def load_histogram_from_hdf5(filepath):
+def load_histogram_hdf5(filepath):
     '''
     reads in a Histogram object from a file
     in hdf5 format
     '''
     with h5py.File(filepath, 'r') as h5file:
-        return load_histogram_from_hdf5_group(h5file)
+        return load_histogram_hdf5_group(h5file)
 
 
-def save_histograms_to_hdf5(hdict, filepath):
+def save_histograms_hdf5(hdict, filepath):
     '''
     saves a dict{str_name : Histogram} object to a file
     in hdf5 format
@@ -72,10 +71,10 @@ def save_histograms_to_hdf5(hdict, filepath):
         for hname in hdict:
             hist = hdict[hname]
             grp = h5file.create_group(hname)
-            save_histogram_to_hdf5_group(hist, grp)
+            save_histogram_hdf5_group(hist, grp)
 
 
-def load_histograms_from_hdf5(filepath):
+def load_histograms_hdf5(filepath):
     '''
     reads in a dict{str_name : Histogram} object from a file
     in hdf5 format
@@ -83,5 +82,5 @@ def load_histograms_from_hdf5(filepath):
     with h5py.File(filepath, 'r') as h5file:
         h = {}
         for grp in h5file:
-            h[grp] = load_histogram_from_hdf5_group(h5file[grp])
+            h[grp] = load_histogram_hdf5_group(h5file[grp])
         return h
