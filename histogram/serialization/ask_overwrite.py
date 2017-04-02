@@ -15,7 +15,8 @@ def ask_overwrite(filepath):
             try:
                 os.makedirs(dirpath)
             except:
-                print('could not create directory: {}'.format(dirpath))
+                msg = 'could not create directory: {}\n'.format(dirpath)
+                sys.stdout.write(msg)
                 return False
         return True
     if rc.overwrite.timeout is not None:
