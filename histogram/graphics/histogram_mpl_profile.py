@@ -44,7 +44,7 @@ def plothist_profile(ax,hist,axis=0,**kwargs):
         return n * stats.norm(m,s).pdf(x)
 
     def _p0(h,mid0=mid0,sig0=sig0):
-        return [h.integral(),mid0,sig0]
+        return [h.integral()[0],mid0,sig0]
 
     fn = kwargs.pop('fn', _fn)
     p0 = kwargs.pop('p0', lambda h: _p0(h))
@@ -69,7 +69,7 @@ def plothist_profile(ax,hist,axis=0,**kwargs):
     axlim_x = ax.get_xlim()
     axlim_y = ax.get_ylim()
 
-    pt1 = ax.errorbar(pax.bincenters,xerr=0.5*pax.binwidths,
+    pt1 = ax.errorbar(pax.bincenters(),xerr=0.5*pax.binwidths(),
         y=yy,yerr=dy,
         color=markercolor, linestyle='none', capsize=0)
 

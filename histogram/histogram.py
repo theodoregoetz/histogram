@@ -1232,7 +1232,7 @@ class Histogram(object):
         if self.has_uncert:
             uncert_slices = self.slices_uncert(axis)
         else:
-            uncert_slices = [None]*self.dim
+            uncert_slices = [None]*self.axes[axis].nbins
         for d, u in zip(self.slices_data(axis), uncert_slices):
             yield Histogram(
                 *[a for i, a in enumerate(self.axes) if i != axis],
