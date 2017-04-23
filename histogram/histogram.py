@@ -1418,36 +1418,51 @@ class Histogram(object):
 
         npar = len(kwargs['p0'])
 
-        ### Setup data selection
+        # data selection
         sel &= np.isfinite(self.data)
 
         xx = self.grid()
         for x in xx:
             sel &= np.isfinite(x)
-        xx = np.squeeze(tuple(x[sel].astype(np.float64) for x in xx))
 
         if uncert is not None:
+            # consider only finite uncertainties
             sel &= np.isfinite(uncert)
+            if np.allclose(uncert[0], uncert):
+                # uncertainties are the same value
+                uncert = None
+            else:
+                # throw out uncertainties equal to zero
+                sel &= ~ np.isclose(uncert, 0)
 
         if np.count_nonzero(sel) < npar:
             raise RuntimeError('Not enough data.')
 
-        ## Setup data at grid points
+        # make selection on grid
+        xx = np.squeeze(tuple(x[sel].astype(np.float64) for x in xx))
+
+        # make selection on data at grid points
         yy = self.data[sel].astype(np.float64)
 
+        # make selection on uncertainty
         if uncert is not None:
             kwargs['sigma'] = uncert[sel].astype(np.float64)
             kwargs['absolute_sigma'] = True
 
-        ### Do the fit
+        # perform the fit
         pfit, pcov = opt.curve_fit(fcn, xx, yy, **kwargs)
 
         if not isinstance(pcov, np.ndarray):
             raise RuntimeError('Bad fit.')
+        if any(np.isinf(pcov)):
+            raise RuntimeError('Bad fit.')
 
         ### perform goodness of fit test
         if test not in [None, 'none']:
-            N = len(xx)
+            try:
+                N = len(xx)
+            except:
+                N = 1
             m = npar
             ndf = N - m
             yyfit = fcn(xx, *pfit)

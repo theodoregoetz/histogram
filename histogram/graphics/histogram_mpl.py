@@ -18,8 +18,8 @@ def plothist_errorbar(ax, hist, **kwargs):
         linestyle = kwargs.pop('linestyle','none') )
     kw.update(kwargs)
 
-    if hist.has_uncert:
-        hist.uncert = np.sqrt(hist.data)
+    if not hist.has_uncert:
+        hist.uncert = np.sqrt(np.abs(hist.data))
 
     if mask is not None:
         (x,),y = hist.grid()[mask], hist.data[mask]
@@ -47,6 +47,7 @@ def plothist_errorbar(ax, hist, **kwargs):
 
 def plothist_polygon(ax, hist, **kwargs):
     baseline = kwargs.pop('baseline',rc.plot.baseline)
+    ymin = kwargs.pop('ymin', 0)
 
     kw = dict(
         linewidth = kwargs.pop('linewidth',kwargs.pop('lw',0)),
@@ -57,7 +58,7 @@ def plothist_polygon(ax, hist, **kwargs):
 
     pt = ax.fill_between(hist.axes[0].edges,
                          np.concatenate((hist.data, [0])),
-                         y2=kwargs.pop('ymin',0),
+                         y2=ymin,
                          step='post',
                          **kw)
 
@@ -133,9 +134,8 @@ def plothist_1d(ax, hist, **kwargs):
         if autox or autoy:
 
             hmin = hist.min()
-            if not np.isclose(hmin,0):
-                if (hmin > 0) and (hmin > 0.3 * abs(hist.max() - hmin)):
-                    extent_kwargs['pad'][2] = 0.05
+            if not np.isclose(hmin, 0):
+                extent_kwargs['pad'][2] = 0.05
 
             xmin,xmax,y0,ymax = hist.extent(**extent_kwargs)
 

@@ -1355,6 +1355,54 @@ class TestHistogram(unittest.TestCase):
         hocc = h.occupancy(4)
         assert_array_almost_equal(hocc.data, [7,1,0,2])
 
+    def test_fit_1d(self):
+        h = Histogram(10,[0,10])
+        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        self.assertEqual(popt.shape, (1,))
+        self.assertEqual(pcov.shape, (1,1))
+        self.assertEqual(len(ptest), 2)
+        self.assertAlmostEqual(popt[0], 0)
+        self.assertAlmostEqual(pcov[0,0], 0)
+        self.assertAlmostEqual(ptest[0], 0)
+        self.assertAlmostEqual(ptest[1], 1)
+
+        h.data[...] = 1
+        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        self.assertEqual(popt.shape, (1,))
+        self.assertEqual(pcov.shape, (1,1))
+        self.assertEqual(len(ptest), 2)
+        self.assertAlmostEqual(popt[0], 1)
+        self.assertAlmostEqual(pcov[0,0], 0)
+        self.assertAlmostEqual(ptest[0], 0)
+        self.assertAlmostEqual(ptest[1], 1)
+
+        h.data = np.linspace(3,20,len(h.data))
+        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        self.assertAlmostEqual(popt[0], 7.70524386)
+        self.assertAlmostEqual(pcov[0,0], 0.77052438)
+        self.assertAlmostEqual(ptest[0], 6.1739150908012181)
+        self.assertAlmostEqual(ptest[1], 0)
+
+        h = Histogram(2,[0,1])
+        h.data[...] = [1,2]
+        h.uncert = [0,1]
+        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        self.assertAlmostEqual(popt[0], 2)
+        self.assertAlmostEqual(pcov[0,0], 1)
+        self.assertTrue(np.isnan(ptest[0]))
+        self.assertTrue(np.isnan(ptest[1]))
+
+        h = Histogram(2,[0,1])
+        h.data[...] = [1,2]
+        h.uncert = [10000,1]
+        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        self.assertAlmostEqual(popt[0], 2)
+        self.assertAlmostEqual(pcov[0,0], 1)
+        self.assertAlmostEqual(ptest[0], 0.5)
+        self.assertTrue(np.isnan(ptest[1]))
+
+
+
 
 if __name__ == '__main__':
     from . import main

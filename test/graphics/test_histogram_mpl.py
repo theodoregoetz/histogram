@@ -57,6 +57,26 @@ class TestHistogramsMpl(unittest.TestCase):
         self.assertTrue(comparator.compare_images(
             fig.savefig, 'hist_2d.png'))
 
+    def test_hist_1d_nonuniform(self):
+        h = Histogram([0,1,3], data=[1,2])
+        fig, ax = plt.subplots(2)
+        pt = ax[0].plothist(h, style='polygon')
+        pt = ax[0].plothist(h, style='line', color='black', lw=2)
+        pt = ax[1].plothist(h, style='errorbar')
+        self.assertTrue(comparator.compare_images(
+            fig.savefig, 'hist_1d_nonuniform.png'))
+
+    def test_hist_1d_negative(self):
+        h = Histogram([0,1,3], data=[-1,2])
+        fig, ax = plt.subplots(2)
+        pt = ax[0].plothist(h, style='polygon')
+        pt = ax[0].plothist(h, style='line', color='black', lw=2)
+        pt = ax[1].plothist(h, style='errorbar')
+        self.assertTrue(comparator.compare_images(
+            fig.savefig, 'hist_1d_negative.png'))
+
+
+
 
 if __name__ == '__main__':
     from .. import main
