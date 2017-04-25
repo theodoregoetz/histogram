@@ -1406,9 +1406,9 @@ class Histogram(object):
         sel = kwargs.pop('sel', np.ones(self.data.shape, dtype=bool))
 
         if 'sigma' in kwargs:
-            warn('"sigma" keyword not valid, use "uncert".')
-        if 'abolute_sigma' in kwargs:
-            warn('"absolue_sigma" keyword not used (always considered True).')
+            raise ValueError('"sigma" keyword not valid, use "uncert".')
+        if 'absolute_sigma' in kwargs:
+            raise ValueError('"absolute_sigma" ignored (considered True).')
 
         # initial parameters
         if hasattr(p0, '__call__'):
@@ -1436,7 +1436,7 @@ class Histogram(object):
                 sel &= ~ np.isclose(uncert, 0)
 
         if np.count_nonzero(sel) < npar:
-            raise RuntimeError('Not enough data.')
+            raise ValueError('Not enough data.')
 
         # make selection on grid
         xx = np.squeeze(tuple(x[sel].astype(np.float64) for x in xx))
@@ -1452,9 +1452,7 @@ class Histogram(object):
         # perform the fit
         pfit, pcov = opt.curve_fit(fcn, xx, yy, **kwargs)
 
-        if not isinstance(pcov, np.ndarray):
-            raise RuntimeError('Bad fit.')
-        if any(np.isinf(pcov)):
+        if not isinstance(pcov, np.ndarray) or np.isinf(pcov).any():
             raise RuntimeError('Bad fit.')
 
         ### perform goodness of fit test
@@ -1469,7 +1467,7 @@ class Histogram(object):
             dyy = yy - yyfit
 
             # nchar is the minimum number of characters
-            # used to disambiguate goodness of fit tests
+            # used to disambiguate goodness of fit tests.
             # at the moment, one letter is sufficient.
             nchar = 1
             if test[:nchar] == 'kstest'[:nchar]:
@@ -1479,7 +1477,7 @@ class Histogram(object):
                 ptest = (D, pval)
             elif test[:nchar] == 'shapiro'[:nchar]:
                 # Shapiro-Wilk test
-                W, pval = sp.stats.shapiro(dyy)
+                W, pval = stats.shapiro(dyy)
                 ptest = (W, pval)
             else: # test[:nchar] == 'chisquare'[:nchar]:
                 # simple Chi-squared test

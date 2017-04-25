@@ -253,6 +253,27 @@ class TestHistogram(unittest.TestCase):
         d = h.asdict()
         self.assertTrue(h.isidentical(Histogram.fromdict(d)))
 
+    def test_asdict_flat(self):
+        h = Histogram(3,[0,3],'xx','ll','tt',data=[5,6,7])
+        d = h.asdict(flat=True)
+        assert_array_almost_equal(d['data'], [5,6,7])
+        self.assertEqual(d['label'], 'll')
+        self.assertEqual(d['title'], 'tt')
+        assert_array_almost_equal(d['axes:0:edges'], [0,1,2,3])
+        self.assertEqual(d['axes:0:label'], 'xx')
+        self.assertTrue(h.isidentical(Histogram.fromdict(d)))
+        h.uncert = [8,9,10]
+        d = h.asdict(flat=True)
+        assert_array_almost_equal(d['uncert'], [8,9,10])
+        self.assertTrue(h.isidentical(Histogram.fromdict(d)))
+
+    def test_asdict_encoding(self):
+        h = Histogram(3,[0,3],'xx','ll','tt',data=[5,6,7])
+        d = h.asdict(encoding='ascii')
+        self.assertTrue(h.isidentical(Histogram.fromdict(d, 'ascii')))
+        d = h.asdict(encoding='utf-8')
+        self.assertTrue(h.isidentical(Histogram.fromdict(d, 'utf-8')))
+
     def test_dim(self):
         h1 = Histogram(3,[0,1])
         h2 = Histogram(3,[0,1],4,[0,1])
@@ -1401,6 +1422,45 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(ptest[0], 0.5)
         self.assertTrue(np.isnan(ptest[1]))
 
+    def test_fit_exceptions(self):
+        h = Histogram(2,[0,1],data=[3,5],uncert=[3,10], dtype=float)
+        with self.assertRaises(ValueError):
+            h.fit(lambda *a: 0, [1], sigma=[1,2])
+        with self.assertRaises(ValueError):
+            h.fit(lambda *a: 0, [1], absolute_sigma=False)
+        h.data = [np.inf, np.nan]
+        with self.assertRaises(ValueError):
+            h.fit(lambda *a: 0, [1])
+        h.data = [0,1]
+        with self.assertRaises(RuntimeError):
+            h.fit(lambda *a: 0, [1])
+
+    def test_fit_p0_func(self):
+        def p0(hist):
+            return [hist.mean()[0].nominal_value]
+
+        h = Histogram(2, [0,1], data=[1,2], uncert=[0,1])
+        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), p0)
+
+        self.assertAlmostEqual(popt[0], 2)
+        self.assertAlmostEqual(pcov[0,0], 1)
+        self.assertTrue(np.isnan(ptest[0]))
+        self.assertTrue(np.isnan(ptest[1]))
+
+    def test_fit_ptest(self):
+        poly = lambda x,*p: np.poly1d(p)(x)
+        h = Histogram(4, [0,1], data=[2,7,4,5], uncert=[0.4,0.2,0.5,0.5])
+        popt, pcov, ptest = h.fit(poly, [1,1], test='ktest')
+        self.assertAlmostEqual(ptest[0], 0.559980109)
+        self.assertAlmostEqual(ptest[1], 0.1057123562)
+
+        popt, pcov, ptest = h.fit(poly, [1,1], test='shapiro')
+        self.assertAlmostEqual(ptest[0], 0.9251196384429932,)
+        self.assertAlmostEqual(ptest[1], 0.5660210251808167)
+
+        popt, pcov, ptest = h.fit(poly, [1,1], test='chisquare')
+        self.assertAlmostEqual(ptest[0], 1.6721828728355184)
+        self.assertAlmostEqual(ptest[1], 0.067435462790183101)
 
 
 
