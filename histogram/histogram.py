@@ -1401,7 +1401,7 @@ class Histogram(object):
         specified test result (chi-square test is default).
         """
 
-        test = kwargs.pop('test', 'chisquare').lower()
+        test = str(kwargs.pop('test', 'chisquare')).lower()
         uncert = kwargs.pop('uncert', self.uncert)
         sel = kwargs.pop('sel', np.ones(self.data.shape, dtype=bool))
 
@@ -1456,7 +1456,7 @@ class Histogram(object):
             raise RuntimeError('Bad fit.')
 
         ### perform goodness of fit test
-        if test not in [None, 'none']:
+        if test != 'none':
             try:
                 N = len(xx)
             except:

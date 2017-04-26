@@ -4,6 +4,7 @@ from __future__ import division
 from copy import copy, deepcopy
 import numpy as np
 import unittest
+import warnings
 
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
@@ -267,8 +268,23 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(d['uncert'], [8,9,10])
         self.assertTrue(h.isidentical(Histogram.fromdict(d)))
 
+        h = Histogram(3,[0,3],data=[5,6,7])
+        d = h.asdict(flat=True)
+        assert_array_almost_equal(d['data'], [5,6,7])
+        self.assertFalse('label' in d)
+        self.assertFalse('title' in d)
+        assert_array_almost_equal(d['axes:0:edges'], [0,1,2,3])
+        self.assertFalse('axes:0:label' in d)
+        self.assertTrue(h.isidentical(Histogram.fromdict(d)))
+
     def test_asdict_encoding(self):
         h = Histogram(3,[0,3],'xx','ll','tt',data=[5,6,7])
+        d = h.asdict(encoding='ascii')
+        self.assertTrue(h.isidentical(Histogram.fromdict(d, 'ascii')))
+        d = h.asdict(encoding='utf-8')
+        self.assertTrue(h.isidentical(Histogram.fromdict(d, 'utf-8')))
+
+        h = Histogram(3,[0,3],data=[5,6,7])
         d = h.asdict(encoding='ascii')
         self.assertTrue(h.isidentical(Histogram.fromdict(d, 'ascii')))
         d = h.asdict(encoding='utf-8')
@@ -1377,8 +1393,10 @@ class TestHistogram(unittest.TestCase):
         assert_array_almost_equal(hocc.data, [7,1,0,2])
 
     def test_fit_1d(self):
+        poly = lambda x,*p: np.poly1d(p)(x)
+
         h = Histogram(10,[0,10])
-        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        popt, pcov, ptest = h.fit(poly, [1])
         self.assertEqual(popt.shape, (1,))
         self.assertEqual(pcov.shape, (1,1))
         self.assertEqual(len(ptest), 2)
@@ -1388,7 +1406,7 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(ptest[1], 1)
 
         h.data[...] = 1
-        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        popt, pcov, ptest = h.fit(poly, [1])
         self.assertEqual(popt.shape, (1,))
         self.assertEqual(pcov.shape, (1,1))
         self.assertEqual(len(ptest), 2)
@@ -1398,7 +1416,7 @@ class TestHistogram(unittest.TestCase):
         self.assertAlmostEqual(ptest[1], 1)
 
         h.data = np.linspace(3,20,len(h.data))
-        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        popt, pcov, ptest = h.fit(poly, [1])
         self.assertAlmostEqual(popt[0], 7.70524386)
         self.assertAlmostEqual(pcov[0,0], 0.77052438)
         self.assertAlmostEqual(ptest[0], 6.1739150908012181)
@@ -1407,7 +1425,7 @@ class TestHistogram(unittest.TestCase):
         h = Histogram(2,[0,1])
         h.data[...] = [1,2]
         h.uncert = [0,1]
-        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        popt, pcov, ptest = h.fit(poly, [1])
         self.assertAlmostEqual(popt[0], 2)
         self.assertAlmostEqual(pcov[0,0], 1)
         self.assertTrue(np.isnan(ptest[0]))
@@ -1416,13 +1434,22 @@ class TestHistogram(unittest.TestCase):
         h = Histogram(2,[0,1])
         h.data[...] = [1,2]
         h.uncert = [10000,1]
-        popt, pcov, ptest = h.fit(lambda x,*p: np.poly1d(p)(x), [1])
+        popt, pcov, ptest = h.fit(poly, [1])
         self.assertAlmostEqual(popt[0], 2)
         self.assertAlmostEqual(pcov[0,0], 1)
         self.assertAlmostEqual(ptest[0], 0.5)
         self.assertTrue(np.isnan(ptest[1]))
 
+        h = Histogram(2,[0,1])
+        h.data[...] = [1,2]
+        popt, pcov, ptest = h.fit(poly, [1], uncert=None)
+        self.assertAlmostEqual(popt[0], 1.5)
+        self.assertAlmostEqual(pcov[0,0], 0.25)
+        self.assertAlmostEqual(ptest[0], 1/3)
+        self.assertTrue(np.isnan(ptest[1]))
+
     def test_fit_exceptions(self):
+        warnings.simplefilter('ignore')
         h = Histogram(2,[0,1],data=[3,5],uncert=[3,10], dtype=float)
         with self.assertRaises(ValueError):
             h.fit(lambda *a: 0, [1], sigma=[1,2])
@@ -1461,6 +1488,8 @@ class TestHistogram(unittest.TestCase):
         popt, pcov, ptest = h.fit(poly, [1,1], test='chisquare')
         self.assertAlmostEqual(ptest[0], 1.6721828728355184)
         self.assertAlmostEqual(ptest[1], 0.067435462790183101)
+
+        self.assertEqual(len(h.fit(poly, [1,1], test=None)), 2)
 
 
 

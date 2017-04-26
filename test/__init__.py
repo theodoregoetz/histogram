@@ -28,7 +28,8 @@ baseline_directory = 'image_comparisons/baseline'
 repo = 'https://github.com/theodoregoetz/histogram_baseline.git'
 dist = platform.dist()
 ver = sys.version_info
-branch = '{}-{}-py{}'.format(dist[0], dist[1], ''.join(str(x) for x in ver[:2]))
+branch = '{}-{}-py{}'.format(dist[0], dist[1].split('.', maxsplit=1)[0],
+                             ''.join(str(x) for x in ver[:2]))
 if os.path.exists(baseline_directory):
     cmds = ['git fetch --depth=1 {repo} {branch}:{branch}',
             'git checkout {branch}']
