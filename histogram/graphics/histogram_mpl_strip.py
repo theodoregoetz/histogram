@@ -33,7 +33,7 @@ def plothist_strip(fig, hlist, haxis, hook=None, hook_kw={}, **kwargs):
         sharex=kwargs.pop('sharex',True),
         sharey=kwargs.pop('sharex','row'),
         subplot_kw = kwargs.pop('subplot_kw',None))
-    fig.subplots_adjust(wspace=0)
+    fig.subplots_adjust(wspace=0, hspace=0.35)
 
     fig.suptitle(hlist[0].title)
 
@@ -89,18 +89,19 @@ def plothist_strip(fig, hlist, haxis, hook=None, hook_kw={}, **kwargs):
         if ilow < len(haxis.edges):
             if ihigh < len(haxis.edges):
                 ax.set_xlim(haxis.edges[ilow],haxis.edges[ihigh])
-                ax.xaxis.set_ticks(haxis.edges[ilow:ihigh+1])
             else:
                 ax.set_xlim(haxis.edges[ilow],haxis.edges[-1])
-        ax.xaxis.labelpad = -3
+            ax.xaxis.set_ticks(haxis.edges[ilow:ihigh+1])
 
         # disable interactive pan/zoom for this axis
         ax.set_xlim = lambda *args,**kwargs: None
 
         strip_axs.append(ax)
 
-    axs[0,0].set_xlabel('')
-    axs[-1,0].set_xlabel(hlist[0].axes[0].label)
+    for ax in axs.ravel():
+        ax.set_xlabel('')
+    for ax in axs.ravel()[-cols:]:
+        ax.set_xlabel(hlist[0].axes[0].label)
     for ax in axs[...,0]:
         ax.set_ylabel(hlist[0].label)
     strip_axs[0].set_xlabel(haxis.label, x=0.15)

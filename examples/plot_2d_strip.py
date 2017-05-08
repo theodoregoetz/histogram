@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('GTK3Agg')
+
 from numpy import random as rand
 from matplotlib import pyplot
 from histogram import Histogram
