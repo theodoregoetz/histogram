@@ -19,7 +19,7 @@ h2.fill(xdata,ydata)
 h2slices = list(h2.slices())
 axslices = h2.axes[0]
 
-fig = pyplot.figure(figsize=(12,12))
+fig = pyplot.figure(figsize=(12,8))
 axs,saxs = fig.plothist_strip(h2slices,axslices)
 
 pyplot.show()

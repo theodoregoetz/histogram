@@ -33,7 +33,7 @@ def plothist_strip(fig, hlist, haxis, hook=None, hook_kw={}, **kwargs):
         sharex=kwargs.pop('sharex',True),
         sharey=kwargs.pop('sharex','row'),
         subplot_kw = kwargs.pop('subplot_kw',None))
-    fig.subplots_adjust(wspace=0, hspace=0.35)
+    fig.subplots_adjust(wspace=0, hspace=0.45)
 
     fig.suptitle(hlist[0].title)
 
@@ -100,11 +100,13 @@ def plothist_strip(fig, hlist, haxis, hook=None, hook_kw={}, **kwargs):
 
     for ax in axs.ravel():
         ax.set_xlabel('')
-    for ax in axs.ravel()[-cols:]:
+        ax.set_ylabel('')
+    for ax in axs.ravel()[-(cols+1):]:
         ax.set_xlabel(hlist[0].axes[0].label)
     for ax in axs[...,0]:
         ax.set_ylabel(hlist[0].label)
-    strip_axs[0].set_xlabel(haxis.label, x=0.15)
+    for ax in strip_axs:
+        ax.set_xlabel(haxis.label, x=0.1)
 
     for ax in axs.flat:
         ax.label_outer()

@@ -14,7 +14,7 @@ h3 = Histogram(d0,d1,d2,'counts','Random Data')
 
 h3.fill(datax,datay,dataz)
 
-fig = pyplot.figure(figsize=(12,12))
-axs,axtot,axins = fig.plothist_grid(h3, cmap=cm.copper_r)
+fig = pyplot.figure(figsize=(8,8))
+axs,axtot,axins = fig.plothist_grid(h3, ymin=0, cmap=cm.viridis) #copper_r)
 
 pyplot.show()

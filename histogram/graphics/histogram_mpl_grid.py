@@ -103,8 +103,8 @@ def plothist_grid(fig, hist, xaxis=0, yaxis=1, hook=None, hook_kw={}, **kwargs):
                 h.uncert[...] = uncert[xi,yi,...]
 
             if hook is None:
-                axs[a,xi].plothist(h, color=color(h.sum()), **kwargs)
-                total = str(int(h.sum()))
+                axs[a,xi].plothist(h, color=color(h.sum().n), **kwargs)
+                total = str(int(h.sum().n))
                 axs[a,xi].text(0.1, 0.9, total,
                     verticalalignment='top',
                     transform=axs[a,xi].transAxes)
@@ -176,7 +176,6 @@ def plothist_grid(fig, hist, xaxis=0, yaxis=1, hook=None, hook_kw={}, **kwargs):
     if hist.title is not None:
         axtot.set_title(hist.title)
 
-    fig.tight_layout()
     fig.subplots_adjust(hspace=0,wspace=0)
 
     if hook is not None:
