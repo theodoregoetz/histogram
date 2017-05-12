@@ -16,7 +16,6 @@ HistogramAxis
         max
         min
         nbins
-        overflow
 
     **Methods**
 
@@ -25,7 +24,6 @@ HistogramAxis
         __str__
         bin
         binwidth
-        clone
         cut
         edge_index
         inaxis
@@ -40,7 +38,6 @@ Edges and Bins
 .. autoattribute:: HistogramAxis.min
 .. autoattribute:: HistogramAxis.max
 .. autoattribute:: HistogramAxis.limits
-.. autoattribute:: HistogramAxis.overflow
 .. automethod:: HistogramAxis.edge_index
 .. automethod:: HistogramAxis.inaxis
 .. automethod:: HistogramAxis.bin
@@ -70,7 +67,6 @@ Misc
 
 .. autoattribute:: HistogramAxis.label
     :annotation:
-.. automethod:: HistogramAxis.clone
 .. automethod:: HistogramAxis.__eq__
 
     Each point in the edge arrays must satisfy

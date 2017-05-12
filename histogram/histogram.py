@@ -124,6 +124,10 @@ class Histogram(object):
         if uncert is not None:
             self.uncert = uncert
 
+    axes = []
+    """`list` of `HistogramAxis` objects which detail binning along the axes.
+    """
+
 ### properties
     @property
     def data(self):

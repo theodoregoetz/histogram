@@ -20,13 +20,11 @@ Histogram
         binvolumes
         binwidths
         dim
-        dtype
         edge_grid
         edges
         grid
         max
         min
-        overflow
         shape
         size
         uncert_ratio
@@ -34,14 +32,9 @@ Histogram
     **Methods**
 
     .. autosummary::
-        added_uncert
-        added_uncert_ratio
         asdict
         asline
-        aspolygon
         binwidth
-        clear_nans
-        clone
         cut
         errorbars
         extent
@@ -51,7 +44,6 @@ Histogram
         fit
         fromdict
         integral
-        interpolate_nans
         isuniform
         mean
         occupancy
@@ -126,7 +118,6 @@ Methods specific to the axes of this histogram including size, shape and labels.
 .. autoattribute:: Histogram.edges
 .. autoattribute:: Histogram.grid
 .. automethod:: Histogram.isuniform
-.. autoattribute:: Histogram.overflow
 .. autoattribute:: Histogram.shape
 .. autoattribute:: Histogram.size
 
@@ -155,7 +146,6 @@ Filling Histogram with Data
 .. automethod:: Histogram.fill_one
 .. automethod:: Histogram.set
 .. automethod:: Histogram.reset
-.. automethod:: Histogram.clear_nans
 
 Transformations
 ---------------
@@ -164,7 +154,6 @@ Methods which generally return a new histogram representing the same data in som
 
 .. automethod:: Histogram.cut
 .. automethod:: Histogram.rebin
-.. automethod:: Histogram.interpolate_nans
 .. automethod:: Histogram.smooth
 
 Iterating
@@ -201,11 +190,6 @@ Misc
 .. automethod:: Histogram.asdict
 .. automethod:: Histogram.fromdict
 .. automethod:: Histogram.asline
-.. automethod:: Histogram.aspolygon
 .. automethod:: Histogram.errorbars
-.. automethod:: Histogram.clone
 .. automethod:: Histogram.__str__
 .. automethod:: Histogram.__call__
-.. automethod:: Histogram.added_uncert
-.. automethod:: Histogram.added_uncert_ratio
-.. automethod:: Histogram.dtype
