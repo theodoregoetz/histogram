@@ -15,10 +15,12 @@ import matplotlib.pyplot as plt
 
 from histogram import Histogram
 
-from .. import comparator
+from .. import conf
 
 class TestHistogramsMpl(unittest.TestCase):
     def setUp(self):
+        if conf.fast or conf.comparator is None:
+            raise unittest.SkipTest('slow tests')
         simplefilter('ignore')
 
     def test_hist_1d(self):
@@ -27,7 +29,7 @@ class TestHistogramsMpl(unittest.TestCase):
         h.fill(rand.normal(0.5, 0.1, 2000))
         fig, ax = plt.subplots()
         pt = ax.plothist(h)
-        self.assertTrue(comparator.compare_images(
+        self.assertTrue(conf.comparator.compare_images(
             fig.savefig, 'hist_1d.png'))
 
     def test_hist_1d_errorbar(self):
@@ -36,7 +38,7 @@ class TestHistogramsMpl(unittest.TestCase):
         h.fill(rand.normal(0.5, 0.1, 300))
         fig, ax = plt.subplots()
         pt = ax.plothist(h, style='errorbar')
-        self.assertTrue(comparator.compare_images(
+        self.assertTrue(conf.comparator.compare_images(
             fig.savefig, 'hist_1d_errorbar.png'))
 
     def test_hist_1d_line(self):
@@ -45,7 +47,7 @@ class TestHistogramsMpl(unittest.TestCase):
         h.fill(rand.normal(0.5, 0.1, 300))
         fig, ax = plt.subplots()
         pt = ax.plothist(h, style='line')
-        self.assertTrue(comparator.compare_images(
+        self.assertTrue(conf.comparator.compare_images(
             fig.savefig, 'hist_1d_line.png'))
 
     def test_hist_2d(self):
@@ -54,7 +56,7 @@ class TestHistogramsMpl(unittest.TestCase):
         h.fill(rand.normal(0.5, 0.1, 1000), rand.normal(0,1,1000))
         fig, ax = plt.subplots()
         pt = ax.plothist(h)
-        self.assertTrue(comparator.compare_images(
+        self.assertTrue(conf.comparator.compare_images(
             fig.savefig, 'hist_2d.png'))
 
     def test_hist_1d_nonuniform(self):
@@ -63,7 +65,7 @@ class TestHistogramsMpl(unittest.TestCase):
         pt = ax[0].plothist(h, style='polygon')
         pt = ax[0].plothist(h, style='line', color='black', lw=2)
         pt = ax[1].plothist(h, style='errorbar')
-        self.assertTrue(comparator.compare_images(
+        self.assertTrue(conf.comparator.compare_images(
             fig.savefig, 'hist_1d_nonuniform.png'))
 
     def test_hist_1d_negative(self):
@@ -72,7 +74,7 @@ class TestHistogramsMpl(unittest.TestCase):
         pt = ax[0].plothist(h, style='polygon')
         pt = ax[0].plothist(h, style='line', color='black', lw=2)
         pt = ax[1].plothist(h, style='errorbar')
-        self.assertTrue(comparator.compare_images(
+        self.assertTrue(conf.comparator.compare_images(
             fig.savefig, 'hist_1d_negative.png'))
 
 

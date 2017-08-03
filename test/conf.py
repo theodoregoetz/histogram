@@ -1,0 +1,2 @@
+comparator = None
+fast = False

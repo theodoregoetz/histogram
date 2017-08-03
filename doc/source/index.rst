@@ -3,9 +3,16 @@
 ``histogram`` documentation
 ===========================
 
-.. toctree::
-    :maxdepth: 2
+.. .. automodule:: histogram
 
+.. autoclass:: histogram.Histogram
+    :members:
+
+.. autoclass:: histogram.HistogramAxis
+    :members:
+
+.. .. toctree::
+    :maxdepth: 2
     histogram
     histogram_axis
 

@@ -60,3 +60,4 @@ docs/_build/
 target/
 
 histogram/version.py
+image_comparisons
