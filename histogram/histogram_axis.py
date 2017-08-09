@@ -90,7 +90,18 @@ class HistogramAxis(object):
 
     def __eq__(self, that):
         r"""Compare edges to within numpy's default tolerance.
-        Labels are ignored."""
+
+        Note:
+            Labels are ignored and each point in the edge arrays must satisfy
+
+            .. math::
+
+                \left(\frac{\left|e - e^{\prime}\right|}
+                           {0.5 (e + e^{\prime})}\right) < tol,
+
+            where :math:`e := \mathtt{self.edges[i]}` and :math:`e^{\prime} :=
+            \mathtt{that.edges[i]}`.
+        """
         try:
             return np.allclose(self.edges,that.edges)
         except ValueError:
@@ -313,6 +324,17 @@ class HistogramAxis(object):
 
                 abs(widths - mean) <= (atol + rtol * abs(median))
 
+            The axis is considered uniform if the maximum deviation of the
+            bin-widths is less than the given tolerance:
+
+            .. math::
+
+                \max\left(\frac{\left|w_{i} -
+                    \left<w\right>\right|}{\left<w\right>}\right) < tol
+
+            where :math:`\left<w\right>` is the :py:func:`median
+            <numpy.median>` bin width and :math:`max()` is evaluated over all
+            bin widths, :math:`w_{i}`.
         """
         widths = self.binwidths()
         median = np.median(widths)

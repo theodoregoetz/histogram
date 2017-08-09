@@ -14,46 +14,51 @@ HistogramAxis
         label
         limits
         max
+        mid
         min
         nbins
+        overflow_value
+        range
 
     **Methods**
 
     .. autosummary::
         __eq__
         __str__
+        asdict
         bin
         binwidth
+        copy
         cut
         edge_index
+        fromdict
         inaxis
+        isidentical
         isuniform
         mergebins
 
-Edges and Bins
---------------
+Edges
+-----
 
 .. autoattribute:: HistogramAxis.edges
     :annotation:
 .. autoattribute:: HistogramAxis.min
+.. autoattribute:: HistogramAxis.mid
 .. autoattribute:: HistogramAxis.max
 .. autoattribute:: HistogramAxis.limits
+.. autoattribute:: HistogramAxis.range
 .. automethod:: HistogramAxis.edge_index
-.. automethod:: HistogramAxis.inaxis
+
+Bins
+----
+
 .. automethod:: HistogramAxis.bin
+.. automethod:: HistogramAxis.inaxis
+.. autoattribute:: HistogramAxis.overflow_value
 .. autoattribute:: HistogramAxis.nbins
 .. automethod:: HistogramAxis.binwidth
 .. autoattribute:: HistogramAxis.binwidths
 .. automethod:: HistogramAxis.isuniform
-
-    The axis is considered uniform if the maximum deviation of the bin-widths is less than the given tolerance:
-
-    .. math::
-
-        \max\left(\frac{\left|w_{i} - \left<w\right>\right|}{\left<w\right>}\right) < tol
-
-    where :math:`\left<w\right>` is the :py:func:`median <numpy.median>` bin width and :math:`max()` is evaluated over all bin widths, :math:`w_{i}`.
-
 .. autoattribute:: HistogramAxis.bincenters
 
 Tranformations
@@ -67,25 +72,9 @@ Misc
 
 .. autoattribute:: HistogramAxis.label
     :annotation:
+.. automethod:: HistogramAxis.copy
+.. automethod:: HistogramAxis.asdict
+.. automethod:: HistogramAxis.fromdict
+.. automethod:: HistogramAxis.isidentical
 .. automethod:: HistogramAxis.__eq__
-
-    Each point in the edge arrays must satisfy
-
-    .. math::
-
-        \left(\frac{\left|e - e^{\prime}\right|}{0.5 (e + e^{\prime})}\right) < tol,
-
-    where
-
-    .. math::
-
-        e := \mathtt{self.edges[i]}
-
-    and
-
-    .. math::
-
-        e^{\prime} := \mathtt{that.edges[i]}.
-
 .. automethod:: HistogramAxis.__str__
-

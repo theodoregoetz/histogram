@@ -23,8 +23,10 @@ Histogram
         edge_grid
         edges
         grid
+        has_uncert
         max
         min
+        overflow_value
         shape
         size
         uncert_ratio
@@ -34,7 +36,9 @@ Histogram
     .. autosummary::
         asdict
         asline
+        asroot
         binwidth
+        copy
         cut
         errorbars
         extent
@@ -43,38 +47,56 @@ Histogram
         fill_one
         fit
         fromdict
+        fromroot
         integral
+        interpolate_nonfinites
+        isidentical
         isuniform
+        load
+        load_hdf5
+        load_npz
+        load_root
         mean
         occupancy
         projection
+        projection_data
         rebin
         reset
+        save
+        save_hdf5
+        save_npz
+        save_root
         set
+        set_infs
+        set_nans
+        set_nonfinites
         slices
         slices_data
         slices_uncert
         smooth
         std
         sum
+        sum_data
+        var
 
     **Operators and Special Methods**
 
     .. autosummary::
         __add__
         __call__
-        __truediv__
+        __eq__
         __iadd__
-        __itruediv__
         __imul__
         __isub__
+        __itruediv__
         __mul__
         __radd__
-        __rtruediv__
         __rmul__
         __rsub__
+        __rtruediv__
         __str__
         __sub__
+        __truediv__
 
 Axes, Shape and Labels
 ----------------------
@@ -83,11 +105,16 @@ Methods specific to the axes of this histogram including size, shape and labels.
 
 .. attribute:: Histogram.axes
 
-    This is a list of the :py:class:`HistogramAxis` objects in the same order as the dimensions of the :py:attr:`Histogram.data` attribute. This should not typically be changed after constructing the :py:class:`Histogram` in the first place.
+    This is a list of the :py:class:`HistogramAxis` objects in the same order
+    as the dimensions of the :py:attr:`Histogram.data` attribute. This should
+    not typically be changed after constructing the :py:class:`Histogram` in
+    the first place.
 
     Example:
 
-        One can access the underlying axes by the index. Here we create a 2D histogram, fill it and change the axes labels afterwards before plotting::
+        One can access the underlying axes by the index. Here we create a 2D
+        histogram, fill it and change the axes labels afterwards before
+        plotting::
 
             import numpy as np
             from matplotlib import pyplot
@@ -120,11 +147,13 @@ Methods specific to the axes of this histogram including size, shape and labels.
 .. automethod:: Histogram.isuniform
 .. autoattribute:: Histogram.shape
 .. autoattribute:: Histogram.size
+.. autoattribute:: Histogram.overflow_value
 
 Data, Uncertainty and Statistics
 --------------------------------
 
-Access to the filled data, associated uncertainty and various properties of the histogram.
+Access to the filled data, associated uncertainty and various properties of the
+histogram.
 
 .. autoattribute:: Histogram.data
 .. autoattribute:: Histogram.uncert
@@ -133,9 +162,12 @@ Access to the filled data, associated uncertainty and various properties of the 
 .. automethod:: Histogram.min
 .. automethod:: Histogram.mean
 .. automethod:: Histogram.std
+.. automethod:: Histogram.var
 .. automethod:: Histogram.sum
+.. automethod:: Histogram.sum_data
 .. automethod:: Histogram.integral
 .. automethod:: Histogram.projection
+.. automethod:: Histogram.projection_data
 .. automethod:: Histogram.occupancy
 
 Filling Histogram with Data
@@ -146,11 +178,15 @@ Filling Histogram with Data
 .. automethod:: Histogram.fill_one
 .. automethod:: Histogram.set
 .. automethod:: Histogram.reset
+.. automethod:: Histogram.set_infs
+.. automethod:: Histogram.set_nans
+.. automethod:: Histogram.set_nonfinites
 
 Transformations
 ---------------
 
-Methods which generally return a new histogram representing the same data in some transformed view, sometimes with a loss of information (eg. merged bins).
+Methods which generally return a new histogram representing the same data in
+some transformed view, sometimes with a loss of information (eg. merged bins).
 
 .. automethod:: Histogram.cut
 .. automethod:: Histogram.rebin
@@ -184,12 +220,33 @@ Arithmetic
 .. automethod:: Histogram.__rtruediv__
 .. automethod:: Histogram.__truediv__
 
+Saving, Loading and Type Conversions
+------------------------------------
+
+.. automethod:: Histogram.copy
+.. automethod:: Histogram.asdict
+.. automethod:: Histogram.fromdict
+.. automethod:: Histogram.asroot
+.. automethod:: Histogram.fromroot
+.. automethod:: Histogram.save
+.. automethod:: Histogram.load
+.. automethod:: Histogram.save_hdf5
+.. automethod:: Histogram.load_hdf5
+.. automethod:: Histogram.save_npz
+.. automethod:: Histogram.load_npz
+.. automethod:: Histogram.save_root
+.. automethod:: Histogram.load_root
+
 Misc
 ----
 
-.. automethod:: Histogram.asdict
-.. automethod:: Histogram.fromdict
+.. autoattribute:: Histogram.label
+.. autoattribute:: Histogram.title
+.. automethod:: Histogram.interpolate_nonfinites
 .. automethod:: Histogram.asline
+.. autoattribute:: Histogram.has_uncert
 .. automethod:: Histogram.errorbars
+.. automethod:: Histogram.isidentical
+.. automethod:: Histogram.__eq__
 .. automethod:: Histogram.__str__
 .. automethod:: Histogram.__call__
