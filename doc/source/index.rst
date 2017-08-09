@@ -3,19 +3,13 @@
 ``histogram`` documentation
 ===========================
 
-.. .. automodule:: histogram
-
-.. autoclass:: histogram.Histogram
-    :members:
-
-.. autoclass:: histogram.HistogramAxis
-    :members:
-
-.. .. toctree::
+.. toctree::
     :maxdepth: 2
+
     histogram
     histogram_axis
 
+.. automodule:: histogram
 
 Indices and tables
 ==================
