@@ -310,7 +310,7 @@ class HistogramAxis(object):
         return (self.edges[b + 1] - self.edges[b])
 
     def isuniform(self, rtol=1e-05, atol=1e-08):
-        """Check if all bins are of equal width.
+        r"""Check if all bins are of equal width.
 
         Arguments:
             rtol (float): relative tolerance parameter
@@ -335,6 +335,7 @@ class HistogramAxis(object):
             where :math:`\left<w\right>` is the :py:func:`median
             <numpy.median>` bin width and :math:`max()` is evaluated over all
             bin widths, :math:`w_{i}`.
+
         """
         widths = self.binwidths()
         median = np.median(widths)

@@ -392,7 +392,7 @@ class Histogram(object):
         output::
 
             164
-            428str(
+            428
             909
 
         """
