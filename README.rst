@@ -84,7 +84,7 @@ the features of each one into a single object:
 -  `datagram <https://pypi.python.org/pypi/datagram>`__
 -  `hdrhistogram <https://pypi.python.org/pypi/hdrhistogram>`__
 -  `dashi <http://www.ifh.de/~middell/dashi/index.html>`__
--  `physt <https://pypi.python.org/pypi/physt/0.3.6>`__
+-  `physt <https://pypi.python.org/pypi/physt>`__
 -  `matplotlib-hep <https://github.com/ibab/matplotlib-hep>`__
 
 Furthermore, the author was greatly influenced by the histogram classes found
